@@ -2,15 +2,19 @@ const react = async (conn, m, text) => {
   try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
 }
 
-// Función para asegurar que el usuario existe en la DB
-function getUser(who) {
-  if (!global.db) global.db = { data: { users: {} } }
-  if (!global.db.data) global.db.data = { users: {} }
+// Asegurar que la DB exista
+function initDB() {
+  if (!global.db) global.db = { data: {} }
+  if (!global.db.data) global.db.data = {}
   if (!global.db.data.users) global.db.data.users = {}
+}
+
+function getUser(who) {
+  initDB()
   if (!global.db.data.users[who]) {
     global.db.data.users[who] = {
       exp: 0, level: 0, money: 0, limit: 0, registered: false, role: 'Principiante',
-      age: null, birth: null, country: null, hobby: null, bio: null, gender: null, marriage: null
+      age: '', birth: '', country: '', hobby: '', bio: '', gender: '', marriage: ''
     }
   }
   return global.db.data.users[who]
@@ -19,27 +23,23 @@ function getUser(who) {
 let handler = async (m, { conn, args }) => {
   try {
     await react(conn, m, "👤")
+    initDB()
 
     let who = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : m.sender
     let user = getUser(who)
 
-    // ARREGLO: getName sin.catch
     let name
-    try {
-      name = await conn.getName(who)
-    } catch {
-      name = m.pushName || 'Usuario'
-    }
+    try { name = await conn.getName(who) } catch { name = m.pushName || 'Usuario' }
 
     let number = who.split('@')[0]
-    let exp = user.exp || 0
-    let level = user.level || 0
-    let money = user.money || 0
-    let limit = user.limit || 0
+    let exp = Number(user.exp) || 0
+    let level = Number(user.level) || 0
+    let money = Number(user.money) || 0
+    let limit = Number(user.limit) || 0
     let registered = user.registered || false
     let role = user.role || 'Principiante'
 
-    // DATOS PERSONALIZABLES
+    // Si están vacíos que muestre "No registrado"
     let age = user.age || 'No registrado'
     let birth = user.birth || 'No registrado'
     let country = user.country || 'No registrado'
@@ -52,11 +52,11 @@ let handler = async (m, { conn, args }) => {
     let xpProgress = exp - (level * 100)
 
     let birthdayText = 'No registrado'
-    if (user.birth) {
+    if (user.birth && user.birth.includes('/')) {
       try {
         let [d, mo, y] = user.birth.split('/')
         let today = new Date()
-        let nextBday = new Date(today.getFullYear(), mo - 1, d)
+        let nextBday = new Date(today.getFullYear(), Number(mo) - 1, Number(d))
         if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1)
         let diff = Math.ceil((nextBday - today) / (1000 * 60 * 60 * 24))
         birthdayText = `${user.birth} - Faltan ${diff} días`
@@ -87,11 +87,8 @@ let handler = async (m, { conn, args }) => {
 ╰───────────────────────`
 
     let pp
-    try {
-      pp = await conn.profilePictureUrl(who, 'image')
-    } catch {
-      pp = 'https://i.ibb.co/1p9Q0V3/default.jpg'
-    }
+    try { pp = await conn.profilePictureUrl(who, 'image') }
+    catch { pp = 'https://i.ibb.co/1p9Q0V3/default.jpg' }
 
     await conn.sendMessage(m.chat, {
       image: { url: pp },
@@ -108,12 +105,14 @@ let handler = async (m, { conn, args }) => {
   }
 }
 
-// COMANDOS PARA EDITAR
+// COMANDOS PARA EDITAR + GUARDAR EN DB
 handler.before = async (m, { conn }) => {
   if (!m.text) return
+  initDB()
   let user = getUser(m.sender)
   let [cmd,...text] = m.text.trim().split(' ')
   text = text.join(' ')
+  if(!text) return
 
   if (cmd === '.setedad') { user.age = text; return m.reply(`✅ Edad: ${text}`) }
   if (cmd === '.setcumple') {
