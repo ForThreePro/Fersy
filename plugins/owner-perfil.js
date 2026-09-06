@@ -2,131 +2,100 @@ const react = async (conn, m, text) => {
   try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
 }
 
-// Asegurar que la DB exista
-function initDB() {
-  if (!global.db) global.db = { data: {} }
-  if (!global.db.data) global.db.data = {}
-  if (!global.db.data.users) global.db.data.users = {}
-}
+// Memoria temporal. Se borra al reiniciar
+global.perfilesTemp = global.perfilesTemp || new Map()
 
-function getUser(who) {
-  initDB()
-  if (!global.db.data.users[who]) {
-    global.db.data.users[who] = {
-      exp: 0, level: 0, money: 0, limit: 0, registered: false, role: 'Principiante',
-      age: '', birth: '', country: '', hobby: '', bio: '', gender: '', marriage: ''
-    }
+function getPerfil(jid) {
+  if (!global.perfilesTemp.has(jid)) {
+    global.perfilesTemp.set(jid, {
+      age: '', birth: '', country: '', hobby: '', bio: '', gender: ''
+    })
   }
-  return global.db.data.users[who]
+  return global.perfilesTemp.get(jid)
 }
 
-let handler = async (m, { conn, args }) => {
-  try {
-    await react(conn, m, "👤")
-    initDB()
+let handler = async (m, { conn }) => {
+  await react(conn, m, "👤")
 
-    let who = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : m.sender
-    let user = getUser(who)
+  let who = m.mentionedJid?.[0] || m.sender
+  let perfil = getPerfil(who)
+  let dbUser = global.db?.data?.users?.[who] || {}
 
-    let name
-    try { name = await conn.getName(who) } catch { name = m.pushName || 'Usuario' }
+  let name
+  try { name = await conn.getName(who) } catch { name = m.pushName || 'Usuario' }
+  let number = who.split('@')[0]
 
-    let number = who.split('@')[0]
-    let exp = Number(user.exp) || 0
-    let level = Number(user.level) || 0
-    let money = Number(user.money) || 0
-    let limit = Number(user.limit) || 0
-    let registered = user.registered || false
-    let role = user.role || 'Principiante'
+  let level = dbUser.level || 0
+  let exp = dbUser.exp || 0
+  let money = dbUser.money || 0
+  let limit = dbUser.limit || 0
 
-    // Si están vacíos que muestre "No registrado"
-    let age = user.age || 'No registrado'
-    let birth = user.birth || 'No registrado'
-    let country = user.country || 'No registrado'
-    let hobby = user.hobby || 'No registrado'
-    let bio = user.bio || 'Sin biografía'
-    let gender = user.gender || 'No especificado'
-    let marriage = user.marriage || 'Soltero(a)'
+  let age = perfil.age || 'No registrado'
+  let birth = perfil.birth || 'No registrado'
+  let country = perfil.country || 'No registrado'
+  let hobby = perfil.hobby || 'No registrado'
+  let bio = perfil.bio || 'Sin biografía'
+  let gender = perfil.gender || 'No especificado'
 
-    let reqXp = (level + 1) * 100
-    let xpProgress = exp - (level * 100)
+  let reqXp = (level + 1) * 100
+  let xpProgress = exp - (level * 100)
 
-    let birthdayText = 'No registrado'
-    if (user.birth && user.birth.includes('/')) {
-      try {
-        let [d, mo, y] = user.birth.split('/')
-        let today = new Date()
-        let nextBday = new Date(today.getFullYear(), Number(mo) - 1, Number(d))
-        if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1)
-        let diff = Math.ceil((nextBday - today) / (1000 * 60 * 60 * 24))
-        birthdayText = `${user.birth} - Faltan ${diff} días`
-      } catch { birthdayText = user.birth }
-    }
-
-    const caption = `╭─「 PERFIL DE USUARIO 」
+  let caption = `╭─「 PERFIL GARFIELD 」
 │
 │ 👤 *NOMBRE:* ${name}
 │ 📱 *NUMERO:* @${number}
 │ 🌍 *PAÍS:* ${country}
 │ ⚧️ *GÉNERO:* ${gender}
 │ 🎂 *EDAD:* ${age}
-│ 📅 *CUMPLE:* ${birthdayText}
-│ 💍 *ESTADO:* ${marriage}
+│ 📅 *CUMPLE:* ${birth}
 │
-│ 🎯 *PASATIEMPO:* ${hobby}
+│ 🎯 *HOBBY:* ${hobby}
 │ 📝 *BIO:* ${bio}
 │
-│ 🏷️ *RANGO:* ${role}
 │ 📊 *NIVEL:* ${level}
 │ ⭐ *EXP:* ${xpProgress}/${reqXp}
 │ 💰 *DINERO:* $${money}
 │ 💎 *DIAMANTES:* ${limit}
 │
-│ ✅ *REGISTRO:* ${registered? 'Si' : 'No'}
-│
-╰───────────────────────`
+╰───────────────────`
 
-    let pp
-    try { pp = await conn.profilePictureUrl(who, 'image') }
-    catch { pp = 'https://i.ibb.co/1p9Q0V3/default.jpg' }
+  let pp
+  try { pp = await conn.profilePictureUrl(who, 'image') }
+  catch { pp = 'https://i.ibb.co/1p9Q0V3/default.jpg' }
 
-    await conn.sendMessage(m.chat, {
-      image: { url: pp },
-      caption: caption,
-      mentions: [who]
-    }, { quoted: m })
+  await conn.sendMessage(m.chat, {
+    image: { url: pp },
+    caption: caption,
+    mentions: [who]
+  }, { quoted: m })
 
-    await react(conn, m, "✅")
-
-  } catch (e) {
-    console.error(e)
-    await react(conn, m, "❌")
-    await m.reply(`❌ Error: ${e.message}`)
-  }
+  await react(conn, m, "✅")
 }
 
-// COMANDOS PARA EDITAR + GUARDAR EN DB
-handler.before = async (m, { conn }) => {
+// COMANDOS PARA EDITAR
+handler.before = async (m) => {
   if (!m.text) return
-  initDB()
-  let user = getUser(m.sender)
+  let perfil = getPerfil(m.sender)
   let [cmd,...text] = m.text.trim().split(' ')
   text = text.join(' ')
-  if(!text) return
+  if(!text && cmd!== '.verperfil') return
 
-  if (cmd === '.setedad') { user.age = text; return m.reply(`✅ Edad: ${text}`) }
+  if (cmd === '.setedad') { perfil.age = text; return m.reply(`✅ Edad: ${text}`) }
   if (cmd === '.setcumple') {
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(text)) return m.reply(`Formato:.setcumple DD/MM/YYYY`)
-    user.birth = text; return m.reply(`✅ Cumple: ${text}`)
+    perfil.birth = text; return m.reply(`✅ Cumple: ${text}`)
   }
-  if (cmd === '.setpais') { user.country = text; return m.reply(`✅ País: ${text}`) }
-  if (cmd === '.sethobby') { user.hobby = text; return m.reply(`✅ Hobby: ${text}`) }
-  if (cmd === '.setbio') { user.bio = text; return m.reply(`✅ Bio actualizada`) }
-  if (cmd === '.setgenero') { user.gender = text; return m.reply(`✅ Género: ${text}`) }
-  if (cmd === '.setestado') { user.marriage = text; return m.reply(`✅ Estado: ${text}`) }
+  if (cmd === '.setpais') { perfil.country = text; return m.reply(`✅ País: ${text}`) }
+  if (cmd === '.sethobby') { perfil.hobby = text; return m.reply(`✅ Hobby: ${text}`) }
+  if (cmd === '.setbio') { perfil.bio = text; return m.reply(`✅ Bio actualizada`) }
+  if (cmd === '.setgenero') { perfil.gender = text; return m.reply(`✅ Género: ${text}`) }
+  if (cmd === '.borrarperfil') {
+    global.perfilesTemp.delete(m.sender)
+    return m.reply(`✅ Perfil borrado`)
+  }
 }
 
 handler.help = ['perfil @user']
 handler.tags = ['rg']
-handler.command = ['perfil', 'profile', 'p']
+handler.command = ['perfil', 'p', 'profile']
 export default handler
