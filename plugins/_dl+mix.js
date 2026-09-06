@@ -1,42 +1,91 @@
 import axios from "axios"
+import { downloadContentFromMessage } from "@whiskeysockets/baileys"
 
-const api = { url: 'https://api.stellarwa.xyz', key: 'proyectsV2' }
-
-const D = {
-    name: 'GARFIELD BOT', emoji: '🐱🍝',
-    border: '╭─── 𓆩🐱𓆪 ───╮', border2: '╰─── 𓆩🍝𓆪 ───╯',
-    title: '𝐆𝐀𝐑𝐅𝐈𝐄𝐋𝐃 𝐈𝐆', footer: '> "Bajando como lasaña" 😼',
-    process: '🐱 DESCARGANDO', found: '🍝 LISTO', error: '😿 NO SE PUDO'
+// ===== CONFIG API STELLAR =====
+const api = {
+    url: 'https://api.stellarwa.xyz',
+    key: 'garfield-vip'
 }
 
-let handler = async (m, { conn, args, usedPrefix }) => {
-    if (!args.length) return m.reply(`${D.border}\n✎ Manda el link de IG\n${D.border2}`)
+// ===== DISEÑO GARFIELD BOT =====
+const D = {
+    name: 'GARFIELD BOT',
+    emoji: '🐱🍝',
+    border: '╭─── 𓆩🐱𓆪 ───╮',
+    border2: '╰─── 𓆩🍝𓆪 ───╯',
+    title: '𝐑𝐄𝐌𝐎𝐕𝐄 𝐁𝐆',
+    process: '🐱 QUITANDO FONDO',
+    found: '🍝 LISTO',
+    error: '😿 NO SE PUDO'
+}
 
-    let url = args[0].split('?')[0] // <-- QUITA EL TOKEN AUTOMATICO
-    if (!url.match(/instagram\.com\/(p|reel|tv)/i)) {
-      return m.reply(`${D.border}\n⚠️ ➛ Link inválido\n${D.border2}`)
+let handler = async (m, { conn, usedPrefix }) => {
+    let q = m.quoted ? m.quoted : m
+    let mime = (q.msg || q).mimetype || ''
+    
+    if (!mime) {
+      return m.reply(`${D.border}
+${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
+
+.⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
+
+ ⤷ ┇ Responde a una *imagen* o manda una imagen ：✿ 。
+
+Ejemplo: ${usedPrefix}removebg
+
+${D.border2}`)
+    }
+    
+    if (!/image\/(jpe?g|png)/.test(mime)) {
+      return m.reply(`${D.border}\n⚠️ ➛ Solo se acepta imagen JPG/PNG\n${D.border2}`)
     }
 
     try {
       await m.react('🐱')
-      await m.reply(`${D.border}\n⤷ ┇ ${D.process} ：✿ 。\n${D.border2}`)
+      await m.reply(`${D.border}
+${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
 
-      const apiUrl = `${api.url}/dl/instagram?url=${encodeURIComponent(url)}&key=${api.key}`
-      const { data } = await axios.get(apiUrl, { timeout: 30000 })
+ ⤷ ┇ ${D.process} ：✿ 。
 
-      if (!data ||!data.status) throw data?.message || 'Stellar no respondió'
-      if (!data.data?.download?.length) throw 'Stellar no encontró el video'
+  ꒱ ׁ. ᘏ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢 ׅ 𝆬 ָ֢ ෆ
+💭 ➛ Subiendo imagen...
+💭 ➛ API: Stellar garfield-vip
 
-      const medias = data.data.download.map(media => ({
-        type: media.type,
-        data: { url: media.url },
-        caption: `${D.border}\n${D.emoji} 𓆩 ${D.name} 𓆪 ${D.emoji}\n⤷ ┇ ${D.found}\n${D.border2}`
-      }))
+${D.border2}`)
 
-      if (medias.length === 1) await conn.sendMessage(m.chat, medias[0], { quoted: m })
-      else await conn.sendAlbumMessage(m.chat, medias, { quoted: m })
+      // Descargar imagen
+      let stream = await downloadContentFromMessage(q, 'image')
+      let buffer = Buffer.from([])
+      for await (const chunk of stream) {
+        buffer = Buffer.concat([buffer, chunk])
+      }
+
+      // Convertir a base64 para enviar a Stellar
+      let base64 = buffer.toString('base64')
+      
+      // Enviar a API Stellar removebg
+      const { data } = await axios.post(`${api.url}/tools/removebg?key=${api.key}`, {
+        image: base64
+      }, { timeout: 60000 })
+
+      if (!data.status || !data.data?.url) throw data.message || 'API no devolvió imagen'
+
+      // Enviar resultado
+      await conn.sendMessage(m.chat, {
+        image: { url: data.data.url },
+        caption: `${D.border}
+${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
+
+.⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
+
+ ⤷ ┇ ${D.found} ：✿ 。
+
+${D.border2}
+${D.footer}`
+      }, { quoted: m })
 
       await m.react('✅')
+
     } catch (e) {
       await m.react('❌')
       await m.reply(`${D.border}
@@ -44,17 +93,18 @@ ${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
 
  ⤷ ┇ ${D.error} ：✿ 。
 
+──愛 *DETALLE* ╏ ❄️
 ⚠️ ➛ ${e.message || e}
 
 ──愛 *TIP* ╏ ❄️
-💭 ➛ Stellar está caída con proyectsV2
-💭 ➛ Intenta en 5 min o usa otro link sin?stkn=
+💭 ➛ La imagen debe pesar menos de 10MB
+💭 ➛ Intenta con otra foto si falla
 
 ${D.border2}`)
     }
 }
 
-handler.help = ['ig']
-handler.tags = ['downloader']
-handler.command = /^(ig|instagram|reel)$/i
+handler.help = ['removebg', 'nobg']
+handler.tags = ['tools']
+handler.command = /^(removebg|nobg|rbg)$/i
 export default handler
