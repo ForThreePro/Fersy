@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import FormData from 'form-data' // <- IMPORTANTE
 
 const API_KEY = 'garfield-vip'
 const API_URL = `https://api.stellarwa.xyz/tools/removebg?key=${API_KEY}`
@@ -9,7 +10,7 @@ const D = {
     emoji: '🪷🌸',
     border: '╭── 𓆩🪷𓆪 ──╮',
     border2: '╰── 𓆩🌸𓆪 ──╯',
-    title: '𝐂𝐎𝐓𝐈 𝐑𝐄𝐌𝐁𝐆',
+    title: '𝐂𝐎𝐓𝐓𝐈 𝐑𝐄𝐌𝐁𝐆', // <-- Corregido
     footer: '> "Florece sin fondo" 🦋',
     process: '🪷 QUITANDO FONDO',
     found: '🌸 FONDO ELIMINADO',
@@ -54,13 +55,14 @@ ${D.border2}`)
         let buffer = await q.download()
         if (!buffer) throw 'Error al descargar la imagen'
 
-        // 2. Enviar a la API
+        // 2. Enviar a la API - ARREGLADO
         const form = new FormData()
-        form.append('image', buffer, 'image.jpg')
+        form.append('image', buffer, { filename: 'image.jpg', contentType: mime })
         
         const res = await fetch(API_URL, {
             method: 'POST',
-            body: form
+            body: form,
+            headers: form.getHeaders() // <- IMPORTANTE PARA FORM-DATA
         })
 
         if (!res.ok) throw `Error ${res.status}: ${await res.text()}`
@@ -69,7 +71,7 @@ ${D.border2}`)
         
         if (!result.status || !result.result) throw 'La API no devolvió imagen'
 
-        const imageUrl = result.result // La API devuelve la url de la imagen sin fondo
+        const imageUrl = result.result 
 
         // 3. Descargar imagen resultante
         const imageBuffer = await fetch(imageUrl).then(v => v.buffer())
