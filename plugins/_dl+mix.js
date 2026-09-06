@@ -5,7 +5,8 @@ import { downloadContentFromMessage } from "@whiskeysockets/baileys"
 // ===== CONFIG API STELLAR =====
 const api = {
     url: 'https://api.stellarwa.xyz',
-    key: 'proyectsV2'
+    key_hd: 'proyectsV2', // Para HD/Upscale
+    key_bg: 'garfield-vip' // Para RemoveBG
 }
 
 // ===== DISEÑO GARFIELD BOT =====
@@ -14,7 +15,11 @@ const D = {
     emoji: '🐱🍝',
     border: '╭─── 𓆩🐱𓆪 ───╮',
     border2: '╰─── 𓆩🍝𓆪 ───╯',
-    footer: '> "Bajando como lasaña" 😼'
+    title: '𝐆𝐀𝐑𝐅𝐈𝐄𝐋𝐃 𝐇𝐃 + 𝐁𝐆',
+    footer: '> "Mejorando y limpiando como lasaña" 😼',
+    process: '🐱 PROCESANDO',
+    found: '🍝 LISTO',
+    error: '😿 NO SE PUDO'
 }
 
 function generateUniqueFilename(mime) {
@@ -25,29 +30,29 @@ function generateUniqueFilename(mime) {
 }
 
 async function uploadToUguu(buffer, mime) {
-  const form = new FormData()
-  form.append('files[]', buffer, generateUniqueFilename(mime))
+  const body = new FormData()
+  body.append('files[]', buffer, generateUniqueFilename(mime))
 
-  const res = await axios.post("https://uguu.se/upload.php", form, {
-    headers: form.getHeaders(),
-    maxContentLength: Infinity,
-    maxBodyLength: Infinity,
+  const res = await axios.post('https://uguu.se/upload.php', body, {
+    headers: body.getHeaders(),
     timeout: 30000
   })
-
-  const data = res.data
-  const url = data?.files?.[0]?.url
-  if (!url) throw new Error("Uguu no devolvió URL: " + JSON.stringify(data))
+  const url = res.data?.files?.[0]?.url
+  if (!url) throw 'No se pudo subir a Uguu'
   return url
 }
 
+async function upscaleImage(url) {
+  const apiUrl = `${api.url}/tools/upscale?url=${encodeURIComponent(url)}&key=${api.key_hd}`
+  const res = await axios.get(apiUrl, { responseType: 'arraybuffer', timeout: 60000 })
+  if (!res.data) throw 'Stellar HD no devolvió imagen'
+  return Buffer.from(res.data)
+}
+
 async function removeBgFromUrl(url) {
-  const apiUrl = `${api.url}/tools/removebg?url=${encodeURIComponent(url)}&key=${api.key}`
-  const res = await axios.get(apiUrl, {
-    responseType: 'arraybuffer',
-    timeout: 60000
-  })
-  if (!res.data) throw new Error('Stellar no devolvió imagen')
+  const apiUrl = `${api.url}/tools/removebg?url=${encodeURIComponent(url)}&key=${api.key_bg}`
+  const res = await axios.get(apiUrl, { responseType: 'arraybuffer', timeout: 60000 })
+  if (!res.data) throw 'Stellar RemoveBG no devolvió imagen'
   return Buffer.from(res.data)
 }
 
@@ -55,60 +60,90 @@ let handler = async (m, { conn, usedPrefix, command }) => {
     const q = m.quoted || m
     const mime = (q.msg || q).mimetype || ''
 
-    if (!mime.startsWith('image/')) {
-      return m.reply(`${D.border}
+    if (!mime) return m.reply(`${D.border}
 ${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
 
- ⤷ ┇ Responde a una *imagen* con ${usedPrefix}${command} ：✿ 。
+.⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
 
-${D.border2}`)
+ ⤷ ┇ 𝗠𝗘𝗝𝗢𝗥𝗔𝗗𝗢𝗥 + 𝗤𝗨𝗜𝗧𝗔𝗥 𝗙𝗢𝗡𝗗𝗢
+
+──愛 *COMO USAR* ╏ ❄️
+💭 ➛ Responde a una imagen con: *${usedPrefix + command}*
+💭 ➛ Proceso: HD 2x → Quitar Fondo → Enviar PNG + DOC
+
+${D.border2}
+${D.footer}
+━━━━━━━━━━━`)
+
+    if (!/image\/(jpe?g|png)/.test(mime)) {
+      return m.reply(`${D.border}\n⚠️ ➛ Solo se acepta imagen JPG/PNG\n${D.border2}`)
     }
 
     try {
       await m.react('🐱')
-      await m.reply(`${D.border}\n⤷ ┇ 🐱 QUITANDO FONDO ：✿ 。\n${D.border2}`)
+      await m.reply(`${D.border}\n⤷ ┇ ${D.process} ：✿ 。\n${D.border2}`)
 
-      // Descargar imagen
-      let stream = await downloadContentFromMessage(q, 'image')
-      let buffer = Buffer.from([])
-      for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk])
+      // 1. Descargar
+      const buffer = await q.download()
 
-      await m.reply(`${D.border}\n💭 ➛ Subiendo a Uguu...\n${D.border2}`)
-      const uguuUrl = await uploadToUguu(buffer, mime)
+      // 2. Subir original a Uguu
+      await m.reply(`${D.border}\n💭 ➛ 1/4 Subiendo imagen...\n${D.border2}`)
+      const uploadedUrl = await uploadToUguu(buffer, mime)
 
-      await m.reply(`${D.border}\n💭 ➛ Procesando con Stellar...\n${D.border2}`)
-      const bufferNoBg = await removeBgFromUrl(uguuUrl)
+      // 3. HD con proyectsV2
+      await m.reply(`${D.border}\n💭 ➛ 2/4 Mejorando calidad 2x...\n${D.border2}`)
+      const hdBuffer = await upscaleImage(uploadedUrl)
 
+      // 4. Subir HD a Uguu
+      await m.reply(`${D.border}\n💭 ➛ 3/4 Subiendo HD a Uguu...\n${D.border2}`)
+      const hdUrl = await uploadToUguu(hdBuffer, 'image/png')
+
+      // 5. RemoveBG con garfield-vip
+      await m.reply(`${D.border}\n💭 ➛ 4/4 Quitando fondo...\n${D.border2}`)
+      const finalBuffer = await removeBgFromUrl(hdUrl)
+
+      // 6. Enviar imagen
       await conn.sendMessage(m.chat, {
-        image: bufferNoBg,
+        image: finalBuffer,
         caption: `${D.border}
 ${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
 
- ⤷ ┇ 🍝 LISTO ：✿ 。
+.⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
+
+ ⤷ ┇ ${D.found} ：✿ 。
+
+  ꒱ ׁ. ᘏ 𝗗𝗘𝗧𝗔𝗟𝗘𝗦 ׅ 𝆬 ָ֢ ෆ
+📌 ➛ Calidad: HD 2x
+📌 ➛ Fondo: Eliminado
+📌 ➛ Formato: PNG Transparente
 
 ${D.border2}
 ${D.footer}`
       }, { quoted: m })
 
+      // 7. Enviar también como documento
+      await conn.sendMessage(m.chat, {
+        document: finalBuffer,
+        fileName: 'garfield-nobg.png',
+        mimetype: 'image/png',
+        caption: `${D.border}\n📄 *Documento PNG Sin Fondo*\n${D.border2}`
+      }, { quoted: m })
+
       await m.react('✅')
 
-    } catch (e) {
+    } catch (err) {
       await m.react('❌')
       await m.reply(`${D.border}
-⤷ ┇ 😿 NO SE PUDO ：✿ 。
+⤷ ┇ ${D.error} ：✿ 。
 
-──愛 *DETALLE* ╏ ❄️
-⚠️ ➛ ${e.message || e}
-
-──愛 *TIP* ╏ ❄️
-💭 ➛ Imagen menor a 5MB
-💭 ➛ Si falla intenta otra vez
+──愛 *FALLA* ╏ ❄️
+⚠️ ➛ ${err.message || err}
 
 ${D.border2}`)
     }
 }
 
-handler.help = ['removebg', 'nobg', 'rbg']
-handler.tags = ['tools']
-handler.command = /^(removebg|nobg|rbg)$/i
+handler.help = ['removebg', 'rbg', 'nobg']
+handler.tags = ['herramientas', 'ia']
+handler.command = /^(removebg|rbg|nobg)$/i
 export default handler
