@@ -1,5 +1,4 @@
 const handler = async (m, { text, conn, args, usedPrefix, command }) => {
-
     if (args.length < 2) return conn.reply(m.chat, `*❌ Ejemplo:* ${usedPrefix + command} 20 pe infinito`, m);
 
     let [hora, minutos] = args[0].includes(':')? args[0].split(':').map(Number) : [Number(args[0]), 0];
@@ -16,9 +15,7 @@ const handler = async (m, { text, conn, args, usedPrefix, command }) => {
         horasEnPais[key] = formatTime(horaEnPais);
     }
 
-    const modalidad = args.slice(2).join(' ');
-    m.react('🎮');
-
+    const modalidad = args.slice(2).join(' '); m.react('🎮');
     let titulo = '', players = '', icons1 = [], icons2 = [];
     if(command.includes('4') && command.includes('fem')){ titulo='4VS4 FEM'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖺𝗌'; icons1=['🌸','🌸','🌸','🌸']; icons2=['🌸','🌸'] }
     if(command.includes('4') && command.includes('masc')){ titulo='4VS4 MASC'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖾𝗌'; icons1=['🥥','🥥','🥥','🥥']; icons2=['🥥','🥥'] }
@@ -41,19 +38,17 @@ ${icons1.map(icono => `${icono}˚ `).join('\n')}
 ${icons2.map(icono => `${icono}˚ `).join('\n')}
 > © VS BOT`;
 
-    // BOTONES ESTILO REMOVE.BG - HEADER 1
-    await conn.sendMessage(m.chat, {
-        text: message,
-        footer: 'Toca un botón para anotarte',
-        buttons: [
-            { buttonId: `.anotarme_jugador_${salaId}`, buttonText: { displayText: '🎮 JUGADOR' }, type: 1 },
-            { buttonId: `.anotarme_suplente_${salaId}`, buttonText: { displayText: '🌸 SUPLENTE' }, type: 1 }
+    // LISTA EN VEZ DE BOTONES - ESTO NUNCA FALLA
+    await conn.sendListM(m.chat,
+        `ꆬ ݂ *${titulo}*`, // titulo
+        message, // descripción
+        'Toca aquí para anotarte', // footer
+        [
+            ['🎮 ANOTARSE COMO JUGADOR', `.anotarme jugador ${salaId}`],
+            ['🌸 ANOTARSE COMO SUPLENTE', `.anotarme suplente ${salaId}`]
         ],
-        headerType: 1 // <- CLAVE PARA QUE JALE EN TESTE2
-    }, { quoted: m });
+        m
+    )
 };
-
-handler.help = ['v4fem', 'v6masc'];
-handler.tags = ['ff'];
 handler.command = /^(v4fem|vsfem4|v4masc|vsmasc4|v4mixto|vsmixto4|v6fem|vsfem6|v6masc|vsmasc6|v6mixto|vsmixto6)$/i;
 export default handler;
