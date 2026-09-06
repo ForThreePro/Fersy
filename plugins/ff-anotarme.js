@@ -1,77 +1,51 @@
-const handler = async (m, { conn, args, usedPrefix, command }) => {
-
-    if (args.length < 2) return m.reply(`*❌ Usa:* ${usedPrefix}anotarme jugador/suplente`)
-
-    let tipo = args[0].toLowerCase() // jugador o suplente
-    let salaId = args[1] // el id de la sala
-
+const handler = async (m, { conn, args, usedPrefix }) => {
+    if (args.length < 2) return
+    let tipo = args[0].toLowerCase()
+    let salaId = args[1]
     global.vsData = global.vsData || {}
     let sala = global.vsData[salaId]
-
-    if (!sala) return m.reply('*❌ Esta lista ya expiró o no existe*')
+    if (!sala) return m.reply('*❌ Lista expirada*')
 
     let user = m.sender
-
-    // Quitar de ambas listas si ya estaba
     sala.jugadores = sala.jugadores.filter(v => v.id!== user)
     sala.suplentes = sala.suplentes.filter(v => v.id!== user)
 
     if (tipo === 'jugador') {
-        if (sala.jugadores.length >= sala.icons1.length) {
-            return m.reply('*⚠️ Ya están todos los jugadores completos*')
-        }
+        if (sala.jugadores.length >= sala.icons1.length) return m.reply('*⚠️ Jugadores llenos*')
         sala.jugadores.push({ id: user })
-        await m.reply(`✅ @${user.split('@')[0]} se anotó como JUGADOR`, { mentions: [user] })
+        await conn.reply(sala.chat, `✅ @${user.split('@')[0]} JUGADOR`, { mentions: [user] })
     }
-
     if (tipo === 'suplente') {
-        if (sala.suplentes.length >= sala.icons2.length) {
-            return m.reply('*⚠️ Ya están los suplentes completos*')
-        }
+        if (sala.suplentes.length >= sala.icons2.length) return m.reply('*⚠️ Suplentes llenos*')
         sala.suplentes.push({ id: user })
-        await m.reply(`✅ @${user.split('@')[0]} se anotó como SUPLENTE`, { mentions: [user] })
+        await conn.reply(sala.chat, `✅ @${user.split('@')[0]} SUPLENTE`, { mentions: [user] })
     }
 
-    // ACTUALIZAR LA LISTA
     let listaJug = sala.jugadores.map((v, i) => `${sala.icons1[i]} @${v.id.split('@')[0]}`).join('\n')
     let listaSup = sala.suplentes.map((v, i) => `${sala.icons2[i]} @${v.id.split('@')[0]}`).join('\n')
-
-    // Rellenar espacios vacíos
-    for(let i = sala.jugadores.length; i < sala.icons1.length; i++){
-        listaJug += `\n${sala.icons1[i]}˚ `
-    }
-    for(let i = sala.suplentes.length; i < sala.icons2.length; i++){
-        listaSup += `\n${sala.icons2[i]}˚ `
-    }
+    for(let i = sala.jugadores.length; i < sala.icons1.length; i++){ listaJug += `\n${sala.icons1[i]}˚ ` }
+    for(let i = sala.suplentes.length; i < sala.icons2.length; i++){ listaSup += `\n${sala.icons2[i]}˚ ` }
 
     const message = `ꆬ ݂ *${sala.titulo}* 🌹֟፝
-
   ത *𝖬𝗈𝖽𝖺𝗅𝗂𝖽𝖺𝖽:* ${sala.modalidad}
   ത *𝖧𝗈𝗋𝖺:* ${sala.horasEnPais.PE} 🇵🇪 ${sala.horasEnPais.AR} 🇦🇷
-
 ㅤ࿙࿚ㅤׅㅤ࿙࿚࿙࿚ㅤׅㅤ࿙࿚
-
 ߳𑁍̵ ֕︵۪᷼ ּ \`${sala.players}:\` ׅ░ׅ
-
 ${listaJug}
-
       ꛁ⵿ֹ𐑼᪲ ۪ \`𝖲𝗎𝗉𝗅𝖾𝗇𝗍𝖾𝗌:\` ֹ̼ ׅ ❜𝆬 ᨩ̼
-
 ${listaSup}
+> © VS BOT`;
 
-> © Տһᥲძᨣᥕ Ɓᨣƚ Uᥣ𝗍rᥲ `;
-
-    await conn.sendMessage(m.chat, {
-        text: message,
-        footer: 'Toca el botón para anotarte',
+    await conn.sendMessage(sala.chat, {
+        image: { url: 'https://files.evogb.win/QFXQtu.jpg' },
+        caption: message,
+        footer: 'Toca para anotarte',
         buttons: [
-            { buttonId: `${usedPrefix}anotarme jugador ${salaId}`, buttonText: { displayText: 'Jugador' }, type: 1 },
-            { buttonId: `${usedPrefix}anotarme suplente ${salaId}`, buttonText: { displayText: 'Suplente' }, type: 1 }
+            { buttonId: `${usedPrefix}anotarme jugador ${salaId}`, buttonText: { displayText: '🎮 JUGADOR' }, type: 1 },
+            { buttonId: `${usedPrefix}anotarme suplente ${salaId}`, buttonText: { displayText: '🌸 SUPLENTE' }, type: 1 }
         ],
-        viewOnce: true
-    }, { quoted: m });
-
+        headerType: 4
+    });
 }
-
 handler.command = /^anotarme$/i
 export default handler
