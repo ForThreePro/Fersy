@@ -1,4 +1,6 @@
-const handler = async (m, { text, conn, args, usedPrefix, command }) => {
+let vs = global.vsData = global.vsData || {}
+
+const crear = async (m, { conn, args, usedPrefix, command }) => {
     if (args.length < 2) return conn.reply(m.chat, `*❌ Ejemplo:* ${usedPrefix + command} 20 pe infinito`, m);
 
     let [hora, minutos] = args[0].includes(':')? args[0].split(':').map(Number) : [Number(args[0]), 0];
@@ -24,31 +26,69 @@ const handler = async (m, { text, conn, args, usedPrefix, command }) => {
     if(command.includes('6') && command.includes('masc')){ titulo='6VS6 MASC'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖾𝗌'; icons1=['🥞','🥞','🥞','🥞','🥞','🥞']; icons2=['🥞','🥞'] }
     if(command.includes('6') && command.includes('mixto')){ titulo='6VS6 MIXTO'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖾𝗌'; icons1=['🥯','🥯','🥯','🥯','🥯','🥯']; icons2=['🥯','🥯'] }
 
-    const salaId = `vs_${m.chat}_${Date.now()}`;
-    global.vsData = global.vsData || {};
-    global.vsData[salaId] = { jugadores: [], suplentes: [], titulo, players, modalidad, horasEnPais, icons1, icons2, chat: m.chat };
+    // GUARDA LA VS COMO "ACTIVA" EN ESE GRUPO
+    vs[m.chat] = { jugadores: [], suplentes: [], titulo, players, modalidad, horasEnPais, icons1, icons2 };
 
-    const message = `ꆬ ݂ *${titulo}* 🌹֟፝
-  ത *𝖬𝗈𝖽𝖺𝗅𝗂𝖽𝖺𝖽:* ${modalidad}
-  ത *𝖧𝗈𝗋𝖺:* ${horasEnPais.PE} 🇵🇪 ${horasEnPais.AR} 🇦🇷
+    let msg = await actualizarLista(m.chat, conn, usedPrefix)
+    await conn.sendMessage(m.chat, { react: { text: '🎮', key: msg.key }})
+}
+
+const anotar = async (m, { conn, usedPrefix, command }) => {
+    if (!vs[m.chat]) return m.reply(`*❌ No hay VS activa en este grupo*\nCrea una con: ${usedPrefix}v4fem 20 pe`)
+
+    let sala = vs[m.chat]
+    let user = m.sender
+
+    sala.jugadores = sala.jugadores.filter(v => v!== user)
+    sala.suplentes = sala.suplentes.filter(v => v!== user)
+
+    if (command === 'j') {
+        if (sala.jugadores.length >= sala.icons1.length) return m.reply('*⚠️ Jugadores llenos*')
+        sala.jugadores.push(user)
+        await conn.reply(m.chat, `✅ @${user.split('@')[0]} JUGADOR 🎮`, { mentions: [user] })
+    }
+    if (command === 's') {
+        if (sala.suplentes.length >= sala.icons2.length) return m.reply('*⚠️ Suplentes llenos*')
+        sala.suplentes.push(user)
+        await conn.reply(m.chat, `✅ @${user.split('@')[0]} SUPLENTE 🌸`, { mentions: [user] })
+    }
+    if (command === 'out') {
+        return m.reply(`❌ @${user.split('@')[0]} salió`, null, { mentions: [user] })
+    }
+
+    await actualizarLista(m.chat, conn, usedPrefix)
+}
+
+const actualizarLista = async (chat, conn, usedPrefix) => {
+    let sala = vs[chat]
+    let listaJug = sala.jugadores.map((v, i) => `${sala.icons1[i]} @${v.split('@')[0]}`).join('\n')
+    let listaSup = sala.suplentes.map((v, i) => `${sala.icons2[i]} @${v.split('@')[0]}`).join('\n')
+    for(let i = sala.jugadores.length; i < sala.icons1.length; i++){ listaJug += `\n${sala.icons1[i]}˚ ` }
+    for(let i = sala.suplentes.length; i < sala.icons2.length; i++){ listaSup += `\n${sala.icons2[i]}˚ ` }
+
+    const message = `ꆬ ݂ *${sala.titulo}* 🌹֟፝
+  ത *𝖬𝗈𝖽𝖺𝗅𝗂𝖽𝖺𝖽:* ${sala.modalidad}
+  ത *𝖧𝗈𝗋𝖺:* ${sala.horasEnPais.PE} 🇵🇪 ${sala.horasEnPais.AR} 🇦🇷
 ㅤ࿙࿚ㅤׅㅤ࿙࿚࿙࿚ㅤׅㅤ࿙࿚
-߳𑁍̵ ֕︵۪᷼ ּ \`${players}:\` ׅ░ׅ
-${icons1.map(icono => `${icono}˚ `).join('\n')}
+߳𑁍̵ ֕︵۪᷼ ּ \`${sala.players}:\` ׅ░ׅ
+${listaJug}
       ꛁ⵿ֹ𐑼᪲ ۪ \`𝖲𝗎𝗉𝗅𝖾𝗇𝗍𝖾𝗌:\` ֹ̼ ׅ ❜𝆬 ᨩ̼
-${icons2.map(icono => `${icono}˚ `).join('\n')}
+${listaSup}
 
 ╭─「 PARA ANOTARSE 」
-│ Responde a *ESTE MENSAJE* con:
-│ *1* = 🎮 JUGADOR
-│ *2* = 🌸 SUPLENTE
-│ *3* = ❌ SALIR
+│ *.j* = 🎮 JUGADOR
+│ *.s* = 🌸 SUPLENTE
+│ *.out* = ❌ SALIR
 ╰───────────────────
 > © VS BOT`;
 
-    let msg = await conn.sendMessage(m.chat, { text: message }, { quoted: m });
-    global.vsData[salaId].msgId = msg.key.id // Guardamos el ID del mensaje para detectar replies
-    await conn.sendMessage(m.chat, { react: { text: '🎮', key: msg.key }})
-};
+    return await conn.sendMessage(chat, { text: message, mentions: [...sala.jugadores,...sala.suplentes] })
+}
 
-handler.command = /^(v4fem|vsfem4|v4masc|vsmasc4|v4mixto|vsmixto4|v6fem|vsfem6|v6masc|vsmasc6|v6mixto|vsmixto6)$/i;
-export default handler;
+const handler = async (m, { conn, args, usedPrefix, command }) => {
+    if (['v4fem','vsfem4','v4masc','vsmasc4','v4mixto','vsmixto4','v6fem','vsfem6','v6masc','vsmasc6','v6mixto','vsmixto6'].includes(command)) return crear(m, {conn, args, usedPrefix, command})
+    if (['j','s','out'].includes(command)) return anotar(m, {conn, usedPrefix, command})
+}
+
+handler.command = /^(v4fem|vsfem4|v4masc|vsmasc4|v4mixto|vsmixto4|v6fem|vsfem6|v6masc|vsmasc6|v6mixto|vsmixto6|j|s|out)$/i
+export default handler
