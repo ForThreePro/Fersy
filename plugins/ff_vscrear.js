@@ -36,7 +36,7 @@ const crear = async (m, { conn, args, usedPrefix, command }) => {
         diseño = { header: `ㅤ ㅤㅤ ˗ˏˋ ꒰ ♡ ꒱ ˎˊ˗\n🩷⃝☁️🍭̊${groupName}.🍭🩷⃝☁️`, icon: '🍭', suplente: '🧁' }
     }
     if(tipo === 'MASC'){ // LUXURY
-        diseño = { header: `ㅤㅤ👑˗ˏˋ ꒰ ${groupName} ꒱ ˎˊ˗👑\n✧･ﾟ: *✧･ﾟ:* 🥂 *:･ﾟ✧*:･ﾟ✧`, icon: '🥥', suplente: '🥂' }
+        diseño = { header: `ㅤ👑˗ˏˋ ꒰ ${groupName} ꒱ ˎˊ˗👑\n✧･ﾟ: *✧･ﾟ:* 🥂 *:･ﾟ✧*:･ﾟ✧`, icon: '🥥', suplente: '🥂' }
     }
     if(tipo === 'MIXTO'){ // GALAXY
         diseño = { header: `.　☆\n　　★彡\n🌌⃟✨ ${groupName} ✨⃟🌌`, icon: '🍁', suplente: '☄️' }
@@ -129,5 +129,20 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
     if (['anotar','suplente','salir'].includes(command)) return anotar(m, {conn, args, usedPrefix, command})
 }
 
+handler.help = [
+    'v4fem <hora> <pais> <modalidad>',
+    'v4masc <hora> <pais> <modalidad>',
+    'v4mixto <hora> <pais> <modalidad>',
+    'v6fem <hora> <pais> <modalidad>',
+    'v6masc <hora> <pais> <modalidad>',
+    'v6mixto <hora> <pais> <modalidad>',
+    'anotar <numSala> @user1 @user2',
+    'suplente <numSala> @user',
+    'salir <numSala> @user'
+]
+handler.tags = ['freefire']
 handler.command = /^(v[46](fem|masc|mixto)|anotar|suplente|salir)$/i
+handler.group = true
+handler.admin = true // solo admin puede crear y anotar
+
 export default handler
