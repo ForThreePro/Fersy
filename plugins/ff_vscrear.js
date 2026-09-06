@@ -21,8 +21,7 @@ const crear = async (m, { conn, args, usedPrefix, command }) => {
     }
 
     const modalidad = args.slice(2).join(' ') || 'APOS';
-
-    let groupName = 'VS'
+    let groupName = 'VS TEAM'
     if(m.isGroup){
         let groupMeta = await conn.groupMetadata(m.chat)
         groupName = groupMeta.subject.toUpperCase()
@@ -30,37 +29,58 @@ const crear = async (m, { conn, args, usedPrefix, command }) => {
 
     let cantidad = command.includes('6')? 6 : 4
     let tipo = command.includes('fem')? 'FEM' : command.includes('masc')? 'MASC' : 'MIXTO'
-    let titulo = `${cantidad}VS${cantidad} ${tipo}`
 
-    let playerIcon = tipo === 'FEM'? '🍭' : tipo === 'MASC'? '🥥' : '🍁'
-    let suplenteIcon = '🧁'
-    let icons1 = Array(cantidad).fill(playerIcon)
-    let icons2 = [suplenteIcon, suplenteIcon]
+    // DISEÑOS
+    let diseño = {}
+    if(tipo === 'FEM'){ // KAWAI
+        diseño = { header: `ㅤ ㅤㅤ ˗ˏˋ ꒰ ♡ ꒱ ˎˊ˗\n🩷⃝☁️🍭̊${groupName}.🍭🩷⃝☁️`, icon: '🍭', suplente: '🧁' }
+    }
+    if(tipo === 'MASC'){ // LUXURY
+        diseño = { header: `ㅤㅤ👑˗ˏˋ ꒰ ${groupName} ꒱ ˎˊ˗👑\n✧･ﾟ: *✧･ﾟ:* 🥂 *:･ﾟ✧*:･ﾟ✧`, icon: '🥥', suplente: '🥂' }
+    }
+    if(tipo === 'MIXTO'){ // GALAXY
+        diseño = { header: `.　☆\n　　★彡\n🌌⃟✨ ${groupName} ✨⃟🌌`, icon: '🍁', suplente: '☄️' }
+    }
 
-    vs[m.chat] = { jugadores: [], suplentes: [], titulo, modalidad, horasEnPais, icons1, icons2, header: groupName };
+    vs[m.chat] = vs[m.chat] || { salas: [], tipo, diseño, groupName }
+    if(vs[m.chat].tipo!== tipo) vs[m.chat] = { salas: [], tipo, diseño, groupName } // reinicia si cambia de tipo
+
+    vs[m.chat].salas.push({
+        jugadores: [],
+        suplentes: [],
+        modalidad,
+        horasEnPais,
+        cantidad,
+        icons1: Array(cantidad).fill(diseño.icon),
+        icons2: [diseño.suplente, diseño.suplente]
+    })
+
     await actualizarLista(m.chat, conn, usedPrefix)
-    m.react('🎮')
+    m.react(diseño.icon)
 }
 
-const anotar = async (m, { conn, usedPrefix, command }) => {
-    if (!vs[m.chat]) return conn.reply(m.chat, `*❌ No hay VS activa*`, m)
-    let sala = vs[m.chat]
+const anotar = async (m, { conn, args, usedPrefix, command }) => {
+    if (!vs[m.chat] ||!vs[m.chat].salas.length) return conn.reply(m.chat, `*❌ No hay VS activa*`, m)
+    let salaNum = parseInt(args[0]) - 1
+    if(isNaN(salaNum)) salaNum = 0
+
+    let sala = vs[m.chat].salas[salaNum]
+    if(!sala) return conn.reply(m.chat, `*❌ Sala ${args[0]} no existe*`, m)
+
     let users = m.mentionedJid || []
-    if(users.length === 0) return conn.reply(m.chat, `*❌ Menciona a alguien*\nEj:.anotar @pepito @juana`, m)
+    if(users.length === 0) return conn.reply(m.chat, `*❌ Menciona a alguien*\nEj:.anotar 1 @pepito @juana`, m)
 
     for(let user of users){
         sala.jugadores = sala.jugadores.filter(v => v!== user)
         sala.suplentes = sala.suplentes.filter(v => v!== user)
 
         if (command === 'anotar') {
-            if (sala.jugadores.length >= sala.icons1.length) return conn.reply(m.chat, '*⚠️ Jugadores llenos*', m)
+            if (sala.jugadores.length >= sala.cantidad) return conn.reply(m.chat, `*⚠️ Sala ${salaNum+1} llena*`, m)
             sala.jugadores.push(user)
-            await conn.reply(m.chat, `✅ @${user.split('@')[0]} ANOTADO 🎮`, m, { mentions: [user] })
         }
         if (command === 'suplente') {
-            if (sala.suplentes.length >= sala.icons2.length) return conn.reply(m.chat, '*⚠️ Suplentes llenos*', m)
+            if (sala.suplentes.length >= 2) return conn.reply(m.chat, `*⚠️ Suplentes sala ${salaNum+1} llenos*`, m)
             sala.suplentes.push(user)
-            await conn.reply(m.chat, `✅ @${user.split('@')[0]} SUPLENTE 🌸`, m, { mentions: [user] })
         }
         if (command === 'salir') {
             await conn.reply(m.chat, `❌ @${user.split('@')[0]} salió`, m, { mentions: [user] })
@@ -70,42 +90,44 @@ const anotar = async (m, { conn, usedPrefix, command }) => {
 }
 
 const actualizarLista = async (chat, conn, usedPrefix) => {
-    let sala = vs[chat]
-    let listaJug = sala.jugadores.map((v, i) => `┆⋆${sala.icons1[i]} @${v.split('@')[0]}`).join('\n')
-    let listaSup = sala.suplentes.map((v, i) => `┆ ⋆${sala.icons2[i]} @${v.split('@')[0]}`).join('\n')
+    let data = vs[chat]
+    let d = data.diseño
+    let todasSalas = ''
 
-    for(let i = sala.jugadores.length; i < sala.icons1.length; i++){ listaJug += `\n┆⋆${sala.icons1[i]} ` }
-    for(let i = sala.suplentes.length; i < sala.icons2.length; i++){ listaSup += `\n┆ ⋆${sala.icons2[i]} ` }
+    data.salas.forEach((sala) => {
+        let listaJug = sala.jugadores.map((v) => `┆⋆${sala.icons1[0]} @${v.split('@')[0]}`).join('\n')
+        let listaSup = sala.suplentes.map((v) => `┆ ⋆${sala.icons2[0]} @${v.split('@')[0]}`).join('\n')
 
-    const message = `ㅤ ㅤㅤ ˗ˏˋ ꒰ ♡ ꒱ ˎˊ˗
-🩷⃝☁️🍭̊${sala.header}.🍭🩷⃝☁️
+        for(let j = sala.jugadores.length; j < sala.cantidad; j++){ listaJug += `\n┆⋆${sala.icons1[0]} ` }
+        for(let j = sala.suplentes.length; j < 2; j++){ listaSup += `\n┆ ⋆${sala.icons2[0]} ` }
 
-⁀➴
-┆ *${sala.icons2[0]}MODO : ${sala.modalidad}${sala.icons2[0]}*
-┆⋆.˚ּ ֶָ ${sala.horasEnPais.PE}🇵🇪${sala.horasEnPais.CL}🇨🇱🇧🇴 ${sala.horasEnPais.AR}🇦🇷
-┆⋆𝗥𝗶𝘃𝗮𝗹:
-${listaJug}
-┆ *Suplentes:*
-${listaSup}
-╰────────────⁀➴
+        todasSalas += `┆ *${sala.icons2[0]}MODO : ${sala.modalidad}${sala.icons2[0]}*\n`
+        todasSalas += `┆⋆.˚ּ ֶָ ${sala.horasEnPais.PE} 🇵🇪${sala.horasEnPais.CL}🇨🇱🇧🇴 ${sala.horasEnPais.AR}🇦🇷\n`
+        todasSalas += `┆⋆𝗥𝗶𝘃𝗮𝗹:\n${listaJug}\n`
+        todasSalas += `┆ *Suplentes:*\n${listaSup}\n`
+        todasSalas += `╰────────────⁀➴\n\n`
+    })
 
+    const message = `${d.header}\n\n${todasSalas}
 ╭─「 COMO ANOTARSE 」
-│ Admin: *.anotar @user1 @user2*
-│ Admin: *.suplente @user*
-│ Admin: *.salir @user*
+│ Admin: *.anotar 1 @user1 @user2*
+│ Admin: *.suplente 2 @user*
+│ Admin: *.salir 1 @user*
 │
 │ Players:
-│ Reacciona con 😎 = Quiero JUGAR ❤️
-│ Reacciona con 🌸 = Quiero SUPLENTE 🤖
+│ 😎 = Quiero JUGAR ❤️
+│ 🌸 = Quiero SUPLENTE 🤖
 ╰───────────────────`;
 
-    await conn.sendMessage(chat, { text: message, mentions: [...sala.jugadores,...sala.suplentes] })
+    let mentions = []
+    data.salas.forEach(s => mentions.push(...s.jugadores,...s.suplentes))
+    await conn.sendMessage(chat, { text: message, mentions })
 }
 
 const handler = async (m, { conn, args, usedPrefix, command }) => {
-    if (/^v[46](fem|masc|mixto)?$/i.test(command)) return crear(m, {conn, args, usedPrefix, command})
-    if (['anotar','suplente','salir'].includes(command)) return anotar(m, {conn, usedPrefix, command})
+    if (/^v[46](fem|masc|mixto)$/i.test(command)) return crear(m, {conn, args, usedPrefix, command})
+    if (['anotar','suplente','salir'].includes(command)) return anotar(m, {conn, args, usedPrefix, command})
 }
 
-handler.command = /^(v[46](fem|masc|mixto)?|anotar|suplente|salir)$/i
+handler.command = /^(v[46](fem|masc|mixto)|anotar|suplente|salir)$/i
 export default handler
