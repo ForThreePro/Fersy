@@ -9,19 +9,8 @@ function getUser(who) {
   if (!global.db.data.users) global.db.data.users = {}
   if (!global.db.data.users[who]) {
     global.db.data.users[who] = {
-      exp: 0,
-      level: 0,
-      money: 0,
-      limit: 0,
-      registered: false,
-      role: 'Principiante',
-      age: null,
-      birth: null,
-      country: null,
-      hobby: null,
-      bio: null,
-      gender: null,
-      marriage: null
+      exp: 0, level: 0, money: 0, limit: 0, registered: false, role: 'Principiante',
+      age: null, birth: null, country: null, hobby: null, bio: null, gender: null, marriage: null
     }
   }
   return global.db.data.users[who]
@@ -34,7 +23,14 @@ let handler = async (m, { conn, args }) => {
     let who = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : m.sender
     let user = getUser(who)
 
-    let name = await conn.getName(who).catch(() => 'Usuario')
+    // ARREGLO: getName sin.catch
+    let name
+    try {
+      name = await conn.getName(who)
+    } catch {
+      name = m.pushName || 'Usuario'
+    }
+
     let number = who.split('@')[0]
     let exp = user.exp || 0
     let level = user.level || 0
@@ -108,7 +104,7 @@ let handler = async (m, { conn, args }) => {
   } catch (e) {
     console.error(e)
     await react(conn, m, "❌")
-    await m.reply(`❌ Error: ${e.message}\n\nAsegúrate de tener la DB activa. Si usas baileys + lowdb, reinicia el bot.`)
+    await m.reply(`❌ Error: ${e.message}`)
   }
 }
 
@@ -119,41 +115,16 @@ handler.before = async (m, { conn }) => {
   let [cmd,...text] = m.text.trim().split(' ')
   text = text.join(' ')
 
-  if (cmd === '.setedad' || cmd === '.setage') {
-    if (!text) return m.reply(`Uso:.setedad 18`)
-    user.age = text
-    return m.reply(`✅ Edad: ${text}`)
+  if (cmd === '.setedad') { user.age = text; return m.reply(`✅ Edad: ${text}`) }
+  if (cmd === '.setcumple') {
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(text)) return m.reply(`Formato:.setcumple DD/MM/YYYY`)
+    user.birth = text; return m.reply(`✅ Cumple: ${text}`)
   }
-  if (cmd === '.setcumple' || cmd === '.setbirth') {
-    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(text)) return m.reply(`Formato:.setcumple DD/MM/YYYY\nEj:.setcumple 25/12/2000`)
-    user.birth = text
-    return m.reply(`✅ Cumple: ${text}`)
-  }
-  if (cmd === '.setpais' || cmd === '.setcountry') {
-    if (!text) return m.reply(`Uso:.setpais Perú`)
-    user.country = text
-    return m.reply(`✅ País: ${text}`)
-  }
-  if (cmd === '.sethobby') {
-    if (!text) return m.reply(`Uso:.sethobby Jugar Free Fire`)
-    user.hobby = text
-    return m.reply(`✅ Hobby: ${text}`)
-  }
-  if (cmd === '.setbio') {
-    if (!text) return m.reply(`Uso:.setbio Tu biografía`)
-    user.bio = text
-    return m.reply(`✅ Bio actualizada`)
-  }
-  if (cmd === '.setgenero' || cmd === '.setgender') {
-    if (!text) return m.reply(`Uso:.setgenero Hombre/Mujer`)
-    user.gender = text
-    return m.reply(`✅ Género: ${text}`)
-  }
-  if (cmd === '.setestado' || cmd === '.setmarriage') {
-    if (!text) return m.reply(`Uso:.setestado Soltero/Casado`)
-    user.marriage = text
-    return m.reply(`✅ Estado: ${text}`)
-  }
+  if (cmd === '.setpais') { user.country = text; return m.reply(`✅ País: ${text}`) }
+  if (cmd === '.sethobby') { user.hobby = text; return m.reply(`✅ Hobby: ${text}`) }
+  if (cmd === '.setbio') { user.bio = text; return m.reply(`✅ Bio actualizada`) }
+  if (cmd === '.setgenero') { user.gender = text; return m.reply(`✅ Género: ${text}`) }
+  if (cmd === '.setestado') { user.marriage = text; return m.reply(`✅ Estado: ${text}`) }
 }
 
 handler.help = ['perfil @user']
