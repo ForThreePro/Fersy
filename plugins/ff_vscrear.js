@@ -52,12 +52,12 @@ const anotar = async (m, { conn, usedPrefix, command }) => {
         sala.jugadores = sala.jugadores.filter(v => v!== user)
         sala.suplentes = sala.suplentes.filter(v => v!== user)
 
-        if (command === 'anotar') { // SOLO ANOTAR
+        if (command === 'anotar') {
             if (sala.jugadores.length >= sala.icons1.length) return conn.reply(m.chat, '*⚠️ Jugadores llenos*', m)
             sala.jugadores.push(user)
             await conn.reply(m.chat, `✅ @${user.split('@')[0]} ANOTADO 🎮`, m, { mentions: [user] })
         }
-        if (command === 'suplente') { // SOLO SUPLENTE
+        if (command === 'suplente') {
             if (sala.suplentes.length >= sala.icons2.length) return conn.reply(m.chat, '*⚠️ Suplentes llenos*', m)
             sala.suplentes.push(user)
             await conn.reply(m.chat, `✅ @${user.split('@')[0]} SUPLENTE 🌸`, m, { mentions: [user] })
@@ -93,6 +93,10 @@ ${listaSup}
 │ Admin: *.anotar @user1 @user2*
 │ Admin: *.suplente @user*
 │ Admin: *.salir @user*
+│
+│ Players:
+│ Reacciona con 😎 = Quiero JUGAR ❤️
+│ Reacciona con 🌸 = Quiero SUPLENTE 🤖
 ╰───────────────────`;
 
     await conn.sendMessage(chat, { text: message, mentions: [...sala.jugadores,...sala.suplentes] })
@@ -100,8 +104,8 @@ ${listaSup}
 
 const handler = async (m, { conn, args, usedPrefix, command }) => {
     if (/^v[46](fem|masc|mixto)?$/i.test(command)) return crear(m, {conn, args, usedPrefix, command})
-    if (['anotar','suplente','salir'].includes(command)) return anotar(m, {conn, usedPrefix, command}) // BORRADO J S OUT
+    if (['anotar','suplente','salir'].includes(command)) return anotar(m, {conn, usedPrefix, command})
 }
 
-handler.command = /^(v[46](fem|masc|mixto)?|anotar|suplente|salir)$/i // BORRADO J S OUT
+handler.command = /^(v[46](fem|masc|mixto)?|anotar|suplente|salir)$/i
 export default handler
