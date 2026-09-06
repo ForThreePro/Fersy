@@ -13,7 +13,6 @@ const UGUU_UPLOAD = 'https://uguu.se/upload'
 const SVETY_API = 'https://api.sventy.store/api/ytdl'
 const CLIP_SECONDS = 30
 
-// ===== FUNCIONES BASE =====
 async function recognizeUrl(audioUrl) {
   const res = await fetch(SONGFINDER_API, {
     method: 'POST',
@@ -67,33 +66,26 @@ async function downloadMp3(youtubeUrl) {
     return json.data.url
 }
 
-// ===== COMANDO.letra UNICO =====
 const handler = async (m, { conn }) => {
     await m.react('📝')
     try {
-        // 1. Detectar cancion
         const song = await detectSongFromMessage(m, conn)
-
-        // 2. Buscar en YT para sacar link
         await m.react('🔍')
         const search = await yts(`${song.title} ${song.artist}`)
         const video = search.videos[0]
         if(!video) throw 'No encontré el video en YouTube'
 
-        // 3. Descargar MP3 con svety
         await m.react('⬇️')
         const mp3Url = await downloadMp3(video.url)
 
-        // 4. Buscar letra
         await m.react('📄')
         const lyricsRes = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(song.artist)}/${encodeURIComponent(song.title)}`).then(r => r.json())
         let lyrics = lyricsRes.lyrics || 'No encontré la letra. Jon la perdió'
         if(lyrics.length > 1200) lyrics = lyrics.slice(0, 1200) + '\n\n...Muy larga, prefiero dormir 😴'
 
-        // 5. Enviar todo junto
         await m.react('✅')
 
-        // Enviar info + letra
+        // 1. Enviar letra
         await conn.sendMessage(m.chat, {
             text: `🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
 
@@ -102,20 +94,23 @@ const handler = async (m, { conn }) => {
 📌 *${song.title}* - *${song.artist}*
 💿 *${song.album || 'Album desconocido'}*
 
-\`\`${lyrics}\`\`\`
+\`\`${lyrics}\`\`
 
 ━━━━━━━━━━━
 > *"Si hay lasaña, canto"* 🍝
 ━━━━━━━━━━━`
         }, { quoted: m })
 
-        // Enviar MP3
+        // 2. Enviar MP3 como DOCUMENTO para que si se pueda descargar
         await conn.sendMessage(m.chat, {
-            audio: { url: mp3Url },
+            document: { url: mp3Url },
             mimetype: 'audio/mpeg',
             fileName: `${song.title} - ${song.artist}.mp3`,
-            caption: `😼 Aquí tienes tu lasaña musical`
+            caption: `😼 Aquí tienes tu lasaña musical\n> Si no reproduce, descárgalo`
         }, { quoted: m })
+
+        // 3. Opcional: También mandarlo como nota de voz
+        // await conn.sendMessage(m.chat, { audio: { url: mp3Url }, mimetype: 'audio/mpeg', ptt: true }, { quoted: m })
 
     } catch(e) {
         await m.react('❌')
