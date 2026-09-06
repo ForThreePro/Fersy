@@ -1,4 +1,5 @@
-import fetch from 'node-fetch'
+import fetch from "node-fetch"
+import yts from 'yt-search'
 import { FormData, Blob } from 'formdata-node'
 import { fileTypeFromBuffer } from 'file-type'
 import { spawn } from 'child_process'
@@ -6,15 +7,116 @@ import crypto from 'crypto'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-import yts from 'yt-search'
 
-/* ====== CONFIG ====== */
-const STELLAR_KEY = 'api-b6GCD' // ⚠️ Cambia esta key
 const SONGFINDER_API = 'https://songfinder.gg/api/recognize/url'
 const UGUU_UPLOAD = 'https://uguu.se/upload'
 const CLIP_SECONDS = 30
 
-/* ====== SONGFINDER ====== */
+const handler = async (m, { conn }) => {
+    try {
+        let q = m.quoted? m.quoted : m
+        let mime = (q.msg || q).mimetype || ''
+        
+        if (!mime || !/audio|video/.test(mime)) return m.reply(`🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
+
+.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.💭꒷
+
+ ⤷ ┇ 𝗕𝗨𝗦𝗖𝗔𝗗𝗢𝗥 𝗗𝗘 𝗠𝗨𝗦𝗜𝗖𝗔 ：✿ 。
+
+──愛 *COMO USAR* ╏ ❄️
+💭 ➛ Responde a un audio o video con: .song
+💭 ➛ Ejemplo: Responde a un estado de WhatsApp
+
+━━━━━━━━━━━
+*Owner*: @whois.yallico | *Numero*: +51 927 174 369
+━━━━━━━━━━━`)
+
+        await m.react('🔍')
+        let buffer = await q.download()
+        if (!buffer) throw 'Error al descargar'
+
+        // 1. DETECTAR CANCION
+        await m.reply(`🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
+
+.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.💭꒷
+
+ ⤷ ┇ 𝗗𝗘𝗧𝗘𝗖𝗧𝗔𝗡𝗗𝗢 𝗖𝗔𝗡𝗖𝗜𝗢𝗡 ：✿ 。
+꒰ ◞⁺⊹ ．Shazam Saiyan •
+
+  ꒱ ׁ. ᘏ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢 ׅ 𝆬 ָ֢ ෆ
+💭 ➛ Analizando ${CLIP_SECONDS}s de audio...
+💭 ➛ Extrayendo energia del sonido ⚡
+
+━━━━━━━━━━━`)
+
+        let clip = await prepareClip(buffer, CLIP_SECONDS)
+        let url = await uploadUguu(clip)
+        let song = await recognizeUrl(url)
+        let searchQuery = `${song.title} ${song.artist}`.replace(/\[.*?\]|\(feat.*?\)/gi, '').trim()
+
+        // 2. BUSCAR Y DESCARGAR
+        await m.react('📥')
+        let search = await yts(searchQuery)
+        let result = search.videos[0]
+        if (!result) throw 'No se encontró la canción en YouTube'
+
+        const { title, thumbnail, timestamp, views, videoId, author } = result
+        const shortUrl = `https://youtu.be/${videoId}`
+        const thumb = (await conn.getFile(thumbnail)).data
+        const vistas = formatViews(views)
+
+        // Enviar info
+        await conn.sendMessage(m.chat, {
+            image: thumb,
+            caption: `🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
+
+.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.💭꒷
+
+ ⤷ ┇ 𝗖𝗔𝗡𝗖𝗜𝗢𝗡 𝗘𝗡𝗖𝗢𝗡𝗧𝗥𝗔𝗗𝗔 ：✿ 。
+꒰ ◞⁺⊹ ．Descarga completa •
+
+  ꒱ ׁ. ᘏ 𝗗𝗘𝗧𝗔𝗟𝗘𝗦 ׅ 𝆬 ָ֢ ෆ
+📌 ➛ Titulo: *${title}*
+👤 ➛ Artista: *${author.name}*
+👁️ ➛ Vistas: *${vistas}*
+⏱️ ➛ Duracion: *${timestamp}*
+🔗 ➛ Link: ${shortUrl}
+
+━━━━━━━━━━━
+*Owner*: @whois.yallico | *Numero*: +51 927 174 369
+> *Descargando con energia Saiyan* ⚡
+━━━━━━━━━━━`
+        }, { quoted: m })
+
+        // 3. DESCARGAR AUDIO
+        const mediaUrl = await getMediaUrl(shortUrl)
+        if (!mediaUrl) throw 'No se pudo obtener el audio.'
+
+        await conn.sendMessage(m.chat, {
+            audio: { url: mediaUrl },
+            fileName: `${title}.mp3`,
+            mimetype: 'audio/mpeg'
+        }, { quoted: m })
+
+        await m.react('✅')
+
+    } catch(e) {
+        await m.react('❌')
+        m.reply(`🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
+
+.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.⚠️꒷
+
+ ⤷ ┇ 𝗘𝗥𝗢𝗥 𝗗𝗘 𝗦𝗜𝗦𝗧𝗘𝗠𝗔 ：✿ 。
+
+──愛 *FALLA* ╏ ❄️
+⚠️ ➛ ${e.message}
+⚠️ ➛ Intenta con un audio/video mas claro
+
+━━━━━━━━━━━`)
+    }
+}
+
+// ===== FUNCIONES =====
 async function recognizeUrl(audioUrl) {
   const res = await fetch(SONGFINDER_API, {
     method: 'POST',
@@ -46,124 +148,21 @@ function prepareClip(buffer, seconds = CLIP_SECONDS) {
   })
 }
 
-/* ====== STELLAR YTDL ====== */
-async function searchYT(query) {
-  let res = await yts(query)
-  let vid = res.videos[0]
-  if (!vid) throw new Error('No se encontró en YouTube')
-  return vid
+async function getMediaUrl(url) {
+    try {
+        const res = await fetch(`https://api.sventy.store/api/ytdl?url=${encodeURIComponent(url)}`).then(r => r.json())
+        return res.data?.download || null
+    } catch {
+        return null
+    }
 }
 
-async function downloadStellar(url) {
-  let apiUrl = `https://api.stellarwa.xyz/dl/ytmp3?url=${encodeURIComponent(url)}&key=${STELLAR_KEY}`
-  let res = await fetch(apiUrl)
-  let json = await res.json()
-
-  if (!json.status) throw new Error(json.message || 'Error al descargar con Stellar')
-
-  return {
-    downloadUrl: json.result.dl,
-    title: json.result.title,
-    thumb: json.result.thumb
-  }
-}
-
-/* ====== HANDLER.SONG ====== */
-let handler = async (m, { conn }) => {
-  let q = m.quoted? m.quoted : m
-  let mime = (q.msg || q).mimetype || ''
-  if (!mime ||!/audio|video/.test(mime)) return m.reply(`🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
-
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.💭꒷
-
- ⤷ ┇ 𝗕𝗨𝗦𝗖𝗔𝗗𝗢𝗥 𝗗𝗘 𝗠𝗨𝗦𝗜𝗖𝗔 ：✿ 。
-
-──愛 *COMO USAR* ╏ ❄️
-💭 ➛ Responde a un audio o video con:.song
-💭 ➛ Ejemplo: Responde a un estado de WhatsApp
-
-━━━━━━━━━━━
-*Owner*: @whois.yallico | *Numero*: +51 927 174 369
-━━━━━━━━━━━`)
-
-  await m.react('🔍')
-  let buffer = await q.download()
-  if (!buffer) return m.reply('❌ Error al descargar')
-
-  try {
-    // 1. DETECTAR
-    await m.reply(`🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
-
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.💭꒷
-
- ⤷ ┇ 𝗗𝗘𝗧𝗘𝗖𝗧𝗔𝗡𝗗𝗢 𝗖𝗔𝗡𝗖𝗜𝗢𝗡 ：✿ 。
-꒰ ◞⁺⊹ ．Shazam Saiyan •
-
-  ꒱ ׁ. ᘏ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢 ׅ 𝆬 ָ֢ ෆ
-💭 ➛ Analizando ${CLIP_SECONDS}s de audio...
-💭 ➛ Extrayendo energia del sonido ⚡
-
-━━━━━━━━━━━
-*Owner*: @whois.yallico | *Numero*: +51 927 174 369
-> *Esperando resultado...*
-━━━━━━━━━━━`)
-
-    let clip = await prepareClip(buffer, CLIP_SECONDS)
-    let url = await uploadUguu(clip)
-    let song = await recognizeUrl(url)
-    let searchQuery = `${song.title} ${song.artist}`.replace(/\[.*?\]|\(feat.*?\)/gi, '').trim()
-
-    // 2. BUSCAR Y DESCARGAR CON STELLAR
-    await m.react('📥')
-    let vid = await searchYT(searchQuery)
-    let audio = await downloadStellar(vid.url)
-    let audioBuffer = await (await fetch(audio.downloadUrl)).buffer()
-
-    // 3. ENVIAR 1 SOLO MENSAJE + AUDIO
-    let texto = `🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
-
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.💭꒷
-
- ⤷ ┇ 𝗖𝗔𝗡𝗖𝗜𝗢𝗡 𝗘𝗡𝗖𝗢𝗡𝗧𝗥𝗔𝗗𝗔 ：✿ 。
-꒰ ◞⁺⊹ ．Descarga completa •
-
-  ꒱ ׁ. ᘏ 𝗗𝗘𝗧𝗔𝗟𝗘𝗦 ׅ 𝆬 ָ֢ ෆ
-💭 ➛ Titulo: *${audio.title}*
-💭 ➛ Artista: *${song.artist}*
-💭 ➛ Duracion: *${vid.timestamp}*
-💭 ➛ Estado: *Enviando audio* ✅
-
-━━━━━━━━━━━
-*Owner*: @whois.yallico | *Numero*: +51 927 174 369
-> *"La musica es el poder del alma"* 🎵
-━━━━━━━━━━━`
-
-    await conn.sendMessage(m.chat, { text: texto }, { quoted: m })
-
-    await conn.sendMessage(m.chat, {
-      audio: audioBuffer,
-      mimetype: 'audio/mpeg',
-      fileName: `${audio.title}.mp3`
-    }, { quoted: m })
-
-    await m.react('✅')
-
-  } catch(e) {
-    await m.react('❌')
-    m.reply(`🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
-
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.⚠️꒷
-
- ⤷ ┇ 𝗘𝗥𝗢𝗥 𝗗𝗘 𝗦𝗜𝗦𝗧𝗘𝗠𝗔 ：✿ 。
-
-──愛 *FALLA* ╏ ❄️
-⚠️ ➛ ${e.message}
-⚠️ ➛ Intenta con un audio mas claro
-
-━━━━━━━━━━━
-*Owner*: @whois.yallico | *Numero*: +51 927 174 369
-━━━━━━━━━━━`)
-  }
+function formatViews(views) {
+    if (views === undefined) return "No disponible"
+    if (views >= 1_000_000_000) return `${(views / 1_000_000_000).toFixed(1)}B`
+    if (views >= 1_000_000) return `${(views / 1_000_000).toFixed(1)}M`
+    if (views >= 1_000) return `${(views / 1_000).toFixed(1)}k`
+    return views.toString()
 }
 
 handler.help = ['song']
