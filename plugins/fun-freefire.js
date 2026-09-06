@@ -5,7 +5,6 @@ global.db.listas = global.db.listas || {}
 
 let idLista = `vs16_${m.chat}`
 
-// Reinicia la lista
 global.db.listas[idLista] = {
     titulares: [],
     suplentes: [],
@@ -34,10 +33,8 @@ let lista = `߳₊🪭⋆.˚ 𝟦𝑽𝑺4 𝑺𝑼𝑹 ꒱ ˖ׄ ୭
 🎀 = Jugadora | 🌸 = Suplente | ❌ = Salir`
 
 let msg = await conn.sendMessage(m.chat, { text: lista }, { quoted: m })
-
 global.db.listas[idLista].msgId = msg.key.id
 
-// El bot se reacciona solo
 await conn.sendMessage(m.chat, { react: { text: '🎀', key: msg.key }})
 await conn.sendMessage(m.chat, { react: { text: '🌸', key: msg.key }})
 await conn.sendMessage(m.chat, { react: { text: '❌', key: msg.key }})
@@ -47,21 +44,17 @@ await conn.sendMessage(m.chat, { react: { text: '❌', key: msg.key }})
 handler.help = ['vs16']
 handler.tags = ['ff']
 handler.command = /^vs16$/i
-export default handler
 
-// ESTO VA ABAJO DEL TODO Y ES LO IMPORTANTE
-export async function before(m) {
-    if (!m.message) return
-    if (!m.message.reactionMessage) return
+// ESTA ES LA CLAVE: handler.all detecta reacciones
+handler.all = async function(m) {
+    if (!m.messageStubType || m.messageStubType!== 44) return // 44 = reacción
 
-    let { conn } = global // agarra conn de global
+    let { conn } = global
+    let reaction = m.messageStubParameters[0] // el emoji
+    let key = { id: m.messageStubParameters[1], remoteJid: m.chat } // id del mensaje
+    let user = m.messageStubParameters[2] + '@s.whatsapp.net' // quien reaccionó
 
-    let reaction = m.message.reactionMessage.text
-    let key = m.message.reactionMessage.key
-    let user = m.sender
     let name = await conn.getName(user)
-
-    // Buscar en que lista está
     let idLista = Object.keys(global.db.listas || {}).find(k => global.db.listas[k].msgId === key.id)
     if(!idLista) return
 
@@ -95,7 +88,7 @@ export async function before(m) {
         aviso = `❌ @${user.split('@')[0]} salió de la lista`
     }
 
-    if(aviso) await conn.sendMessage(m.chat, { text: aviso, mentions: [user] }, { quoted: m })
+    if(aviso) await conn.sendMessage(m.chat, { text: aviso, mentions: [user] })
 
     // Actualizar lista
     let textoTit = lista.titulares.map((v,i) => `⌇🪭 ${i+1}. @${v.id.split('@')[0]}`).join('\n') || '⌇🪭𐑞'
@@ -121,3 +114,5 @@ ${textoSup}
         mentions: [...lista.titulares.map(v=>v.id),...lista.suplentes.map(v=>v.id)]
     })
 }
+
+export default handler
