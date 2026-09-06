@@ -17,9 +17,9 @@ const handler = async (m, { conn }) => {
         let q = m.quoted? m.quoted : m
         let mime = (q.msg || q).mimetype || ''
         
-        if (!mime || !/audio|video/.test(mime)) return m.reply(`🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
+        if (!mime || !/audio|video/.test(mime)) return m.reply(`🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
 
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.💭꒷
 
  ⤷ ┇ 𝗕𝗨𝗦𝗖𝗔𝗗𝗢𝗥 𝗗𝗘 𝗠𝗨𝗦𝗜𝗖𝗔 ：✿ 。
 
@@ -28,24 +28,24 @@ const handler = async (m, { conn }) => {
 💭 ➛ Ejemplo: Responde a un estado de WhatsApp
 
 ━━━━━━━━━━━
-*Owner*: @whois.yallico | *Numero*: +51 927 174 369
+*Bot*: GARFIELD BOT 🐱 | *Odia los lunes*
 ━━━━━━━━━━━`)
 
         await m.react('🔍')
         let buffer = await q.download()
-        if (!buffer) throw 'Error al descargar'
+        if (!buffer) throw 'Error al descargar. Garfield tiene hambre y no puede :('
 
         // 1. DETECTAR CANCION
-        await m.reply(`🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
+        await m.reply(`🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
 
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.💭꒷
 
  ⤷ ┇ 𝗗𝗘𝗧𝗘𝗖𝗧𝗔𝗡𝗗𝗢 𝗖𝗔𝗡𝗖𝗜𝗢𝗡 ：✿ 。
-꒰ ◞⁺⊹ ．Shazam Saiyan •
+꒰ ◞⁺⊹ ．Shazam Garfield •
 
   ꒱ ׁ. ᘏ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢 ׅ 𝆬 ָ֢ ෆ
 💭 ➛ Analizando ${CLIP_SECONDS}s de audio...
-💭 ➛ Extrayendo energia del sonido ⚡
+💭 ➛ Comiendo lasaña mientras busco 😼
 
 ━━━━━━━━━━━`)
 
@@ -58,7 +58,7 @@ const handler = async (m, { conn }) => {
         await m.react('📥')
         let search = await yts(searchQuery)
         let result = search.videos[0]
-        if (!result) throw 'No se encontró la canción en YouTube'
+        if (!result) throw 'No se encontró la canción en YouTube. Odio los lunes.'
 
         const { title, thumbnail, timestamp, views, videoId, author } = result
         const shortUrl = `https://youtu.be/${videoId}`
@@ -68,9 +68,9 @@ const handler = async (m, { conn }) => {
         // Enviar info
         await conn.sendMessage(m.chat, {
             image: thumb,
-            caption: `🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
+            caption: `🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
 
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.💭꒷
 
  ⤷ ┇ 𝗖𝗔𝗡𝗖𝗜𝗢𝗡 𝗘𝗡𝗖𝗢𝗡𝗧𝗥𝗔𝗗𝗔 ：✿ 。
 ꒰ ◞⁺⊹ ．Descarga completa •
@@ -83,14 +83,14 @@ const handler = async (m, { conn }) => {
 🔗 ➛ Link: ${shortUrl}
 
 ━━━━━━━━━━━
-*Owner*: @whois.yallico | *Numero*: +51 927 174 369
-> *Descargando con energia Saiyan* ⚡
+*Bot*: GARFIELD BOT 🐱
+> *"No me hables antes del café y la música"* ☕🎵
 ━━━━━━━━━━━`
         }, { quoted: m })
 
         // 3. DESCARGAR AUDIO
         const mediaUrl = await getMediaUrl(shortUrl)
-        if (!mediaUrl) throw 'No se pudo obtener el audio.'
+        if (!mediaUrl) throw 'No se pudo obtener el audio. Garfield está dormido.'
 
         await conn.sendMessage(m.chat, {
             audio: { url: mediaUrl },
@@ -102,15 +102,16 @@ const handler = async (m, { conn }) => {
 
     } catch(e) {
         await m.react('❌')
-        m.reply(`🐉 𓆩 𝗦𝗢𝗡 𝗚𝗢𝗞𝗨 𝗣𝗥𝗘𝗠 𓆪 🐉
+        m.reply(`🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
 
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.⚠️꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.⚠️꒷
 
  ⤷ ┇ 𝗘𝗥𝗢𝗥 𝗗𝗘 𝗦𝗜𝗦𝗧𝗘𝗠𝗔 ：✿ 。
 
 ──愛 *FALLA* ╏ ❄️
 ⚠️ ➛ ${e.message}
 ⚠️ ➛ Intenta con un audio/video mas claro
+⚠️ ➛ O dame lasaña y lo arreglo 😼
 
 ━━━━━━━━━━━`)
     }
