@@ -43,7 +43,7 @@ ${icons2.map(icono => `${icono}˚ `).join('\n')}
 
     // BOTON CON IMAGEN = SI JALA EN TESTE2
     await conn.sendMessage(m.chat, {
-        image: { url: 'https://i.imgur.com/8Km8K2d.jpg' }, // pon tu imagen
+        image: { url: 'https://files.evogb.win/QFXQtu.jpg' }, // pon tu imagen
         caption: message,
         footer: 'Toca para anotarte',
         buttons: [
