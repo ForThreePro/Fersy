@@ -1,8 +1,11 @@
-import fetch from 'node-fetch'
+import axios from 'axios'
 import FormData from 'form-data'
 
-const API_KEY = 'garfield-vip'
-const API_URL = `https://api.stellarwa.xyz/tools/removebg?key=${API_KEY}`
+// ===== CONFIG API STELLAR =====
+const api = {
+    url: 'https://api.stellarwa.xyz',
+    key: 'garfield-vip'
+}
 
 // ===== DISEÑO COTTI BOT =====
 const D = {
@@ -17,12 +20,44 @@ const D = {
     error: '🥀 NO FLORECIÓ'
 }
 
-const handler = async (m, { conn }) => {
-    try {
-        let q = m.quoted ? m.quoted : m
-        let mime = (q.msg || q).mimetype || ''
+function generateUniqueFilename(mime) {
+  const ext = mime.split('/')[1] || 'png'
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let id = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+  return `${id}.${ext}`
+}
 
-        if (!mime || !/image/.test(mime)) return m.reply(`${D.border}
+async function uploadToUguu(buffer, mime) {
+  const form = new FormData()
+  form.append('files[]', buffer, generateUniqueFilename(mime))
+
+  const res = await axios.post("https://uguu.se/upload.php", form, {
+    headers: form.getHeaders(),
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
+    timeout: 30000
+  })
+
+  const data = res.data
+  const url = data?.files?.[0]?.url
+  if (!url) throw new Error("Respuesta inválida de Uguu: " + JSON.stringify(data))
+  return url
+}
+
+async function removeBgFromUrl(url) {
+  const apiUrl = `${api.url}/tools/removebg?method=url&url=${encodeURIComponent(url)}&key=${api.key}`
+  const res = await axios.get(apiUrl, { responseType: 'arraybuffer' })
+  if (!res.data) {
+    throw new Error('Respuesta inválida del servidor de removebg')
+  }
+  return Buffer.from(res.data)
+}
+
+let handler = async (m, { conn, usedPrefix, command }) => {
+    const q = m.quoted || m
+    const mime = (q.msg || q).mimetype || ''
+    if (!mime.startsWith('image/')) {
+      return m.reply(`${D.border}
 ${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
 
 .⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
@@ -30,15 +65,16 @@ ${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
  ⤷ ┇ 𝗘𝗟𝗜𝗠𝗜𝗡𝗔𝗗𝗢𝗥 𝗗𝗘 𝗙𝗢𝗡𝗗𝗢
 
 ──愛 *COMO USAR* ╏ ❄️
-💭 ➛ Responde a una imagen con:.removebg
-💭 ➛ O manda imagen con caption .removebg
+💭 ➛ Responde a una imagen con: *${usedPrefix + command}*
 
 ${D.border2}
 ${D.footer}
 ━━━━━━━━━━━`)
+    }
 
-        await m.react('🪷')
-        await m.reply(`${D.border}
+    try {
+      await m.react('🪷')
+      await m.reply(`${D.border}
 ${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
 
 .⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
@@ -46,59 +82,34 @@ ${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
  ⤷ ┇ ${D.process} ：✿ 。
 
   ꒱ ׁ. ᘏ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢 ׅ 𝆬 ָ֢ ෆ
-💭 ➛ Procesando imagen...
-💭 ➛ Espera unos segundos 🌸
+💭 ➛ Subiendo imagen a Uguu...
+💭 ➛ Quitando fondo...
 
 ${D.border2}`)
 
-        // 1. Descargar imagen
-        let buffer = await q.download()
-        if (!buffer) throw 'Error al descargar la imagen'
+      const media = await q.download()
+      const uguuUrl = await uploadToUguu(media, mime)
+      const bufferNoBg = await removeBgFromUrl(uguuUrl)
 
-        // 2. Enviar a la API - CAMBIO CLAVE: 'file' en vez de 'image'
-        const form = new FormData()
-        form.append('file', buffer, { filename: 'image.png', contentType: mime }) // <- 'file'
-        
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            body: form,
-            headers: form.getHeaders()
-        })
-
-        if (!res.ok) throw `Error ${res.status}: ${await res.text()}`
-        
-        const result = await res.json()
-        
-        if (!result.status || !result.result) throw 'La API no devolvió imagen'
-
-        const imageUrl = result.result 
-
-        // 3. Descargar imagen resultante
-        const imageBuffer = await fetch(imageUrl).then(v => v.buffer())
-
-        await conn.sendMessage(m.chat, {
-            image: imageBuffer,
-            caption: `${D.border}
+      await conn.sendMessage(m.chat, {
+        image: bufferNoBg,
+        caption: `${D.border}
 ${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
 
 .⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
 
  ⤷ ┇ ${D.found} ：✿ 。
 
-  ꒱ ׁ. ᘏ 𝗥𝗘𝗦𝗨𝗟𝗧𝗔𝗗𝗢 ׅ 𝆬 ָ֢ ෆ
-📌 ➛ Fondo eliminado con éxito
-📌 ➛ Ya puedes usarla como sticker
-
 ${D.border2}
 ${D.footer}
 ━━━━━━━━━━━`
-        }, { quoted: m })
+      }, { quoted: m })
 
-        await m.react('✅')
+      await m.react('✅')
 
-    } catch(e) {
-        await m.react('❌')
-        m.reply(`${D.border}
+    } catch (e) {
+      await m.react('❌')
+      await m.reply(`${D.border}
 ${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
 
 .⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.⚠️꒷
