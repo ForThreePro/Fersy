@@ -4,97 +4,56 @@ global.db = global.db || {}
 global.db.listas = global.db.listas || {}
 
 let idLista = `vs16_${m.chat}`
+let args = m.text.split(' ')[1] //.tit.sup.out
 
-global.db.listas[idLista] = {
-    titulares: [],
-    suplentes: [],
-    maxTit: 4,
-    maxSup: 2,
-    msgId: ''
+// Si no hay lista, la crea
+if(!global.db.listas[idLista]){
+    global.db.listas[idLista] = {
+        titulares: [],
+        suplentes: [],
+        maxTit: 4,
+        maxSup: 2
+    }
 }
 
-let lista = `߳₊🪭⋆.˚ 𝟦𝑽𝑺4 𝑺𝑼𝑹 ꒱ ˖ׄ ୭
-╭ ꕀ ֹ
-⌇ ⸝⸝ 🆚 𖥦 ﹕
-⌇ ⸝⸝ ⏰ 𖥦 ﹕ _16 🇦🇷 ʾ 🇵🇪14_
-╰ ☆⃞ 　 ʾ 　 ๑
-╭ ꕀ ֹ
-⌇ ◟✦ 𓏼𝑻𝑰𝑻𝑼𝑳𝑨𝑹𝑬𝑺﹕ 0/4
-⌇🪭𐑞
-⌇🪭𐑞
-⌇🪭𐑞
-⌇🪭𐑞
-⌇ ◟✦ 𓏼𝑺𝑼𝑷𝑳𝑬𝑵𝑻𝑬𝑺﹕ 0/2
-⌇🎐𐑞
-⌇🎐𐑞
-╰ ☆⃞ 　 ʾ 　 ๑
-\`｡⁖. 𝑷𝒖𝒏𝒕𝒖𝒂𝒍𝒊𝒅𝒂𝒅 | 𝑺𝒊𝒏 𝒍𝒂𝒈 | 𝑹𝒆𝒔𝒑𝒆𝒕𝒐 ⁖｡\`
+let lista = global.db.listas[idLista]
+let user = m.sender
+let name = await conn.getName(user)
 
-🎀 = Jugadora | 🌸 = Suplente | ❌ = Salir`
-
-let msg = await conn.sendMessage(m.chat, { text: lista }, { quoted: m })
-global.db.listas[idLista].msgId = msg.key.id
-
-await conn.sendMessage(m.chat, { react: { text: '🎀', key: msg.key }})
-await conn.sendMessage(m.chat, { react: { text: '🌸', key: msg.key }})
-await conn.sendMessage(m.chat, { react: { text: '❌', key: msg.key }})
-
-}
-
-handler.help = ['vs16']
-handler.tags = ['ff']
-handler.command = /^vs16$/i
-
-// ESTA ES LA CLAVE: handler.all detecta reacciones
-handler.all = async function(m) {
-    if (!m.messageStubType || m.messageStubType!== 44) return // 44 = reacción
-
-    let { conn } = global
-    let reaction = m.messageStubParameters[0] // el emoji
-    let key = { id: m.messageStubParameters[1], remoteJid: m.chat } // id del mensaje
-    let user = m.messageStubParameters[2] + '@s.whatsapp.net' // quien reaccionó
-
-    let name = await conn.getName(user)
-    let idLista = Object.keys(global.db.listas || {}).find(k => global.db.listas[k].msgId === key.id)
-    if(!idLista) return
-
-    let lista = global.db.listas[idLista]
-
+// SISTEMA DE ANOTACION
+if(args){
     // Quitar de ambas
     lista.titulares = lista.titulares.filter(v => v.id!== user)
     lista.suplentes = lista.suplentes.filter(v => v.id!== user)
 
-    let aviso = ''
-
-    if(reaction === '🎀'){
+    if(args === 'tit'){
         if(lista.titulares.length < lista.maxTit){
             lista.titulares.push({id: user, name})
-            aviso = `🎀 @${user.split('@')[0]} se anotó como TITULAR`
+            await m.reply(`🎀 @${user.split('@')[0]} se anotó como TITULAR`, { mentions: [user] })
         } else {
-            aviso = `⚠️ Ya hay 4 titulares. Usa 🌸 para suplente`
+            return m.reply(`⚠️ Ya hay 4 titulares. Usa.sup para suplente`)
         }
     }
 
-    if(reaction === '🌸'){
+    if(args === 'sup'){
         if(lista.suplentes.length < lista.maxSup){
             lista.suplentes.push({id: user, name})
-            aviso = `🌸 @${user.split('@')[0]} se anotó como SUPLENTE`
+            await m.reply(`🌸 @${user.split('@')[0]} se anotó como SUPLENTE`, { mentions: [user] })
         } else {
-            aviso = `⚠️ Ya hay 2 suplentes`
+            return m.reply(`⚠️ Ya hay 2 suplentes`)
         }
     }
 
-    if(reaction === '❌'){
-        aviso = `❌ @${user.split('@')[0]} salió de la lista`
+    if(args === 'out'){
+        await m.reply(`❌ @${user.split('@')[0]} salió de la lista`, { mentions: [user] })
     }
+}
 
-    if(aviso) await conn.sendMessage(m.chat, { text: aviso, mentions: [user] })
+// ACTUALIZAR LISTA
+let textoTit = lista.titulares.map((v,i) => `⌇🪭 ${i+1}. @${v.id.split('@')[0]}`).join('\n') || '⌇🪭𐑞'
+let textoSup = lista.suplentes.map((v,i) => `⌇🎐 ${i+1}. @${v.id.split('@')[0]}`).join('\n') || '⌇🎐𐑞'
 
-    // Actualizar lista
-    let textoTit = lista.titulares.map((v,i) => `⌇🪭 ${i+1}. @${v.id.split('@')[0]}`).join('\n') || '⌇🪭𐑞'
-    let textoSup = lista.suplentes.map((v,i) => `⌇🎐 ${i+1}. @${v.id.split('@')[0]}`).join('\n') || '⌇🎐𐑞'
-
-    let texto = `߳₊🪭⋆.˚ 𝟦𝑽𝑺4 𝑺𝑼𝑹 ꒱ ˖ׄ ୭
+let texto = `߳₊🪭⋆.˚ 𝟦𝑽𝑺4 𝑺𝑼𝑹 ꒱ ˖ׄ ୭
 ╭ ꕀ ֹ
 ⌇ ⸝⸝ 🆚 𖥦 ﹕
 ⌇ ⸝⸝ ⏰ 𖥦 ﹕ _16 🇦🇷 ʾ 🇵🇪14_
@@ -107,12 +66,19 @@ ${textoSup}
 ╰ ☆⃞ 　 ʾ 　 ๑
 \`｡⁖. 𝑷𝒖𝒏𝒕𝒖𝒂𝒍𝒊𝒅𝒂𝒅 | 𝑺𝒊𝒏 𝒍𝒂𝒈 | 𝑹𝒆𝒔𝒑𝒆𝒕𝒐 ⁖｡\`
 
-🎀 = Jugadora | 🌸 = Suplente | ❌ = Salir`
+*COMO ANOTARSE:*
+🎀.tit vs16 = Jugadora
+🌸.sup vs16 = Suplente
+❌.out vs16 = Salir`
 
-    await conn.sendMessage(m.chat, {
-        text: texto,
-        mentions: [...lista.titulares.map(v=>v.id),...lista.suplentes.map(v=>v.id)]
-    })
+await conn.sendMessage(m.chat, {
+    text: texto,
+    mentions: [...lista.titulares.map(v=>v.id),...lista.suplentes.map(v=>v.id)]
+}, { quoted: m })
+
 }
 
+handler.help = ['vs16']
+handler.tags = ['ff']
+handler.command = /^vs16$/i
 export default handler
