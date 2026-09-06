@@ -26,15 +26,14 @@ const crear = async (m, { conn, args, usedPrefix, command }) => {
     if(command.includes('6') && command.includes('masc')){ titulo='6VS6 MASC'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖾𝗌'; icons1=['🥞','🥞','🥞','🥞','🥞','🥞']; icons2=['🥞','🥞'] }
     if(command.includes('6') && command.includes('mixto')){ titulo='6VS6 MIXTO'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖾𝗌'; icons1=['🥯','🥯','🥯','🥯','🥯','🥯']; icons2=['🥯','🥯'] }
 
-    // GUARDA LA VS COMO "ACTIVA" EN ESE GRUPO
     vs[m.chat] = { jugadores: [], suplentes: [], titulo, players, modalidad, horasEnPais, icons1, icons2 };
 
-    let msg = await actualizarLista(m.chat, conn, usedPrefix)
-    await conn.sendMessage(m.chat, { react: { text: '🎮', key: msg.key }})
+    await actualizarLista(m.chat, conn, usedPrefix)
+    m.react('🎮')
 }
 
 const anotar = async (m, { conn, usedPrefix, command }) => {
-    if (!vs[m.chat]) return m.reply(`*❌ No hay VS activa en este grupo*\nCrea una con: ${usedPrefix}v4fem 20 pe`)
+    if (!vs[m.chat]) return conn.reply(m.chat, `*❌ No hay VS activa*\nCrea una con: ${usedPrefix}v4fem 20 pe`, m)
 
     let sala = vs[m.chat]
     let user = m.sender
@@ -43,17 +42,17 @@ const anotar = async (m, { conn, usedPrefix, command }) => {
     sala.suplentes = sala.suplentes.filter(v => v!== user)
 
     if (command === 'j') {
-        if (sala.jugadores.length >= sala.icons1.length) return m.reply('*⚠️ Jugadores llenos*')
+        if (sala.jugadores.length >= sala.icons1.length) return conn.reply(m.chat, '*⚠️ Jugadores llenos*', m)
         sala.jugadores.push(user)
-        await conn.reply(m.chat, `✅ @${user.split('@')[0]} JUGADOR 🎮`, { mentions: [user] })
+        await conn.reply(m.chat, `✅ @${user.split('@')[0]} JUGADOR 🎮`, m, { mentions: [user] }) // <- ARREGLADO
     }
     if (command === 's') {
-        if (sala.suplentes.length >= sala.icons2.length) return m.reply('*⚠️ Suplentes llenos*')
+        if (sala.suplentes.length >= sala.icons2.length) return conn.reply(m.chat, '*⚠️ Suplentes llenos*', m)
         sala.suplentes.push(user)
-        await conn.reply(m.chat, `✅ @${user.split('@')[0]} SUPLENTE 🌸`, { mentions: [user] })
+        await conn.reply(m.chat, `✅ @${user.split('@')[0]} SUPLENTE 🌸`, m, { mentions: [user] }) // <- ARREGLADO
     }
     if (command === 'out') {
-        return m.reply(`❌ @${user.split('@')[0]} salió`, null, { mentions: [user] })
+        await conn.reply(m.chat, `❌ @${user.split('@')[0]} salió`, m, { mentions: [user] }) // <- ARREGLADO
     }
 
     await actualizarLista(m.chat, conn, usedPrefix)
@@ -82,7 +81,7 @@ ${listaSup}
 ╰───────────────────
 > © VS BOT`;
 
-    return await conn.sendMessage(chat, { text: message, mentions: [...sala.jugadores,...sala.suplentes] })
+    await conn.sendMessage(chat, { text: message, mentions: [...sala.jugadores,...sala.suplentes] })
 }
 
 const handler = async (m, { conn, args, usedPrefix, command }) => {
