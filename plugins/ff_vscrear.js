@@ -15,7 +15,7 @@ const handler = async (m, { text, conn, args, usedPrefix, command }) => {
         horasEnPais[key] = formatTime(horaEnPais);
     }
 
-    const modalidad = args.slice(2).join(' '); m.react('🎮');
+    const modalidad = args.slice(2).join(' ');
     let titulo = '', players = '', icons1 = [], icons2 = [];
     if(command.includes('4') && command.includes('fem')){ titulo='4VS4 FEM'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖺𝗌'; icons1=['🌸','🌸','🌸','🌸']; icons2=['🌸','🌸'] }
     if(command.includes('4') && command.includes('masc')){ titulo='4VS4 MASC'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖾𝗌'; icons1=['🥥','🥥','🥥','🥥']; icons2=['🥥','🥥'] }
@@ -26,7 +26,7 @@ const handler = async (m, { text, conn, args, usedPrefix, command }) => {
 
     const salaId = `vs_${m.chat}_${Date.now()}`;
     global.vsData = global.vsData || {};
-    global.vsData[salaId] = { jugadores: [], suplentes: [], titulo, players, modalidad, horasEnPais, icons1, icons2 };
+    global.vsData[salaId] = { jugadores: [], suplentes: [], titulo, players, modalidad, horasEnPais, icons1, icons2, chat: m.chat };
 
     const message = `ꆬ ݂ *${titulo}* 🌹֟፝
   ത *𝖬𝗈𝖽𝖺𝗅𝗂𝖽𝖺𝖽:* ${modalidad}
@@ -36,19 +36,19 @@ const handler = async (m, { text, conn, args, usedPrefix, command }) => {
 ${icons1.map(icono => `${icono}˚ `).join('\n')}
       ꛁ⵿ֹ𐑼᪲ ۪ \`𝖲𝗎𝗉𝗅𝖾𝗇𝗍𝖾𝗌:\` ֹ̼ ׅ ❜𝆬 ᨩ̼
 ${icons2.map(icono => `${icono}˚ `).join('\n')}
+
+╭─「 PARA ANOTARSE 」
+│ Responde a *ESTE MENSAJE* con:
+│ *1* = 🎮 JUGADOR
+│ *2* = 🌸 SUPLENTE
+│ *3* = ❌ SALIR
+╰───────────────────
 > © VS BOT`;
 
-    // LISTA EN VEZ DE BOTONES - ESTO NUNCA FALLA
-    await conn.sendListM(m.chat,
-        `ꆬ ݂ *${titulo}*`, // titulo
-        message, // descripción
-        'Toca aquí para anotarte', // footer
-        [
-            ['🎮 ANOTARSE COMO JUGADOR', `.anotarme jugador ${salaId}`],
-            ['🌸 ANOTARSE COMO SUPLENTE', `.anotarme suplente ${salaId}`]
-        ],
-        m
-    )
+    let msg = await conn.sendMessage(m.chat, { text: message }, { quoted: m });
+    global.vsData[salaId].msgId = msg.key.id // Guardamos el ID del mensaje para detectar replies
+    await conn.sendMessage(m.chat, { react: { text: '🎮', key: msg.key }})
 };
+
 handler.command = /^(v4fem|vsfem4|v4masc|vsmasc4|v4mixto|vsmixto4|v6fem|vsfem6|v6masc|vsmasc6|v6mixto|vsmixto6)$/i;
 export default handler;
