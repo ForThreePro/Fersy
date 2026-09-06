@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 const handler = async (m, { text, conn, args, usedPrefix, command }) => {
 
     if (args.length < 2) return conn.reply(m.chat, `*❌ Ejemplo:* ${usedPrefix + command} 20 pe infinito`, m);
@@ -17,9 +16,10 @@ const handler = async (m, { text, conn, args, usedPrefix, command }) => {
         horasEnPais[key] = formatTime(horaEnPais);
     }
 
-    const modalidad = args.slice(2).join(' '); m.react('🎮');
-    let titulo = '', players = '', icons1 = [], icons2 = [];
+    const modalidad = args.slice(2).join(' ');
+    m.react('🎮');
 
+    let titulo = '', players = '', icons1 = [], icons2 = [];
     if(command.includes('4') && command.includes('fem')){ titulo='4VS4 FEM'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖺𝗌'; icons1=['🌸','🌸','🌸','🌸']; icons2=['🌸','🌸'] }
     if(command.includes('4') && command.includes('masc')){ titulo='4VS4 MASC'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖾𝗌'; icons1=['🥥','🥥','🥥','🥥']; icons2=['🥥','🥥'] }
     if(command.includes('4') && command.includes('mixto')){ titulo='4VS4 MIXTO'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖾𝗌'; icons1=['🍁','🍁','🍁','🍁']; icons2=['🍁','🍁'] }
@@ -29,7 +29,7 @@ const handler = async (m, { text, conn, args, usedPrefix, command }) => {
 
     const salaId = `vs_${m.chat}_${Date.now()}`;
     global.vsData = global.vsData || {};
-    global.vsData[salaId] = { jugadores: [], suplentes: [], titulo, players, modalidad, horasEnPais, icons1, icons2, chat: m.chat };
+    global.vsData[salaId] = { jugadores: [], suplentes: [], titulo, players, modalidad, horasEnPais, icons1, icons2 };
 
     const message = `ꆬ ݂ *${titulo}* 🌹֟፝
   ത *𝖬𝗈𝖽𝖺𝗅𝗂𝖽𝖺𝖽:* ${modalidad}
@@ -41,17 +41,19 @@ ${icons1.map(icono => `${icono}˚ `).join('\n')}
 ${icons2.map(icono => `${icono}˚ `).join('\n')}
 > © VS BOT`;
 
-    // BOTON CON IMAGEN = SI JALA EN TESTE2
+    // BOTONES ESTILO REMOVE.BG - HEADER 1
     await conn.sendMessage(m.chat, {
-        image: { url: 'https://files.evogb.win/QFXQtu.jpg' }, // pon tu imagen
-        caption: message,
-        footer: 'Toca para anotarte',
+        text: message,
+        footer: 'Toca un botón para anotarte',
         buttons: [
-            { buttonId: `${usedPrefix}anotarme jugador ${salaId}`, buttonText: { displayText: '🎮 JUGADOR' }, type: 1 },
-            { buttonId: `${usedPrefix}anotarme suplente ${salaId}`, buttonText: { displayText: '🌸 SUPLENTE' }, type: 1 }
+            { buttonId: `.anotarme_jugador_${salaId}`, buttonText: { displayText: '🎮 JUGADOR' }, type: 1 },
+            { buttonId: `.anotarme_suplente_${salaId}`, buttonText: { displayText: '🌸 SUPLENTE' }, type: 1 }
         ],
-        headerType: 4
+        headerType: 1 // <- CLAVE PARA QUE JALE EN TESTE2
     }, { quoted: m });
 };
+
+handler.help = ['v4fem', 'v6masc'];
+handler.tags = ['ff'];
 handler.command = /^(v4fem|vsfem4|v4masc|vsmasc4|v4mixto|vsmixto4|v6fem|vsfem6|v6masc|vsmasc6|v6mixto|vsmixto6)$/i;
 export default handler;
