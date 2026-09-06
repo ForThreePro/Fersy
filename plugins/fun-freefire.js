@@ -5,7 +5,7 @@ global.db.listas = global.db.listas || {}
 
 let idLista = `vs16_${m.chat}`
 
-// Reinicia la lista cada que mandan .vs16
+// Reinicia la lista
 global.db.listas[idLista] = {
     titulares: [],
     suplentes: [],
@@ -20,6 +20,7 @@ let lista = `߳₊🪭⋆.˚ 𝟦𝑽𝑺4 𝑺𝑼𝑹 ꒱ ˖ׄ ୭
 ╰ ☆⃞ 　 ʾ 　 ๑
 ╭ ꕀ ֹ
 ⌇ ◟✦ 𓏼𝑻𝑰𝑻𝑼𝑳𝑨𝑹𝑬𝑺﹕ 0/4
+⌇🪭𐑞
 ⌇🪭𐑞
 ⌇🪭𐑞
 ⌇🪭𐑞
@@ -49,20 +50,28 @@ handler.tags = ['ff']
 handler.command = /^vs16$/i
 export default handler
 
-// ===== HANDLER PARA LOS BOTONES =====
+// ===== ARREGLADO: LEE BOTONES =====
 export async function before(m, { conn }) {
-    if (!m.message?.buttonsResponseMessage) return
-    let id = m.message.buttonsResponseMessage.selectedButtonId
-    let user = m.sender
-    let name = await conn.getName(user)
-
+    let id = ''
+    
+    // Para detectar los 2 tipos de botones
+    if (m.message?.buttonsResponseMessage) {
+        id = m.message.buttonsResponseMessage.selectedButtonId
+    } else if (m.message?.templateButtonReplyMessage) {
+        id = m.message.templateButtonReplyMessage.selectedId
+    }
+    
+    if(!id) return
     if(!id.startsWith('tit_') && !id.startsWith('sup_') && !id.startsWith('out_')) return
     
+    let user = m.sender
+    let name = await conn.getName(user)
     let idLista = id.split('_').slice(1).join('_')
     let lista = global.db?.listas?.[idLista]
+    
     if(!lista) return conn.reply(m.chat, '⚠️ Esta lista ya expiró. Manda .vs16 de nuevo', m)
 
-    // Quitar de ambas listas primero por si cambia
+    // Quitar de ambas listas primero
     lista.titulares = lista.titulares.filter(v => v.id !== user)
     lista.suplentes = lista.suplentes.filter(v => v.id !== user)
 
