@@ -1,5 +1,5 @@
 import fetch from 'node-fetch'
-import FormData from 'form-data' // <- IMPORTANTE
+import FormData from 'form-data'
 
 const API_KEY = 'garfield-vip'
 const API_URL = `https://api.stellarwa.xyz/tools/removebg?key=${API_KEY}`
@@ -10,7 +10,7 @@ const D = {
     emoji: '🪷🌸',
     border: '╭── 𓆩🪷𓆪 ──╮',
     border2: '╰── 𓆩🌸𓆪 ──╯',
-    title: '𝐂𝐎𝐓𝐓𝐈 𝐑𝐄𝐌𝐁𝐆', // <-- Corregido
+    title: '𝐂𝐎𝐓𝐈 𝐑𝐄𝐌𝐁𝐆',
     footer: '> "Florece sin fondo" 🦋',
     process: '🪷 QUITANDO FONDO',
     found: '🌸 FONDO ELIMINADO',
@@ -55,14 +55,14 @@ ${D.border2}`)
         let buffer = await q.download()
         if (!buffer) throw 'Error al descargar la imagen'
 
-        // 2. Enviar a la API - ARREGLADO
+        // 2. Enviar a la API - CAMBIO CLAVE: 'file' en vez de 'image'
         const form = new FormData()
-        form.append('image', buffer, { filename: 'image.jpg', contentType: mime })
+        form.append('file', buffer, { filename: 'image.png', contentType: mime }) // <- 'file'
         
         const res = await fetch(API_URL, {
             method: 'POST',
             body: form,
-            headers: form.getHeaders() // <- IMPORTANTE PARA FORM-DATA
+            headers: form.getHeaders()
         })
 
         if (!res.ok) throw `Error ${res.status}: ${await res.text()}`
