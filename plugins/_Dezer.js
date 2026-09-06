@@ -12,11 +12,11 @@ const SONGFINDER_API = 'https://songfinder.gg/api/recognize/url'
 const UGUU_UPLOAD = 'https://uguu.se/upload'
 const CLIP_SECONDS = 30
 
-const handler = async (m, { conn }) => {
+const handler = async (m, { conn, command }) => {
     try {
         let q = m.quoted? m.quoted : m
         let mime = (q.msg || q).mimetype || ''
-        
+
         if (!mime || !/audio|video/.test(mime)) return m.reply(`🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
 
 .⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.💭꒷
@@ -24,7 +24,8 @@ const handler = async (m, { conn }) => {
  ⤷ ┇ 𝗕𝗨𝗦𝗖𝗔𝗗𝗢𝗥 𝗗𝗘 𝗠𝗨𝗦𝗜𝗖𝗔 ：✿ 。
 
 ──愛 *COMO USAR* ╏ ❄️
-💭 ➛ Responde a un audio o video con: .song
+💭 ➛ Responde a un audio o video con:.song
+💭 ➛ Responde a un audio o video con:.letra
 💭 ➛ Ejemplo: Responde a un estado de WhatsApp
 
 ━━━━━━━━━━━
@@ -65,10 +66,15 @@ const handler = async (m, { conn }) => {
         const thumb = (await conn.getFile(thumbnail)).data
         const vistas = formatViews(views)
 
-        // Enviar info
-        await conn.sendMessage(m.chat, {
-            image: thumb,
-            caption: `🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
+        // 3. DESCARGAR AUDIO
+        const mediaUrl = await getMediaUrl(shortUrl)
+        if (!mediaUrl) throw 'No se pudo obtener el audio. Garfield está dormido.'
+
+        // ===== SI ES .song =====
+        if(command === 'song'){
+            await conn.sendMessage(m.chat, {
+                image: thumb,
+                caption: `🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
 
 .⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.💭꒷
 
@@ -86,17 +92,44 @@ const handler = async (m, { conn }) => {
 *Bot*: GARFIELD BOT 🐱
 > *"No me hables antes del café y la música"* ☕🎵
 ━━━━━━━━━━━`
-        }, { quoted: m })
+            }, { quoted: m })
 
-        // 3. DESCARGAR AUDIO
-        const mediaUrl = await getMediaUrl(shortUrl)
-        if (!mediaUrl) throw 'No se pudo obtener el audio. Garfield está dormido.'
+            await conn.sendMessage(m.chat, {
+                audio: { url: mediaUrl },
+                fileName: `${title}.mp3`,
+                mimetype: 'audio/mpeg'
+            }, { quoted: m })
+        }
 
-        await conn.sendMessage(m.chat, {
-            audio: { url: mediaUrl },
-            fileName: `${title}.mp3`,
-            mimetype: 'audio/mpeg'
-        }, { quoted: m })
+        // ===== SI ES .letra =====
+        if(command === 'letra'){
+            await m.react('📝')
+            // Buscar letra
+            const lyricsRes = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(song.artist)}/${encodeURIComponent(song.title)}`).then(r => r.json())
+            let lyrics = lyricsRes.lyrics || 'No encontré la letra. Jon la perdió'
+            if(lyrics.length > 1500) lyrics = lyrics.slice(0, 1500) + '\n\n...Muy larga, prefiero dormir 😴'
+
+            await conn.sendMessage(m.chat, {
+                text: `🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
+
+.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐋𝐞𝐭𝐫𝐚\`\` —˙𖦹.💭꒷
+
+📌 *${title}* - *${author.name}*
+
+\`\`${lyrics}\`\`
+
+━━━━━━━━━━━
+> *"Cantar cansa. Mejor como"* 🍝
+━━━━━━━━━━━`
+            }, { quoted: m })
+
+            // También manda el audio
+            await conn.sendMessage(m.chat, {
+                audio: { url: mediaUrl },
+                fileName: `${title}.mp3`,
+                mimetype: 'audio/mpeg'
+            }, { quoted: m })
+        }
 
         await m.react('✅')
 
@@ -166,7 +199,7 @@ function formatViews(views) {
     return views.toString()
 }
 
-handler.help = ['song']
+handler.help = ['song', 'letra']
 handler.tags = ['buscador']
-handler.command = ['song']
+handler.command = ['song', 'letra']
 export default handler
