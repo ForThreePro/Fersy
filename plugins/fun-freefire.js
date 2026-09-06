@@ -10,7 +10,8 @@ global.db.listas[idLista] = {
     titulares: [],
     suplentes: [],
     maxTit: 4,
-    maxSup: 2
+    maxSup: 2,
+    msgId: '' // guardamos el id del mensaje
 }
 
 let lista = `߳₊🪭⋆.˚ 𝟦𝑽𝑺4 𝑺𝑼𝑹 ꒱ ˖ׄ ୭
@@ -28,20 +29,19 @@ let lista = `߳₊🪭⋆.˚ 𝟦𝑽𝑺4 𝑺𝑼𝑹 ꒱ ˖ׄ ୭
 ⌇🎐𐑞
 ⌇🎐𐑞
 ╰ ☆⃞ 　 ʾ 　 ๑
-\`｡⁖. 𝑷𝒖𝒏𝒕𝒖𝒂𝒍𝒊𝒅𝒂𝒅 | 𝑺𝒊𝒏 𝒍𝒂𝒈 | 𝑹𝒆𝒔𝒑𝒆𝒕𝒐 ⁖｡\``
+\`｡⁖. 𝑷𝒖𝒏𝒕𝒖𝒂𝒍𝒊𝒅𝒂𝒅 | 𝑺𝒊𝒏 𝒍𝒂𝒈 | 𝑹𝒆𝒔𝒑𝒆𝒕𝒐 ⁖｡\`
 
-let buttons = [
-    { buttonId: `tit_${idLista}`, buttonText: { displayText: '🎀 Jugadora' }, type: 1 },
-    { buttonId: `sup_${idLista}`, buttonText: { displayText: '🌸 Suplente' }, type: 1 },
-    { buttonId: `out_${idLista}`, buttonText: { displayText: '❌ Salir' }, type: 1 }
-]
+🎀 = Jugadora | 🌸 = Suplente | ❌ = Salir`
 
-await conn.sendMessage(m.chat, {
-    text: lista,
-    footer: 'Toca para anotarte al vs16',
-    buttons: buttons,
-    headerType: 1
-}, { quoted: m })
+let msg = await conn.sendMessage(m.chat, { text: lista }, { quoted: m })
+
+// Guardamos el id del mensaje para detectar reacciones
+global.db.listas[idLista].msgId = msg.key.id
+
+// El bot reacciona solo
+await conn.sendMessage(m.chat, { react: { text: '🎀', key: msg.key }})
+await conn.sendMessage(m.chat, { react: { text: '🌸', key: msg.key }})
+await conn.sendMessage(m.chat, { react: { text: '❌', key: msg.key }})
 
 }
 
@@ -50,57 +50,51 @@ handler.tags = ['ff']
 handler.command = /^vs16$/i
 export default handler
 
-// ===== ARREGLADO: LEE BOTONES =====
+// ===== HANDLER PARA REACCIONES =====
 export async function before(m, { conn }) {
-    let id = ''
-    
-    // Para detectar los 2 tipos de botones
-    if (m.message?.buttonsResponseMessage) {
-        id = m.message.buttonsResponseMessage.selectedButtonId
-    } else if (m.message?.templateButtonReplyMessage) {
-        id = m.message.templateButtonReplyMessage.selectedId
-    }
-    
-    if(!id) return
-    if(!id.startsWith('tit_') && !id.startsWith('sup_') && !id.startsWith('out_')) return
-    
+    if (!m.message?.reactionMessage) return
+
+    let reaction = m.message.reactionMessage.text
+    let key = m.message.reactionMessage.key
     let user = m.sender
     let name = await conn.getName(user)
-    let idLista = id.split('_').slice(1).join('_')
-    let lista = global.db?.listas?.[idLista]
-    
-    if(!lista) return conn.reply(m.chat, '⚠️ Esta lista ya expiró. Manda .vs16 de nuevo', m)
+
+    // Buscar en que lista está esa reacción
+    let idLista = Object.keys(global.db.listas).find(k => global.db.listas[k].msgId === key.id)
+    if(!idLista) return
+
+    let lista = global.db.listas[idLista]
 
     // Quitar de ambas listas primero
-    lista.titulares = lista.titulares.filter(v => v.id !== user)
-    lista.suplentes = lista.suplentes.filter(v => v.id !== user)
+    lista.titulares = lista.titulares.filter(v => v.id!== user)
+    lista.suplentes = lista.suplentes.filter(v => v.id!== user)
 
-    if(id.startsWith('tit_')){
+    if(reaction === '🎀'){
         if(lista.titulares.length < lista.maxTit){
             lista.titulares.push({id: user, name})
-            await conn.reply(m.chat, `🎀 @${user.split('@')[0]} se anotó como TITULAR`, m, { mentions: [user] })
+            await conn.sendMessage(m.chat, { text: `🎀 @${user.split('@')[0]} se anotó como TITULAR`, mentions: [user] }, { quoted: m })
         } else {
-            await conn.reply(m.chat, `⚠️ Ya hay 4 titulares. Usa 🌸 Suplente`, m)
+            await conn.sendMessage(m.chat, { text: `⚠️ Ya hay 4 titulares. Usa 🌸 para suplente` }, { quoted: m })
         }
     }
-    
-    if(id.startsWith('sup_')){
+
+    if(reaction === '🌸'){
         if(lista.suplentes.length < lista.maxSup){
             lista.suplentes.push({id: user, name})
-            await conn.reply(m.chat, `🌸 @${user.split('@')[0]} se anotó como SUPLENTE`, m, { mentions: [user] })
+            await conn.sendMessage(m.chat, { text: `🌸 @${user.split('@')[0]} se anotó como SUPLENTE`, mentions: [user] }, { quoted: m })
         } else {
-            await conn.reply(m.chat, `⚠️ Ya hay 2 suplentes`, m)
+            await conn.sendMessage(m.chat, { text: `⚠️ Ya hay 2 suplentes` }, { quoted: m })
         }
     }
-    
-    if(id.startsWith('out_')){
-        await conn.reply(m.chat, `❌ @${user.split('@')[0]} salió de la lista`, m, { mentions: [user] })
+
+    if(reaction === '❌'){
+        await conn.sendMessage(m.chat, { text: `❌ @${user.split('@')[0]} salió de la lista`, mentions: [user] }, { quoted: m })
     }
 
     // Actualizar lista
     let textoTit = lista.titulares.map((v,i) => `⌇🪭 ${i+1}. @${v.id.split('@')[0]}`).join('\n')
     let textoSup = lista.suplentes.map((v,i) => `⌇🎐 ${i+1}. @${v.id.split('@')[0]}`).join('\n')
-    
+
     let texto = `߳₊🪭⋆.˚ 𝟦𝑽𝑺4 𝑺𝑼𝑹 ꒱ ˖ׄ ୭
 ╭ ꕀ ֹ
 ⌇ ⸝⸝ 🆚 𖥦 ﹕
@@ -112,19 +106,12 @@ ${textoTit || '⌇🪭𐑞'}
 ⌇ ◟✦ 𓏼𝑺𝑼𝑷𝑳𝑬𝑵𝑻𝑬𝑺﹕ ${lista.suplentes.length}/2
 ${textoSup || '⌇🎐𐑞'}
 ╰ ☆⃞ 　 ʾ 　 ๑
-\`｡⁖. 𝑷𝒖𝒏𝒕𝒖𝒂𝒍𝒊𝒅𝒂𝒅 | 𝑺𝒊𝒏 𝒍𝒂𝒈 | 𝑹𝒆𝒔𝒑𝒆𝒕𝒐 ⁖｡\``
+\`｡⁖. 𝑷𝒖𝒏𝒕𝒖𝒂𝒍𝒊𝒅𝒂𝒅 | 𝑺𝒊𝒏 𝒍𝒂𝒈 | 𝑹𝒆𝒔𝒑𝒆𝒕𝒐 ⁖｡\`
 
-    let buttons = [
-        { buttonId: `tit_${idLista}`, buttonText: { displayText: '🎀 Jugadora' }, type: 1 },
-        { buttonId: `sup_${idLista}`, buttonText: { displayText: '🌸 Suplente' }, type: 1 },
-        { buttonId: `out_${idLista}`, buttonText: { displayText: '❌ Salir' }, type: 1 }
-    ]
+🎀 = Jugadora | 🌸 = Suplente | ❌ = Salir`
 
     await conn.sendMessage(m.chat, {
         text: texto,
-        footer: 'Toca para anotarte al vs16',
-        buttons: buttons,
-        headerType: 1,
         mentions: [...lista.titulares.map(v=>v.id),...lista.suplentes.map(v=>v.id)]
     })
 }
