@@ -27,7 +27,7 @@ const crear = async (m, { conn, args, usedPrefix, command }) => {
         horasEnPais[key] = formatTime(horaEnPais);
     }
 
-    const modalidad = args.slice(2).join(' ') || 'Sala Normal'; // Si no pone nada
+    const modalidad = args.slice(2).join(' ') || 'Sala Normal';
     let titulo = '', players = '', icons1 = [], icons2 = [];
     if(command.includes('4') && command.includes('fem')){ titulo='4VS4 FEM'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖺𝗌'; icons1=['🌸','🌸','🌸','🌸']; icons2=['🌸','🌸'] }
     if(command.includes('4') && command.includes('masc')){ titulo='4VS4 MASC'; players='𝖩𝗎𝗀𝖺𝖽𝗈𝗋𝖾𝗌'; icons1=['🥥','🥥','🥥','🥥']; icons2=['🥥','🥥'] }
@@ -46,8 +46,11 @@ const anotar = async (m, { conn, usedPrefix, command }) => {
     if (!vs[m.chat]) return conn.reply(m.chat, `*❌ No hay VS activa*\nCrea una con: ${usedPrefix}v4fem 20 pe`, m)
 
     let sala = vs[m.chat]
-    let user = m.key.participant || m.key.remoteJid // Arreglo para que no se anote el bot
-    if (user === conn.user.jid) return // Si es el bot, ignorar
+
+    // FIX CLAVE: AGARRAR AL USUARIO REAL, NO AL BOT
+    let user = m.key.participant || m.sender
+    if (!user) user = m.sender
+    if (user === conn.user.jid) return // Si es el bot, salir
 
     sala.jugadores = sala.jugadores.filter(v => v!== user)
     sala.suplentes = sala.suplentes.filter(v => v!== user)
