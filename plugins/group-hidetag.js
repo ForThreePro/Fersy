@@ -1,47 +1,60 @@
-let handler = async (m, { conn, args, isAdmin, isBotAdmin }) => {
+let handler = async (m, { conn, args, usedPrefix, command, isAdmin, isBotAdmin, participants }) => {
     if (!m.isGroup) return m.reply('《✤》 Este comando solo funciona en grupos')
     if (!isAdmin) return m.reply('《✤》 Necesitas ser admin para usar este comando')
     if (!isBotAdmin) return m.reply('《✤》 Necesito ser admin para poder etiquetar a todos')
 
-    let text = args.join(' ')
-    let groupMetadata = await conn.groupMetadata(m.chat).catch(() => null)
-    let groupName = groupMetadata?.subject || 'Grupo'
-    let participants = groupMetadata?.participants.map(p => p.id) || []
-
-    if (!text) {
-        return m.reply(`《✤》 Ingresa un texto\n*Ejemplo:* .n buenos días , está para sorteo`)
-    }
-
-    const fecha = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long' }) + ' 🌙'
+    const groupParticipants = participants || []
+    const mentions = groupParticipants.map(p => p.id).filter(Boolean)
+    const userText = (args.join(' ') || '').trim()
+    
+    const src = m.quoted || m
+    const hasImage = Boolean(src.message?.imageMessage || src.mtype === 'imageMessage')
+    const hasVideo = Boolean(src.message?.videoMessage || src.mtype === 'videoMessage')
+    const hasAudio = Boolean(src.message?.audioMessage || src.mtype === 'audioMessage')
+    const hasSticker = Boolean(src.message?.stickerMessage || src.mtype === 'stickerMessage')
+    const isQuoted = Boolean(m.quoted)
+    const originalText = (src.text || src.caption || src.body || '').trim()
 
     try {
-        await conn.sendMessage(m.chat, { 
-            text: text,
-            mentions: participants,
-            contextInfo: {
-                mentionedJid: participants,
-                forwardingScore: 999,
-                isForwarded: true,
-                externalAdReply: {
-                    title: groupName,
-                    body: `${groupName} 💗☁️ | ${fecha}`,
-                    thumbnail: await (await fetch('https://files.evogb.win/fw2NBP.jpg')).buffer(), // logo
-                    sourceUrl: `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat)}`,
-                    mediaType: 1,
-                    renderLargerThumbnail: true
-                }
+        if (hasImage || hasVideo) {
+            const media = await src.download()
+            const options = { mentions }
+            
+            if (isQuoted) {
+                if (hasImage) return conn.sendMessage(m.chat, { image: media, caption: originalText || '', ...options })
+                else return conn.sendMessage(m.chat, { video: media, mimetype: 'video/mp4', caption: originalText || '', ...options })
+            } else {
+                if (hasImage) return conn.sendMessage(m.chat, { image: media, caption: userText || '', ...options })
+                else return conn.sendMessage(m.chat, { video: media, mimetype: 'video/mp4', caption: userText || '', ...options })
             }
-        }, { quoted: null })
+        }
+        
+        if (hasAudio) { 
+            const media = await src.download() 
+            return conn.sendMessage(m.chat, { audio: media, mimetype: 'audio/mp4', fileName: 'hidetag.mp3', mentions }, { quoted: null }) 
+        }
+        
+        if (hasSticker) { 
+            const media = await src.download() 
+            return conn.sendMessage(m.chat, { sticker: media, mentions }, { quoted: null }) 
+        }
+        
+        if (isQuoted && originalText) return conn.sendMessage(m.chat, { text: originalText, mentions }, { quoted: null })
+        if (userText) return conn.sendMessage(m.chat, { text: userText, mentions }, { quoted: null })
+        
+        return m.reply(`《✧》 *Ingresa* un texto o *responde* a uno\n*Ej:* ${usedPrefix}${command} buenos días`)
         
     } catch (e) {
         console.log(e)
-        return m.reply('《✤》 Error: ' + e.message)
+        return m.reply(`> Ocurrió un error ejecutando *${usedPrefix + command}*\n> [Error: *${e.message}*]`)
     }
 }
 
-handler.help = ['n <texto>']
-handler.tags = ['grupo']
-handler.command = /^n$/i
+handler.help = ['n <texto>', 'hidetag <texto>', 'noti <texto>', 'aviso <texto>']
+handler.tags = ['group']
+handler.command = ['n', 'hidetag', 'noti', 'aviso']
+handler.customPrefix = /^(n|hidetag|noti|aviso)$/i // <- ESTO HACE QUE FUNCIONE SIN PREFIJO
+handler.description = 'Etiquetar a todos del grupo'
 handler.group = true
 handler.admin = true
 handler.botAdmin = true
