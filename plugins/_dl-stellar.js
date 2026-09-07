@@ -147,6 +147,6 @@ let handler = async (m, { conn, text, command }) => {
 handler.help = ['play1 <nombre>', 'tomp3 <link>', 'ig <link>']
 handler.tags = ['downloader']
 handler.command = /^(play1|tomp3|ig)$/i
-handler.register = true
+handler.register = false
 
 export default handler
