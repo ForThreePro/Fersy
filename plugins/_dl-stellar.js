@@ -67,7 +67,7 @@ let handler = async (m, { conn, text, args }) => {
 }
 
 handler.help = ['play1 <nombre>']
-handler.tags = ['downloader', 'music']
+handler.tags = ['descargas']
 handler.command = /^(play1)$/i
 
 export default handler
