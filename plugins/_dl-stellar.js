@@ -16,7 +16,7 @@ let handler = async (m, { conn, text, command }) => {
     if (!text) return m.reply(`《✧》 Falta texto o link
 
 *.play1* nombre de la canción
-*.tomp3* link de tiktok`)
+*.ttmp3* link de tiktok`)
 
     await m.react('⏳')
     try {
@@ -64,9 +64,9 @@ let handler = async (m, { conn, text, command }) => {
         }
 
         // ======================================
-        //.tomp3 - TIKTOK MP3
+        //.ttmp3 - TIKTOK MP3
         // ======================================
-        if (command === 'tomp3') {
+        if (command === 'ttmp3') {
             const apiUrl = `${api.url}/dl/tiktokmp3?url=${encodeURIComponent(text)}&key=${api.key}`
             const res = await fetch(apiUrl).then(r => r.json())
             const data = res?.data || res
@@ -111,7 +111,8 @@ let handler = async (m, { conn, text, command }) => {
 }
 
 handler.help = ['play1 <nombre>', 'ttmp3 <link>']
-handler.tags = ['descargas']
+handler.tags = ['downloader']
 handler.command = /^(play1|ttmp3)$/i
+handler.register = true
 
 export default handler
