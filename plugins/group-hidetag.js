@@ -1,60 +1,73 @@
-let handler = async (m, { conn, args, usedPrefix, command, isAdmin, isBotAdmin, participants }) => {
-    if (!m.isGroup) return m.reply('《✤》 Este comando solo funciona en grupos')
-    if (!isAdmin) return m.reply('《✤》 Necesitas ser admin para usar este comando')
-    if (!isBotAdmin) return m.reply('《✤》 Necesito ser admin para poder etiquetar a todos')
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
-    const groupParticipants = participants || []
-    const mentions = groupParticipants.map(p => p.id).filter(Boolean)
-    const userText = (args.join(' ') || '').trim()
+const handler = async (m, { conn, args, text, participants, isAdmin, isBotAdmin }) => {
+    if (!m.isGroup) return m.reply('《✤》 Solo en grupos')
+    if (!isAdmin) return m.reply('《✤》 Solo admins')
+    if (!isBotAdmin) return m.reply('《✤》 Bot necesita ser admin')
+
+    const users = participants.map((u) => u.id)
+    const group = await conn.groupMetadata(m.chat).catch(() => ({}))
+    const groupName = group.subject || 'Grupo'
+    const userText = text || ''
     
-    const src = m.quoted || m
-    const hasImage = Boolean(src.message?.imageMessage || src.mtype === 'imageMessage')
-    const hasVideo = Boolean(src.message?.videoMessage || src.mtype === 'videoMessage')
-    const hasAudio = Boolean(src.message?.audioMessage || src.mtype === 'audioMessage')
-    const hasSticker = Boolean(src.message?.stickerMessage || src.mtype === 'stickerMessage')
-    const isQuoted = Boolean(m.quoted)
-    const originalText = (src.text || src.caption || src.body || '').trim()
+    const q = m.quoted || m
+    const mime = (q.msg || q).mimetype || ''
+    const isMedia = /image|video|sticker|audio/.test(mime)
+    
+    // FECHA ESTILO ESTADO
+    const fecha = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long' }) + ' 🌙'
+    
+    // LOGO PARA EL RECUADRO - CAMBIALO
+    const thumb = await (await fetch('https://files.evogb.win/fw2NBP.jpg')).buffer().catch(() => Buffer.alloc(0))
+
+    const contextInfo = {
+        mentionedJid: users,
+        forwardingScore: 999,
+        isForwarded: true,
+        externalAdReply: {
+            title: groupName,
+            body: `${groupName} 💗☁️ | ${fecha}`,
+            thumbnail: thumb,
+            sourceUrl: `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat).catch(() => '')}`,
+            mediaType: 1,
+            renderLargerThumbnail: true
+        }
+    }
 
     try {
-        if (hasImage || hasVideo) {
-            const media = await src.download()
-            const options = { mentions }
+        if (isMedia) {
+            const media = await q.download()
+            const type = q.mtype.replace('Message', '').toLowerCase()
             
-            if (isQuoted) {
-                if (hasImage) return conn.sendMessage(m.chat, { image: media, caption: originalText || '', ...options })
-                else return conn.sendMessage(m.chat, { video: media, mimetype: 'video/mp4', caption: originalText || '', ...options })
-            } else {
-                if (hasImage) return conn.sendMessage(m.chat, { image: media, caption: userText || '', ...options })
-                else return conn.sendMessage(m.chat, { video: media, mimetype: 'video/mp4', caption: userText || '', ...options })
-            }
+            let messageContent = { mentions: users, contextInfo }
+            if (type === 'image') messageContent.image = media
+            if (type === 'video') { messageContent.video = media; messageContent.mimetype = 'video/mp4' }
+            if (type === 'audio') { messageContent.audio = media; messageContent.mimetype = 'audio/mpeg'; messageContent.fileName = 'hidetag.mp3' }
+            if (type === 'sticker') messageContent.sticker = media
+            
+            if (userText) messageContent.caption = userText
+            else if (q.text || q.caption) messageContent.caption = q.text || q.caption
+            
+            return await conn.sendMessage(m.chat, messageContent)
         }
-        
-        if (hasAudio) { 
-            const media = await src.download() 
-            return conn.sendMessage(m.chat, { audio: media, mimetype: 'audio/mp4', fileName: 'hidetag.mp3', mentions }, { quoted: null }) 
-        }
-        
-        if (hasSticker) { 
-            const media = await src.download() 
-            return conn.sendMessage(m.chat, { sticker: media, mentions }, { quoted: null }) 
-        }
-        
-        if (isQuoted && originalText) return conn.sendMessage(m.chat, { text: originalText, mentions }, { quoted: null })
-        if (userText) return conn.sendMessage(m.chat, { text: userText, mentions }, { quoted: null })
-        
-        return m.reply(`《✧》 *Ingresa* un texto o *responde* a uno\n*Ej:* ${usedPrefix}${command} buenos días`)
-        
+
+        // SOLO TEXTO
+        const finalText = userText || q.text || q.caption || '*Hola :D*'
+        return await conn.sendMessage(m.chat, {
+            text: finalText,
+            mentions: users,
+            contextInfo: contextInfo
+        })
+
     } catch (e) {
         console.log(e)
-        return m.reply(`> Ocurrió un error ejecutando *${usedPrefix + command}*\n> [Error: *${e.message}*]`)
+        return m.reply(`《✤》 Error: ${e.message}`)
     }
 }
 
 handler.help = ['n <texto>', 'hidetag <texto>', 'noti <texto>', 'aviso <texto>']
 handler.tags = ['group']
-handler.command = ['n', 'hidetag', 'noti', 'aviso']
-handler.customPrefix = /^(n|hidetag|noti|aviso)$/i // <- ESTO HACE QUE FUNCIONE SIN PREFIJO
-handler.description = 'Etiquetar a todos del grupo'
+handler.command = ['n', 'hidetag', 'noti', 'aviso', 'notify', 'notificar']
 handler.group = true
 handler.admin = true
 handler.botAdmin = true
