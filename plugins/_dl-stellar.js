@@ -9,7 +9,7 @@ const getBuffer = async (url) => {
 }
 
 let handler = async (m, { conn, text, command }) => {
-    if (!text) return m.reply(`《✧》 Falta texto o link\n
+    if (!text) return m.reply(`《✧》 Falta link\n
 *.play1* nombre de la canción
 *.tomp3* link de tiktok
 *.ig* link de instagram`)
@@ -18,125 +18,58 @@ let handler = async (m, { conn, text, command }) => {
     try {
 
         // ======================================
-        //.play1 - YOUTUBE MP3
+        //.play1
         // ======================================
         if (command === 'play1') {
             const searchResult = await ytsearch(text)
-            if (!searchResult.videos ||!searchResult.videos.length) {
-                await m.react('❌')
-                return m.reply("《✧》 No se encontró la canción.")
-            }
-
+            if (!searchResult.videos ||!searchResult.videos.length) throw 'No se encontró la canción.'
             const video = searchResult.videos[0]
             const { title, author, timestamp: duration, views, url, image } = video
-            const vistas = (views || 0).toLocaleString()
-            const canal = author?.name || author || "Desconocido"
             const thumbBuffer = await getBuffer(image)
-
-            const caption = `_\`୨୧ YT Download\` ───── *${title}*_
-
-> _✐ \`Canal\` ── ${canal}_
-> _ⴵ \`Duración\` ── ${duration || ''}_
-> _✰ \`Vistas\` ── ${vistas}_
-> _🜸 \`Enlace\` ── ${url}_
-
-> _── ִ ۟ *¡Enviando audio!*_`
-
-            await conn.sendMessage(m.chat, { image: thumbBuffer, caption }, { quoted: m })
-
-            const dlEndpoint = `${api.url}/dl/ytmp3?url=${encodeURIComponent(url)}&key=${api.key}`
-            const resDl = await fetch(dlEndpoint).then(r => r.json())
+            await conn.sendMessage(m.chat, { image: thumbBuffer, caption: `_\`୨୧ YT\` ───── *${title}*_\n\n_── ִ ۟ *¡Enviando audio!*_` }, { quoted: m })
+            const resDl = await fetch(`${api.url}/dl/ytmp3?url=${encodeURIComponent(url)}&key=${api.key}`).then(r => r.json())
             const dl = resDl?.data?.dl || resDl?.data?.download
-
-            if (!dl) throw 'No se pudo descargar el audio'
             const audioBuffer = await getBuffer(dl)
-
-            await conn.sendMessage(m.chat, {
-                audio: audioBuffer,
-                mimetype: 'audio/mpeg',
-                fileName: `${title}.mp3`,
-                ptt: false
-            }, { quoted: m })
+            await conn.sendMessage(m.chat, { audio: audioBuffer, mimetype: 'audio/mpeg', fileName: `${title}.mp3` }, { quoted: m })
         }
 
         // ======================================
-        //.tomp3 - TIKTOK MP3
+        //.tomp3
         // ======================================
         if (command === 'tomp3') {
-            const apiUrl = `${api.url}/dl/tiktokmp3?url=${encodeURIComponent(text)}&key=${api.key}`
-            const res = await fetch(apiUrl).then(r => r.json())
+            const res = await fetch(`${api.url}/dl/tiktokmp3?url=${encodeURIComponent(text)}&key=${api.key}`).then(r => r.json())
             const data = res?.data || res
-
             const dl = data?.download || data?.dl
             const title = data?.title || 'tiktok'
-            const author = data?.author || 'Desconocido'
-            const thumb = data?.thumbnail
-
-            if (!dl) throw 'No se pudo descargar. Link mal o privado'
-
             const audioBuffer = await getBuffer(dl)
-            const caption = `_\`୨୧ TikTok MP3\` ───── *${title}*_
-
-> _👤 \`Autor\` ── ${author}_
-> _🜸 \`Link\` ── ${text}_
-
-> _── ִ ۟ *¡Enviando audio!*_`
-
-            if (thumb) {
-                const thumbBuffer = await getBuffer(thumb)
-                await conn.sendMessage(m.chat, { image: thumbBuffer, caption }, { quoted: m })
-            } else {
-                await m.reply(caption)
-            }
-
-            await conn.sendMessage(m.chat, {
-                audio: audioBuffer,
-                mimetype: 'audio/mpeg',
-                fileName: `${title}.mp3`,
-                ptt: false
-            }, { quoted: m })
+            await conn.sendMessage(m.chat, { audio: audioBuffer, mimetype: 'audio/mpeg', fileName: `${title}.mp3` }, { quoted: m })
         }
 
         // ======================================
-        //.ig - INSTAGRAM VIDEO/AUDIO
+        //.ig - INSTAGRAM FIX
         // ======================================
         if (command === 'ig') {
             const apiUrl = `${api.url}/dl/instagram?url=${encodeURIComponent(text)}&key=${api.key}`
             const res = await fetch(apiUrl).then(r => r.json())
-            const data = res?.data || res
 
-            const dl = data?.download || data?.dl || data?.url
-            const title = data?.title || data?.caption || 'instagram'
-            const thumb = data?.thumbnail || data?.image
+            console.log("RESPUESTA IG:", JSON.stringify(res, null, 2)) // Revisa consola
 
-            if (!dl) throw 'No se pudo descargar. Link mal o privado'
+            const data = res?.data || res?.result || res
+            const dl = data?.download || data?.dl || data?.url || data?.video || data?.media
+
+            if (!dl) {
+                await m.react('❌')
+                return m.reply("《✧》 No se pudo descargar. El link es privado, de historia o la API falló")
+            }
 
             const mediaBuffer = await getBuffer(dl)
-            const caption = `_\`୨୧ Instagram Download\`_
+            const caption = data?.title || data?.caption || data?.description || 'Instagram'
 
-> _🜸 \`Link\` ── ${text}_
-> _── ִ ۟ *¡Enviando video!*_`
-
-            if (thumb) {
-                const thumbBuffer = await getBuffer(thumb)
-                await conn.sendMessage(m.chat, { image: thumbBuffer, caption }, { quoted: m })
-            }
-
-            // Detectar si es video o imagen
-            const isVideo = dl.includes('.mp4') || data?.type === 'video'
-
-            if (isVideo) {
-                await conn.sendMessage(m.chat, {
-                    video: mediaBuffer,
-                    caption: title,
-                    mimetype: 'video/mp4'
-                }, { quoted: m })
-            } else {
-                await conn.sendMessage(m.chat, {
-                    image: mediaBuffer,
-                    caption: title
-                }, { quoted: m })
-            }
+            await conn.sendMessage(m.chat, {
+                video: mediaBuffer,
+                caption: `_\`୨୧ Instagram\`_\n\n_${caption}_\n\n_${text}_`,
+                mimetype: 'video/mp4'
+            }, { quoted: m })
         }
 
         await m.react('✅')
@@ -144,12 +77,12 @@ let handler = async (m, { conn, text, command }) => {
     } catch (e) {
         await m.react('❌')
         console.log("ERROR:", e)
-        await m.reply(`《✧》 Error: ${e.message}`)
+        await m.reply(`《✧》 Error: ${e.message || e}`)
     }
 }
 
 handler.help = ['play1 <nombre>', 'tomp3 <link>', 'ig <link>']
-handler.tags = ['descargas']
+handler.tags = ['downloader']
 handler.command = /^(play1|tomp3|ig)$/i
 
 export default handler
