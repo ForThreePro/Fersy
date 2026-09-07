@@ -16,8 +16,7 @@ let handler = async (m, { conn, text, command }) => {
     if (!text) return m.reply(`《✧》 Falta texto o link
 
 *.play1* nombre de la canción
-*.tomp3* link de tiktok
-*.ig* link de instagram`)
+*.tomp3* link de tiktok`)
 
     await m.react('⏳')
     try {
@@ -102,39 +101,6 @@ let handler = async (m, { conn, text, command }) => {
             }, { quoted: m })
         }
 
-        // ======================================
-        //.ig - INSTAGRAM VIDEO SOLO STELLAR
-        // ======================================
-        if (command === 'ig') {
-            const apiUrl = `${api.url}/dl/instagram?url=${encodeURIComponent(text)}&key=${api.key}`
-            const res = await fetch(apiUrl).then(r => r.json())
-
-            console.log("RESPUESTA STELLAR IG:", JSON.stringify(res, null, 2)) // Revisa consola
-
-            const data = res?.data || res
-
-            // Buscar el link en todas las rutas posibles de Stellar
-            let dl = data?.download || data?.dl || data?.url || data?.video
-            if(!dl && data?.result) dl = data.result?.download || data.result?.url || data.result?.video
-            if(!dl && data?.medias) dl = data.medias[0]?.url || data.medias[0]?.download
-
-            let caption = data?.caption || data?.title || data?.description || 'Instagram'
-            let thumb = data?.thumbnail || data?.image || data?.cover
-
-            if (!dl) {
-                await m.react('❌')
-                return m.reply(`《✧》 No se pudo descargar.\n\nPosibles motivos:\n1. El reel es privado\n2. Tiene música con copyright\n3. Es muy nuevo\n4. Stellar está caído\nLink: ${text}`)
-            }
-
-            const mediaBuffer = await getBuffer(dl)
-
-            await conn.sendMessage(m.chat, {
-                video: mediaBuffer,
-                caption: `_\`୨୧ Instagram\`_\n\n_${caption}_`,
-                mimetype: 'video/mp4'
-            }, { quoted: m })
-        }
-
         await m.react('✅')
 
     } catch (e) {
@@ -144,9 +110,8 @@ let handler = async (m, { conn, text, command }) => {
     }
 }
 
-handler.help = ['play1 <nombre>', 'tomp3 <link>', 'ig <link>']
-handler.tags = ['downloader']
-handler.command = /^(play1|tomp3|ig)$/i
-handler.register = false
+handler.help = ['play1 <nombre>', 'tomp3 <link>']
+handler.tags = ['descargas']
+handler.command = /^(play1|tomp3)$/i
 
 export default handler
