@@ -46,9 +46,10 @@ let handler = async (m, { conn, text, command }) => {
             const dlEndpoint = `${api.url}/dl/ytmp3?url=${encodeURIComponent(url)}&key=${api.key}`
             const resDl = await fetch(dlEndpoint).then(r => r.json())
 
-            if (!resDl?.data?.dl) throw 'No se pudo descargar el audio'
+            const dl = resDl?.data?.dl || resDl?.data?.download || resDl?.download
+            if (!dl) throw 'No se pudo descargar el audio'
 
-            const audioBuffer = await getBuffer(resDl.data.dl)
+            const audioBuffer = await getBuffer(dl)
 
             await conn.sendMessage(m.chat, {
                 audio: audioBuffer,
@@ -65,20 +66,30 @@ let handler = async (m, { conn, text, command }) => {
             const apiUrl = `${api.url}/dl/tiktokmp3?url=${encodeURIComponent(text)}&key=${api.key}`
             const res = await fetch(apiUrl).then(r => r.json())
 
-            if (!res?.data?.download) throw 'No se pudo descargar. Link mal o privado'
+            console.log("RESPUESTA TIKTOK:", JSON.stringify(res, null, 2)) // Ver en consola
 
-            const data = res.data
-            const audioBuffer = await getBuffer(data.download)
+            const data = res?.data || res?.result || res
+            const dl = data?.download || data?.dl || data?.url || data?.link
+            const title = data?.title || data?.name || 'tiktok'
+            const author = data?.author || data?.username || 'Desconocido'
+            const thumb = data?.thumbnail || data?.image || data?.cover
 
-            const caption = `_\`୨୧ TikTok MP3\` ───── *${data.title || 'Sin título'}*_
+            if (!dl) {
+                await m.react('❌')
+                return m.reply("《✧》 No se pudo descargar. El link es privado o la API falló")
+            }
 
-> _👤 \`Autor\` ── ${data.author || 'Desconocido'}_
+            const audioBuffer = await getBuffer(dl)
+
+            const caption = `_\`୨୧ TikTok MP3\` ───── *${title}*_
+
+> _👤 \`Autor\` ── ${author}_
 > _🜸 \`Link\` ── ${text}_
 
 > _── ִ ۟ *¡Enviando audio!*_`
 
-            if (data.thumbnail) {
-                const thumbBuffer = await getBuffer(data.thumbnail)
+            if (thumb) {
+                const thumbBuffer = await getBuffer(thumb)
                 await conn.sendMessage(m.chat, { image: thumbBuffer, caption }, { quoted: m })
             } else {
                 await m.reply(caption)
@@ -87,7 +98,7 @@ let handler = async (m, { conn, text, command }) => {
             await conn.sendMessage(m.chat, {
                 audio: audioBuffer,
                 mimetype: 'audio/mpeg',
-                fileName: `${data.title || 'tiktok'}.mp3`,
+                fileName: `${title}.mp3`,
                 ptt: false
             }, { quoted: m })
         }
@@ -96,7 +107,7 @@ let handler = async (m, { conn, text, command }) => {
 
     } catch (e) {
         await m.react('❌')
-        console.log(e)
+        console.log("ERROR:", e)
         await m.reply(`《✧》 Error: ${e.message}`)
     }
 }
