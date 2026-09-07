@@ -1,75 +1,22 @@
-import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
-
-const handler = async (m, { conn, args, text, participants, isAdmin, isBotAdmin }) => {
-    if (!m.isGroup) return m.reply('《✤》 Solo en grupos')
-    if (!isAdmin) return m.reply('《✤》 Solo admins')
-    if (!isBotAdmin) return m.reply('《✤》 Bot necesita ser admin')
-
-    const users = participants.map((u) => u.id)
-    const group = await conn.groupMetadata(m.chat).catch(() => ({}))
-    const groupName = group.subject || 'Grupo'
-    const userText = text || ''
-    
-    const q = m.quoted || m
-    const mime = (q.msg || q).mimetype || ''
-    const isMedia = /image|video|sticker|audio/.test(mime)
-    
-    // FECHA ESTILO ESTADO
-    const fecha = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long' }) + ' 🌙'
-    
-    // LOGO PARA EL RECUADRO - CAMBIALO
-    const thumb = await (await fetch('https://files.evogb.win/fw2NBP.jpg')).buffer().catch(() => Buffer.alloc(0))
-
-    const contextInfo = {
-        mentionedJid: users,
-        forwardingScore: 999,
-        isForwarded: true,
-        externalAdReply: {
-            title: groupName,
-            body: `${groupName} 💗☁️ | ${fecha}`,
-            thumbnail: thumb,
-            sourceUrl: `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat).catch(() => '')}`,
-            mediaType: 1,
-            renderLargerThumbnail: true
-        }
+let handler = async (m, { conn, text, participants }) => {
+  const mime = m.mtype
+  const type = /imageMessage|videoMessage|conversation|extendedTextMessage/.test(mime)
+  if (!m.quoted && type) {
+    if ((mime === 'imageMessage')) {
+      conn.sendMessage(m.chat, { image: await m.download?.(), mentions: participants.map(u => conn.decodeJid(u.id)), caption: text ? text : "", mentions: participants.map(u => conn.decodeJid(u.id)) }, { quoted: m });
+    } else if ((mime === 'videoMessage')) {
+      conn.sendMessage(m.chat, { video: await m.download?.(), mentions: participants.map(u => conn.decodeJid(u.id)), mimetype: 'video/mp4', caption: text ? text : "" }, { quoted: m })
+    } else if ((mime === ("conversation") || ("extendedTextMessage"))) {
+      conn.sendMessage(m.chat, { text: text ? text : "Zurdo’s Bot", mentions: participants.map(u => conn.decodeJid(u.id)) }, { quoted: m })
     }
-
-    try {
-        if (isMedia) {
-            const media = await q.download()
-            const type = q.mtype.replace('Message', '').toLowerCase()
-            
-            let messageContent = { mentions: users, contextInfo }
-            if (type === 'image') messageContent.image = media
-            if (type === 'video') { messageContent.video = media; messageContent.mimetype = 'video/mp4' }
-            if (type === 'audio') { messageContent.audio = media; messageContent.mimetype = 'audio/mpeg'; messageContent.fileName = 'hidetag.mp3' }
-            if (type === 'sticker') messageContent.sticker = media
-            
-            if (userText) messageContent.caption = userText
-            else if (q.text || q.caption) messageContent.caption = q.text || q.caption
-            
-            return await conn.sendMessage(m.chat, messageContent)
-        }
-
-        // SOLO TEXTO
-        const finalText = userText || q.text || q.caption || '*Hola :D*'
-        return await conn.sendMessage(m.chat, {
-            text: finalText,
-            mentions: users,
-            contextInfo: contextInfo
-        })
-
-    } catch (e) {
-        console.log(e)
-        return m.reply(`《✤》 Error: ${e.message}`)
-    }
+  } else if (m.quoted) {
+    await conn.sendMessage(m.chat, { forward: m.quoted.fakeObj, mentions: participants.map(u => conn.decodeJid(u.id)) }, { quoted: m })
+  }
 }
-
-handler.help = ['n <texto>', 'hidetag <texto>', 'noti <texto>', 'aviso <texto>']
-handler.tags = ['group']
-handler.command = ['n', 'hidetag', 'noti', 'aviso', 'notify', 'notificar']
+handler.help = ['notify', 'hidetag']
+handler.tags = ['adm']
+handler.command = ['hidetag', 'notify', 'n', 'noti', 'notificar', 'notif', 'aviso', 'avisar',]
 handler.group = true
 handler.admin = true
-handler.botAdmin = true
 
 export default handler
