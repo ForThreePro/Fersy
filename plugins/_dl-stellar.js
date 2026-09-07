@@ -3,59 +3,94 @@ import fetch from "node-fetch"
 
 const api = { url: 'https://api.stellarwa.xyz', key: 'proyectsV2' }
 
-// Funcion para convertir url a buffer
 const getBuffer = async (url) => {
     const res = await fetch(url)
     return Buffer.from(await res.arrayBuffer())
 }
 
-let handler = async (m, { conn, text, args }) => {
-    if (!text) return m.reply("《✧》 Por favor, menciona el nombre de la canción\nEjemplo: *.play1 tusa*")
+let handler = async (m, { conn, text, command }) => {
+    if (!text) return m.reply(`《✧》 Falta texto o link\n
+*.play1* nombre de la canción
+*.tomp3* link de tiktok`)
 
     await m.react('⏳')
     try {
-        // 1. BUSCAR EN YT
-        const searchResult = await ytsearch(text)
-        if (!searchResult.videos ||!searchResult.videos.length) {
-            await m.react('❌')
-            return m.reply("《✧》 No se encontró la canción.")
-        }
 
-        const video = searchResult.videos[0]
-        const { title, author, timestamp: duration, views, url, image } = video
-        const vistas = (views || 0).toLocaleString()
-        const canal = author?.name || author || "Desconocido"
-        const thumbBuffer = await getBuffer(image)
+        // ======================================
+        // COMANDO.play1
+        // ======================================
+        if (command === 'play1') {
+            const searchResult = await ytsearch(text)
+            if (!searchResult.videos ||!searchResult.videos.length) {
+                await m.react('❌')
+                return m.reply("《✧》 No se encontró la canción.")
+            }
 
-        const caption = `_\`୨୧ Download\` ───── *${title}*_
+            const video = searchResult.videos[0]
+            const { title, author, timestamp: duration, views, url, image } = video
+            const vistas = (views || 0).toLocaleString()
+            const canal = author?.name || author || "Desconocido"
+            const thumbBuffer = await getBuffer(image)
+
+            const caption = `_\`୨୧ YT Download\` ───── *${title}*_
 
 > _✐ \`Canal\` ── ${canal}_
 > _ⴵ \`Duración\` ── ${duration || ''}_
 > _✰ \`Vistas\` ── ${vistas}_
 > _🜸 \`Enlace\` ── ${url}_
 
-> _── ִ ۟ *¡Enviando audio, por favor espera!*_`
+> _── ִ ۟ *¡Enviando audio!*_`
 
-        await conn.sendMessage(m.chat, { image: thumbBuffer, caption }, { quoted: m })
+            await conn.sendMessage(m.chat, { image: thumbBuffer, caption }, { quoted: m })
 
-        // 2. DESCARGAR CON STELLAR
-        const dlEndpoint = `${api.url}/dl/ytmp3?url=${encodeURIComponent(url)}&key=${api.key}`
-        const resDl = await fetch(dlEndpoint).then(r => r.json())
+            const dlEndpoint = `${api.url}/dl/ytmp3?url=${encodeURIComponent(url)}&key=${api.key}`
+            const resDl = await fetch(dlEndpoint).then(r => r.json())
 
-        if (!resDl?.data?.dl) {
-            await m.react('❌')
-            return m.reply("《✧》 No se pudo descargar el *audio*, la API falló.")
+            if (!resDl?.data?.dl) throw 'No se pudo descargar el audio'
+
+            const audioBuffer = await getBuffer(resDl.data.dl)
+
+            await conn.sendMessage(m.chat, {
+                audio: audioBuffer,
+                mimetype: 'audio/mpeg',
+                fileName: `${title}.mp3`,
+                ptt: false
+            }, { quoted: m })
         }
 
-        const audioBuffer = await getBuffer(resDl.data.dl)
+        // ======================================
+        // COMANDO.tomp3
+        // ======================================
+        if (command === 'tomp3') {
+            const apiUrl = `${api.url}/dl/tiktokmp3?url=${encodeURIComponent(text)}&key=${api.key}`
+            const res = await fetch(apiUrl).then(r => r.json())
 
-        // 3. SOLO MANDAR AUDIO
-        await conn.sendMessage(m.chat, {
-            audio: audioBuffer,
-            mimetype: 'audio/mpeg',
-            fileName: `${title}.mp3`,
-            ptt: false
-        }, { quoted: m })
+            if (!res?.data?.download) throw 'No se pudo descargar. Link mal o privado'
+
+            const data = res.data
+            const audioBuffer = await getBuffer(data.download)
+
+            const caption = `_\`୨୧ TikTok MP3\` ───── *${data.title || 'Sin título'}*_
+
+> _👤 \`Autor\` ── ${data.author || 'Desconocido'}_
+> _🜸 \`Link\` ── ${text}_
+
+> _── ִ ۟ *¡Enviando audio!*_`
+
+            if (data.thumbnail) {
+                const thumbBuffer = await getBuffer(data.thumbnail)
+                await conn.sendMessage(m.chat, { image: thumbBuffer, caption }, { quoted: m })
+            } else {
+                await m.reply(caption)
+            }
+
+            await conn.sendMessage(m.chat, {
+                audio: audioBuffer,
+                mimetype: 'audio/mpeg',
+                fileName: `${data.title || 'tiktok'}.mp3`,
+                ptt: false
+            }, { quoted: m })
+        }
 
         await m.react('✅')
 
@@ -66,8 +101,8 @@ let handler = async (m, { conn, text, args }) => {
     }
 }
 
-handler.help = ['play1 <nombre>']
-handler.tags = ['descargas']
-handler.command = /^(play1)$/i
+handler.help = ['play1 <nombre>', 'tomp3 <link>']
+handler.tags = ['downloader']
+handler.command = /^(play1|tomp3)$/i
 
 export default handler
