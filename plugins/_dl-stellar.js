@@ -1,61 +1,74 @@
-import axios from 'axios'
+import ytsearch from "yt-search"
+import fetch from "node-fetch"
 
 const api = { url: 'https://api.stellarwa.xyz', key: 'proyectsV2' }
 
-let handler = async (m, { conn, text }) => {
-    if (!text) return m.reply(`Usa: *.play1 nombre de la canción*\nEjemplo: .play1 tusa`)
+let handler = async (m, { conn, text, args }) => {
+    if (!text) return m.reply("《✧》 Por favor, menciona el nombre de la canción\nEjemplo: *.play1 tusa*")
 
     await m.react('⏳')
     try {
-        const res = await axios.get(`${api.url}/dl/youtubeplay?query=${encodeURIComponent(text)}&key=${api.key}`, { timeout: 120000 })
-        
-        console.log("RESPUESTA API:", JSON.stringify(res.data, null, 2)) // Para ver en consola qué devuelve
-        
-        const data = res.data || res.data.result || res.data
-        
-        if (!data) throw 'La API no devolvió datos'
-        
-        const dl = data.download || data.url || data.link
-        const title = data.title || data.name || text
-        const thumb = data.thumbnail || data.image || data.thumb
-        const author = data.author || data.channel || 'Desconocido'
-
-        if (!dl) throw 'No hay link de descarga en la respuesta'
-
-        // PASO 1: CARATULA
-        if (thumb) {
-            await conn.sendMessage(m.chat, {
-                image: { url: thumb },
-                caption: `*${title}*\n👤 ${author}\n⏱️ ${data.duration || '-'}`
-            }, { quoted: m })
-        } else {
-            await m.reply(`*${title}*\nDescargando...`)
+        // 1. BUSCAR EN YT
+        const searchResult = await ytsearch(text)
+        if (!searchResult.videos ||!searchResult.videos.length) {
+            await m.react('❌')
+            return m.reply("《✧》 No se encontró la canción.")
         }
 
-        // PASO 2: AUDIO
+        const video = searchResult.videos[0]
+        const { title, author, timestamp: duration, views, url, image } = video
+        const vistas = (views || 0).toLocaleString()
+        const canal = author?.name || author || "Desconocido"
+        const thumbBuffer = await getBuffer(image)
+
+        const caption = `_\`୨୧ Download\` ───── *${title}*_
+
+> _✐ \`Canal\` ── ${canal}_
+> _ⴵ \`Duración\` ── ${duration || ''}_
+> _✰ \`Vistas\` ── ${vistas}_
+> _🜸 \`Enlace\` ── ${url}_
+
+> _── ִ ۟ *¡Enviando audio, por favor espera!*_`
+
+        await conn.sendMessage(m.chat, { image: thumbBuffer, caption }, { quoted: m })
+
+        // 2. DESCARGAR CON STELLAR
+        const dlEndpoint = `${api.url}/dl/ytmp3?url=${encodeURIComponent(url)}&key=${api.key}`
+        const resDl = await fetch(dlEndpoint).then(r => r.json())
+
+        if (!resDl?.data?.dl) {
+            await m.react('❌')
+            return m.reply("《✧》 No se pudo descargar el *audio*, la API falló.")
+        }
+
+        const audioBuffer = await getBuffer(resDl.data.dl)
+
+        // 3. MANDAR AUDIO
         await conn.sendMessage(m.chat, {
-            audio: { url: dl },
+            audio: audioBuffer,
             mimetype: 'audio/mpeg',
             fileName: `${title}.mp3`
         }, { quoted: m })
 
-        // PASO 3: DOCUMENTO
+        // 4. MANDAR DOCUMENTO MP3
         await conn.sendMessage(m.chat, {
-            document: { url: dl },
+            document: audioBuffer,
             mimetype: 'audio/mpeg',
-            fileName: `${title}.mp3`
+            fileName: `${title}.mp3`,
+            caption: `Documento MP3 - ${title}`
         }, { quoted: m })
 
         await m.react('✅')
 
-    } catch (err) {
+    } catch (e) {
         await m.react('❌')
-        console.log("ERROR COMPLETO:", err)
-        m.reply(`Error: ${err.response?.data?.msg || err.message}\n\nManda el nombre de la canción sola, sin "official video"`)
+        console.log(e)
+        await m.reply(`《✧》 Error: ${e.message}`)
     }
 }
 
 handler.help = ['play1 <nombre>']
-handler.tags = ['downloader']
+handler.tags = ['downloader', 'music']
 handler.command = /^(play1)$/i
+
 export default handler
