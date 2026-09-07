@@ -1,8 +1,13 @@
 import ytsearch from "yt-search"
-import { getBuffer } from "#serialize"
 import fetch from "node-fetch"
 
 const api = { url: 'https://api.stellarwa.xyz', key: 'proyectsV2' }
+
+// Funcion para convertir url a buffer
+const getBuffer = async (url) => {
+    const res = await fetch(url)
+    return Buffer.from(await res.arrayBuffer())
+}
 
 let handler = async (m, { conn, text, args }) => {
     if (!text) return m.reply("《✧》 Por favor, menciona el nombre de la canción\nEjemplo: *.play1 tusa*")
