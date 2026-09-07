@@ -1,4 +1,5 @@
 import ytsearch from "yt-search"
+import { getBuffer } from "#serialize"
 import fetch from "node-fetch"
 
 const api = { url: 'https://api.stellarwa.xyz', key: 'proyectsV2' }
@@ -43,19 +44,12 @@ let handler = async (m, { conn, text, args }) => {
 
         const audioBuffer = await getBuffer(resDl.data.dl)
 
-        // 3. MANDAR AUDIO
+        // 3. SOLO MANDAR AUDIO
         await conn.sendMessage(m.chat, {
             audio: audioBuffer,
             mimetype: 'audio/mpeg',
-            fileName: `${title}.mp3`
-        }, { quoted: m })
-
-        // 4. MANDAR DOCUMENTO MP3
-        await conn.sendMessage(m.chat, {
-            document: audioBuffer,
-            mimetype: 'audio/mpeg',
             fileName: `${title}.mp3`,
-            caption: `Documento MP3 - ${title}`
+            ptt: false
         }, { quoted: m })
 
         await m.react('✅')
