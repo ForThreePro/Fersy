@@ -3,78 +3,39 @@ let handler = async (m, { conn, args, isAdmin, isBotAdmin }) => {
     if (!isAdmin) return m.reply('《✤》 Necesitas ser admin para usar este comando')
     if (!isBotAdmin) return m.reply('《✤》 Necesito ser admin para poder etiquetar a todos')
 
-    const text = args.join(' ')
+    let text = args.join(' ')
     let groupMetadata = await conn.groupMetadata(m.chat).catch(() => null)
-    let groupName = groupMetadata?.subject || 'Grupo' // DETECTA NOMBRE DEL GRUPO
-    let groupParticipants = groupMetadata?.participants || []
+    let groupName = groupMetadata?.subject || 'Grupo'
+    let participants = groupMetadata?.participants.map(p => p.id) || []
 
-    const mentions = groupParticipants.map(p => p.id).filter(Boolean)
-
-    if (!m.quoted && !text) {
-        return m.reply(`《✤》 Ingresa un texto o responde a un mensaje\n*Ejemplo:* .n buenos días`)
+    if (!text) {
+        return m.reply(`《✤》 Ingresa un texto\n*Ejemplo:* .n buenos días , está para sorteo`)
     }
 
-    const q = m.quoted || m
-    let mime = (q.msg || q).mimetype || q.mediaType || ''
-
-    if (!mime) {
-        if (q.msg?.imageMessage) mime = 'image'
-        else if (q.msg?.videoMessage) mime = 'video'
-        else if (q.msg?.stickerMessage) mime = 'sticker'
-        else if (q.msg?.audioMessage) mime = 'audio'
-    }
-
-    const isMedia = /image|video|sticker|audio/.test(mime)
-
-    const quotedText =
-        q.text ||
-        q.caption ||
-        q.body ||
-        q.message?.conversation ||
-        q.message?.extendedTextMessage?.text ||
-        ''
-
-    const finalText = text || quotedText
-    const hasText = Boolean(finalText && finalText.trim())
-
-    // FECHA COMO EN LA FOTO: "7 de septiembre 🌙"
-    const fecha = new Date().toLocaleDateString('es-PE', { 
-        day: 'numeric', 
-        month: 'long'
-    }) + ' 🌙'
-
-    // ESTE ES EL QUE HACE EL EFECTO EXACTO
-    const contextInfo = {
-        mentionedJid: mentions,
-        forwardingScore: 1,
-        isForwarded: true,
-        externalAdReply: {
-            title: groupName, // NOMBRE DEL GRUPO ARRIBA
-            body: `${groupName} 💗☁️ | ${fecha}`, // NOMBRE + FECHA ABAJO
-            thumbnail: await (await fetch('https://i.imgur.com/8K2V9Qm.jpg')).buffer(), // PON TU LOGO AQUI
-            sourceUrl: `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat)}`, // link del grupo
-            mediaType: 1,
-            renderLargerThumbnail: true
-        }
-    }
+    const fecha = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long' }) + ' 🌙'
 
     try {
-        if (isMedia) {
-            let media = await q.download()
-            return conn.sendMessage(m.chat, 
-                hasText 
-                ? { [mime]: media, caption: finalText, ...contextInfo } 
-                : { [mime]: media, ...contextInfo }
-            )
-        }
+        await conn.sendMessage(m.chat, { 
+            text: text,
+            mentions: participants,
+            contextInfo: {
+                mentionedJid: participants,
+                forwardingScore: 999,
+                isForwarded: true,
+                externalAdReply: {
+                    title: groupName,
+                    body: `${groupName} 💗☁️ | ${fecha}`,
+                    thumbnail: await (await fetch('https://files.evogb.win/fw2NBP.jpg')).buffer(), // logo
+                    sourceUrl: `https://chat.whatsapp.com/${await conn.groupInviteCode(m.chat)}`,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: null })
         
-        if (!hasText) return m.reply('《✤》 Ingresa un texto o responde a un mensaje.')
-
-        return conn.sendMessage(m.chat, { text: finalText, ...contextInfo }, { quoted: null })
-
     } catch (e) {
         console.log(e)
-        return m.reply('《✤》 Ocurrió un error al ejecutar el comando')
+        return m.reply('《✤》 Error: ' + e.message)
     }
 }
 
