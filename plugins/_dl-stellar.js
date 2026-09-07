@@ -110,7 +110,7 @@ let handler = async (m, { conn, text, command }) => {
     }
 }
 
-handler.help = ['play1 <nombre>', 'tomp3 <link>']
+handler.help = ['play1 <nombre>', 'ttmp3 <link>']
 handler.tags = ['descargas']
 handler.command = /^(play1|ttmp3)$/i
 
