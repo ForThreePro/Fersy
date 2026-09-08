@@ -8,11 +8,11 @@ let handler = async (m, { conn, participants }) => {
     let user2 = members[Math.floor(Math.random() * members.length)]
     while(user1 === user2) user2 = members[Math.floor(Math.random() * members.length)]
 
-    let name1 = '@' + user1.split('@')[0]
-    let name2 = '@' + user2.split('@')[0]
+    let tag1 = '@' + user1.split('@')[0]
+    let tag2 = '@' + user2.split('@')[0]
 
     await conn.sendMessage(m.chat, {
-        text: `💘 *CALCULANDO SHIP...* 💘\n\n${name1} + ${name2}`,
+        text: `💘 *CALCULANDO SHIP...* 💘\n\n${tag1} + ${tag2}`,
         mentions: [user1, user2]
     })
 
@@ -31,11 +31,12 @@ let handler = async (m, { conn, participants }) => {
         let porcentaje = Math.floor(Math.random() * 101)
         let texto = porcentaje < 30? '💔 Ni con magia...' : porcentaje < 60? '💛 Tal vez...' : porcentaje < 80? '❤️ Se ven lindos' : '💖 CASORIO YA!!'
 
-        // USAMOS name1 y name2 con el @ para que WhatsApp los pinte
-        let caption = `🐱 *GARFIELD SHIP* 🐱\n\n${name1} + ${name2}\n\n*Compatibilidad: ${porcentaje}%*\n${texto}`
+        let caption = `🐱 *GARFIELD SHIP* 🐱\n\n${tag1} + ${tag2}\n\n*Compatibilidad: ${porcentaje}%*\n${texto}`
 
-        await conn.sendFile(m.chat, buffer, 'ship.png', caption, m, {
-            mentions: [user1, user2] // Pasamos los jid completos
+        await conn.sendMessage(m.chat, {
+            image: buffer,
+            caption: caption,
+            mentions: [user1, user2] // LOS 2 JID COMPLETOS
         })
 
     } catch (e) {
