@@ -17,6 +17,6 @@ handler.help = ['borrarlista']
 handler.tags = ['admin']
 handler.command = /^(borrarlista)$/i // <-- Cambiado aquí
 handler.group = true
-handler.admin = true // Esto ya bloquea que no-admins lo usen
+handler.admin = false // Esto ya bloquea que no-admins lo usen
 
 export default handler
