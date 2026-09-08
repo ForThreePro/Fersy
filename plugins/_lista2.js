@@ -14,6 +14,7 @@ let handler = async (m, { conn, command }) => {
 handler.help = ['borrarlista']
 handler.tags = ['group']
 handler.command = /^(borrarlista)$/i
+handler.admin = true
 handler.group = true
 
 export default handler
