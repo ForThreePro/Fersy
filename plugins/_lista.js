@@ -14,8 +14,8 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
 
     let diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
 
-    //.lista1 = MOSTRAR TODOS LOS DÍAS LUNES A SÁBADO
-    if (command === 'lista1') {
+    //.verlista = MOSTRAR TODOS LOS DÍAS LUNES A SÁBADO
+    if (command === 'verlista') {
         let tabla = `📋 *LISTA COMPLETA LUNES A SÁBADO*\n\n`
 
         diasSemana.forEach(dia => {
@@ -59,9 +59,9 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
     }
 }
 
-handler.help = ['lista nombre/numero/rol', 'lista1']
+handler.help = ['lista nombre/numero/rol', 'verlista']
 handler.tags = ['group']
-handler.command = /^(lista|lista1)$/i
+handler.command = /^(lista|verlista)$/i // <-- Cambiado aquí
 handler.group = true
 
 export default handler
