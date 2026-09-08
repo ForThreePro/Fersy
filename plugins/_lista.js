@@ -1,7 +1,6 @@
 import fs from 'fs'
 let db = './src/database/lista.json'
 
-// Crear carpeta y archivo si no existe
 if (!fs.existsSync('./src/database')) fs.mkdirSync('./src/database', { recursive: true })
 if (!fs.existsSync(db)) fs.writeFileSync(db, JSON.stringify([]))
 
@@ -13,30 +12,26 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
     let fecha = now.toLocaleDateString('es-PE', { timeZone: 'America/Lima', weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
     let diaSemana = now.toLocaleDateString('es-PE', { timeZone: 'America/Lima', weekday: 'long' }).toLowerCase()
 
-    let diasValidos = ['lunes', 'martes', 'miércoles', 'miercoles', 'jueves', 'viernes', 'sábado', 'sabado']
+    let diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
 
     //.lista1 = MOSTRAR TODOS LOS DÍAS LUNES A SÁBADO
     if (command === 'lista1') {
-        if (data.length === 0) return m.reply('📝 *LISTA VACÍA*\nAún nadie se ha anotado.')
-
         let tabla = `📋 *LISTA COMPLETA LUNES A SÁBADO*\n\n`
 
-        // Agrupar por día
-        let dias = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
-
-        dias.forEach(dia => {
+        diasSemana.forEach(dia => {
+            // Buscar anotados de ese día
             let anotadosDelDia = data.filter(v => v.dia.toLowerCase().includes(dia))
-            if (anotadosDelDia.length > 0) {
-                tabla += `*📌 ${dia.toUpperCase()}*\n`
+
+            tabla += `*📌 ${dia.toUpperCase()}*\n`
+
+            if (anotadosDelDia.length === 0) {
+                tabla += ` _Sin anotados_\n\n`
+            } else {
                 anotadosDelDia.forEach((v, i) => {
                     tabla += ` *${i+1}.* ${v.nombre} [${v.rol}]\n 📱 ${v.numero}\n 📅 ${v.dia}\n\n`
                 })
             }
         })
-
-        if (tabla === `📋 *LISTA COMPLETA LUNES A SÁBADO*\n\n`) {
-            return m.reply('📝 *LISTA VACÍA*')
-        }
 
         return conn.reply(m.chat, tabla.trim(), m)
     }
@@ -44,7 +39,7 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
     //.lista = ANOTAR
     if (command === 'lista') {
         // Solo Lunes a Sábado
-        if (!diasValidos.includes(diaSemana)) {
+        if (!diasSemana.includes(diaSemana)) {
             return m.reply('⛔ *FUERA DE HORARIO*\nSolo se puede anotar de *Lunes a Sábado*')
         }
 
