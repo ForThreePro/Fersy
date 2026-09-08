@@ -15,16 +15,19 @@ let handler = async (m, { conn, participants }) => {
 
     try {
         let defaultImg = 'https://i.imgur.com/1tMFa32.png'
-        let pp1 = await conn.profilePictureUrl(user1, 'image').catch(_ => defaultImg)
-        let pp2 = await conn.profilePictureUrl(user2, 'image').catch(_ => defaultImg)
+        let avatar1 = await conn.profilePictureUrl(user1, 'image').catch(_ => defaultImg)
+        let avatar2 = await conn.profilePictureUrl(user2, 'image').catch(_ => defaultImg)
+        
+        // Fondo por defecto de corazones
+        let background = 'https://i.imgur.com/jm5Yl1r.png'
 
-        // URL CORRECTA CON key=
-        let url = `https://api.stellarwa.xyz/generate/ship?user1=${pp1}&user2=${pp2}&key=proyectsV2`
+        // NUEVA URL CON LOS PARAMETROS CORRECTOS
+        let url = `https://api.stellarwa.xyz/generate/ship?avatar1=${encodeURIComponent(avatar1)}&avatar2=${encodeURIComponent(avatar2)}&background=${encodeURIComponent(background)}&key=proyectsV2`
         
         let res = await fetch(url)
         if(!res.ok) {
-            let error = await res.json().catch(_ => res.text())
-            return m.reply(`⚠️ Error de la API:\n${JSON.stringify(error)}`)
+            let error = await res.text()
+            return m.reply(`⚠️ Error de la API:\n${error}`)
         }
         
         let buffer = await res.buffer()
@@ -36,7 +39,7 @@ let handler = async (m, { conn, participants }) => {
 
     } catch (e) {
         console.log(e)
-        m.reply('⚠️ Error al conectar con la API. Revisa tu internet')
+        m.reply('⚠️ Error al conectar con la API')
     }
 }
 
