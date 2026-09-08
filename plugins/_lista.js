@@ -15,16 +15,33 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
 
     let diasValidos = ['lunes', 'martes', 'miércoles', 'miercoles', 'jueves', 'viernes', 'sábado', 'sabado']
 
+    //.lista1 = MOSTRAR TODOS LOS DÍAS LUNES A SÁBADO
     if (command === 'lista1') {
         if (data.length === 0) return m.reply('📝 *LISTA VACÍA*\nAún nadie se ha anotado.')
 
-        let tabla = `📋 *LISTA LUNES A SÁBADO*\n*Hoy:* ${fecha}\n\n`
-        data.forEach((v, i) => {
-            tabla += `*${i+1}.* ${v.nombre} [${v.rol}]\n 📱 ${v.numero}\n 📅 ${v.dia}\n\n`
+        let tabla = `📋 *LISTA COMPLETA LUNES A SÁBADO*\n\n`
+
+        // Agrupar por día
+        let dias = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
+
+        dias.forEach(dia => {
+            let anotadosDelDia = data.filter(v => v.dia.toLowerCase().includes(dia))
+            if (anotadosDelDia.length > 0) {
+                tabla += `*📌 ${dia.toUpperCase()}*\n`
+                anotadosDelDia.forEach((v, i) => {
+                    tabla += ` *${i+1}.* ${v.nombre} [${v.rol}]\n 📱 ${v.numero}\n 📅 ${v.dia}\n\n`
+                })
+            }
         })
+
+        if (tabla === `📋 *LISTA COMPLETA LUNES A SÁBADO*\n\n`) {
+            return m.reply('📝 *LISTA VACÍA*')
+        }
+
         return conn.reply(m.chat, tabla.trim(), m)
     }
 
+    //.lista = ANOTAR
     if (command === 'lista') {
         // Solo Lunes a Sábado
         if (!diasValidos.includes(diaSemana)) {
