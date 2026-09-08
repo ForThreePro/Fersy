@@ -14,7 +14,7 @@ let handler = async (m, { conn, participants }) => {
     })
 
     try {
-        let defaultImg = 'https://i.imgur.com/1tMFa32.png'
+        let defaultImg = 'https://files.evogb.win/E2yVdA.jpg' // TU FOTO DEFAULT
         let avatar1 = await conn.profilePictureUrl(user1, 'image').catch(_ => defaultImg)
         let avatar2 = await conn.profilePictureUrl(user2, 'image').catch(_ => defaultImg)
         let background = 'https://files.evogb.win/7BY3Yv.jpg'
@@ -22,21 +22,22 @@ let handler = async (m, { conn, participants }) => {
         let url = `https://api.stellarwa.xyz/generate/ship?avatar1=${encodeURIComponent(avatar1)}&avatar2=${encodeURIComponent(avatar2)}&background=${encodeURIComponent(background)}&key=proyectsV2`
         
         let res = await fetch(url)
-        let txt = await res.text() // Leemos todo como texto primero
+        let json = await res.json() // Stellar con proyectsV2 siempre devuelve JSON
         
-        console.log("RESPUESTA DE STELLAR:", txt) // Mira tu consola
-        
-        if(!res.ok || txt.includes('error')) {
-            return m.reply(`⚠️ Error de Stellar:\n${txt}`)
-        }
-        
-        // Si es imagen directa
-        let buffer = Buffer.from(txt, 'binary')
-        
+        if(json.error) throw json.error
+        if(!json.result) throw 'No vino imagen en el result'
+
+        // CONVERTIR BASE64 A BUFFER BIEN
+        let buffer = Buffer.from(json.result, 'base64')
+
         let porcentaje = Math.floor(Math.random() * 101)
         let texto = porcentaje < 30 ? '💔 Ni con magia...' : porcentaje < 60 ? '💛 Tal vez...' : porcentaje < 80 ? '❤️ Se ven lindos' : '💖 CASORIO YA!!'
 
-        await conn.sendFile(m.chat, buffer, 'ship.jpg', `🐱 *GARFIELD SHIP* 🐱\n\n@${user1.split('@')[0]} + @${user2.split('@')[0]}\n\n*${porcentaje}%*\n${texto}`, m, { mentions: [user1, user2] })
+        // IMPORTANTE: mandar como image, no document
+        await conn.sendFile(m.chat, buffer, 'ship.jpg', `🐱 *GARFIELD SHIP* 🐱\n\n@${user1.split('@')[0]} + @${user2.split('@')[0]}\n\n*Compatibilidad: ${porcentaje}%*\n${texto}`, m, { 
+            mentions: [user1, user2],
+            mimetype: 'image/jpeg' // Forzamos que sea imagen
+        })
 
     } catch (e) {
         console.log(e)
@@ -44,6 +45,9 @@ let handler = async (m, { conn, participants }) => {
     }
 }
 
+handler.help = ['ship']
+handler.tags = ['fun']
 handler.command = ['ship']
 handler.group = true
+
 export default handler
