@@ -29,10 +29,10 @@ let handler = async (m, { conn, text, command }) => {
 
     //.lista = ANOTAR
     if (command === 'lista') {
-        if (!text) return m.reply(`❌ Usa:.lista Nombre/Numero/Rol\nEj:.lista Fersy/+518292/Bot`)
+        if (!text) return m.reply(`❌ Usa: .lista Nombre/Numero/Rol\nEj: .lista Fersy/+518292/Bot`)
 
         let [nombre, numero, rol] = text.split('/').map(v => v.trim())
-        if (!nombre ||!numero ||!rol) return m.reply(`❌ Faltan datos\nUsa:.lista Nombre/Numero/Rol`)
+        if (!nombre ||!numero ||!rol) return m.reply(`❌ Faltan datos\nUsa: .lista Nombre/Numero/Rol`)
 
         // Revisa si ya se anotó hoy
         let yaAnotado = data.find(v => v.numero === numero && v.dia === fecha)
@@ -42,18 +42,11 @@ let handler = async (m, { conn, text, command }) => {
         fs.writeFileSync(db, JSON.stringify(data, null, 2))
         return m.reply(`✅ *ANOTADO*\n\n*Nombre:* ${nombre}\n*Número:* ${numero}\n*Rol:* ${rol}\n*Día:* ${fecha}`)
     }
-
-    //.borrartodo = BORRAR TODO
-    if (command === 'borrartodo') {
-        if (!m.isAdmin &&!m.isOwner) return m.reply('❌ Solo admins')
-        fs.writeFileSync(db, JSON.stringify([]))
-        return m.reply('🗑️ *LISTA BORRADA*')
-    }
 }
 
-handler.help = ['lista1', 'lista nombre/numero/rol', 'borrartodo']
+handler.help = ['lista1', 'lista nombre/numero/rol']
 handler.tags = ['group']
-handler.command = /^(lista1|lista|borrartodo)$/i
+handler.command = /^(lista1|lista)$/i
 handler.group = true
 
 export default handler
