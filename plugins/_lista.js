@@ -19,9 +19,7 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
         let tabla = `📋 *LISTA COMPLETA LUNES A SÁBADO*\n\n`
 
         diasSemana.forEach(dia => {
-            // Buscar anotados de ese día
             let anotadosDelDia = data.filter(v => v.dia.toLowerCase().includes(dia))
-
             tabla += `*📌 ${dia.toUpperCase()}*\n`
 
             if (anotadosDelDia.length === 0) {
@@ -32,36 +30,39 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
                 })
             }
         })
-
         return conn.reply(m.chat, tabla.trim(), m)
     }
 
     //.lista = ANOTAR
     if (command === 'lista') {
-        // Solo Lunes a Sábado
         if (!diasSemana.includes(diaSemana)) {
             return m.reply('⛔ *FUERA DE HORARIO*\nSolo se puede anotar de *Lunes a Sábado*')
         }
-
         if (!text) return m.reply(`❌ *Formato incorrecto*\nUsa: ${usedPrefix}lista Nombre/Numero/Rol\nEj: ${usedPrefix}lista fetsy/618282/bot`)
 
         let [nombre, numero, rol] = text.split('/').map(v => v.trim())
         if (!nombre ||!numero ||!rol) return m.reply(`❌ *Faltan datos*\nUsa: ${usedPrefix}lista Nombre/Numero/Rol`)
 
-        // Verificar si ya se anotó hoy
         let yaAnotado = data.find(v => v.numero === numero && v.dia === fecha)
         if (yaAnotado) return m.reply(`⚠️ *YA ANOTADO*\n${nombre} ya fue anotado hoy *${fecha}*`)
 
         data.push({ nombre, numero, rol, dia: fecha })
         fs.writeFileSync(db, JSON.stringify(data, null, 2))
-
         return m.reply(`✅ *ANOTADO CORRECTAMENTE*\n\n*Nombre:* ${nombre}\n*Número:* ${numero}\n*Rol:* ${rol}\n*Día:* ${fecha}`)
+    }
+
+    //.borrarlista = BORRAR TODO - SOLO ADMIN
+    if (command === 'borrarlista') {
+        if (!m.isAdmin && !m.isOwner) return m.reply('❌ *SIN PERMISO*\nSolo admins pueden usar este comando')
+        
+        fs.writeFileSync(db, JSON.stringify([]))
+        return m.reply('🗑️ *LISTA BORRADA COMPLETAMENTE*\nSe eliminaron todos los registros de Lunes a Sábado')
     }
 }
 
-handler.help = ['lista nombre/numero/rol', 'verlista']
-handler.tags = ['group']
-handler.command = /^(lista|verlista)$/i // <-- Cambiado aquí
+handler.help = ['lista nombre/numero/rol', 'verlista', 'borrarlista']
+handler.tags = ['group', 'admin']
+handler.command = /^(lista|verlista|borrarlista)$/i
 handler.group = true
 
 export default handler
