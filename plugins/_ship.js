@@ -16,7 +16,7 @@ let handler = async (m, { conn, participants }) => {
 
     try {
         // Saca fotos de perfil
-        let pp1 = await conn.profilePictureUrl(user1, 'image').catch(_ => 'https://telegra.ph/file/24fa902ead26340f3df2c.png')
+        let pp1 = await conn.profilePictureUrl(user1, 'image').catch(_ => 'https://files.evogb.win/lE5vHT.jpg')
         let pp2 = await conn.profilePictureUrl(user2, 'image').catch(_ => 'https://telegra.ph/file/24fa902ead26340f3df2c.png')
 
         // API con tu key en la URL
