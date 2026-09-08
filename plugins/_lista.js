@@ -16,52 +16,71 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
 
     //.verlista = MOSTRAR TODOS LOS DÍAS LUNES A SÁBADO
     if (command === 'verlista') {
-        let tabla = `📋 *LISTA COMPLETA LUNES A SÁBADO*\n\n`
+        let tabla = `╭─「 📋 *LISTA SEMANAL* 」\n│ *Periodo:* Lunes a Sábado\n│ *Actualizado:* ${fecha}\n╰────────────────────\n\n`
 
         diasSemana.forEach(dia => {
-            // Buscar anotados de ese día
             let anotadosDelDia = data.filter(v => v.dia.toLowerCase().includes(dia))
-
-            tabla += `*📌 ${dia.toUpperCase()}*\n`
+            tabla += `📌 *${dia.toUpperCase()}*\n`
 
             if (anotadosDelDia.length === 0) {
-                tabla += ` _Sin anotados_\n\n`
+                tabla += ` └ _Sin anotados_\n\n`
             } else {
                 anotadosDelDia.forEach((v, i) => {
-                    tabla += ` *${i+1}.* ${v.nombre} [${v.rol}]\n 📱 ${v.numero}\n 📅 ${v.dia}\n\n`
+                    tabla += ` ├─ *${i+1}.* ${v.nombre} [${v.rol}]\n`
+                    tabla += ` │  📱 ${v.numero}\n`
+                    tabla += ` │  📅 ${v.dia}\n\n`
                 })
             }
         })
-
+        tabla += `╰─ Total: ${data.length} registro${data.length !== 1 ? 's' : ''}`
         return conn.reply(m.chat, tabla.trim(), m)
     }
 
     //.lista = ANOTAR
     if (command === 'lista') {
-        // Solo Lunes a Sábado
         if (!diasSemana.includes(diaSemana)) {
-            return m.reply('⛔ *FUERA DE HORARIO*\nSolo se puede anotar de *Lunes a Sábado*')
+            return m.reply(`╭─「 ⛔ *FUERA DE HORARIO* 」
+│ 
+│ Solo se puede anotar de 
+│ *Lunes a Sábado*
+╰──────────────────`)
         }
 
-        if (!text) return m.reply(`❌ *Formato incorrecto*\nUsa: ${usedPrefix}lista Nombre/Numero/Rol\nEj: ${usedPrefix}lista fetsy/618282/bot`)
+        if (!text) return m.reply(`╭─「 ❌ *FORMATO INCORRECTO* 」
+│ 
+│ Usa: ${usedPrefix}lista Nombre/Numero/Rol
+│ Ej: ${usedPrefix}lista fetsy/618282/bot
+╰──────────────────`)
 
         let [nombre, numero, rol] = text.split('/').map(v => v.trim())
-        if (!nombre ||!numero ||!rol) return m.reply(`❌ *Faltan datos*\nUsa: ${usedPrefix}lista Nombre/Numero/Rol`)
+        if (!nombre ||!numero ||!rol) return m.reply(`╭─「 ❌ *FALTAN DATOS* 」
+│ 
+│ Usa: ${usedPrefix}lista Nombre/Numero/Rol
+╰──────────────────`)
 
-        // Verificar si ya se anotó hoy
         let yaAnotado = data.find(v => v.numero === numero && v.dia === fecha)
-        if (yaAnotado) return m.reply(`⚠️ *YA ANOTADO*\n${nombre} ya fue anotado hoy *${fecha}*`)
+        if (yaAnotado) return m.reply(`╭─「 ⚠️ *YA ANOTADO* 」
+│ 
+│ ${nombre} ya fue anotado hoy
+│ *${fecha}*
+╰──────────────────`)
 
         data.push({ nombre, numero, rol, dia: fecha })
         fs.writeFileSync(db, JSON.stringify(data, null, 2))
 
-        return m.reply(`✅ *ANOTADO CORRECTAMENTE*\n\n*Nombre:* ${nombre}\n*Número:* ${numero}\n*Rol:* ${rol}\n*Día:* ${fecha}`)
+        return m.reply(`╭─「 ✅ *ANOTADO CORRECTAMENTE* 」
+│ 
+│ *Nombre:* ${nombre}
+│ *Número:* ${numero}
+│ *Rol:* ${rol}
+│ *Día:* ${fecha}
+╰──────────────────`)
     }
 }
 
 handler.help = ['lista nombre/numero/rol', 'verlista']
 handler.tags = ['group']
-handler.command = /^(lista|verlista)$/i // <-- Cambiado aquí
+handler.command = /^(lista|verlista)$/i
 handler.group = true
 
 export default handler
