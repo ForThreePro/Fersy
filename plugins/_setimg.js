@@ -2,6 +2,7 @@ import crypto from "crypto"
 import { FormData, Blob } from "formdata-node"
 import { fileTypeFromBuffer } from "file-type"
 import fs from 'fs'
+import { fileURLToPath } from 'url'
 import path from 'path'
 
 let handler = async (m, { conn, usedPrefix }) => {
@@ -21,28 +22,31 @@ let handler = async (m, { conn, usedPrefix }) => {
     if (!global.db.data.settings) global.db.data.settings = {}
     global.db.data.settings.botimg = link.url
 
-    // 2. ACTUALIZAR VARIABLE AL INSTANTE
+    // 2. ACTUALIZAR VARIABLE
     global.botimg = link.url
 
-    // 3. EDITAR EL CONFIG.JS PARA CAMBIAR EL FALLBACK
-    let configPath = path.join('./config.js')
+    // 3. EDITAR CONFIG.JS CON RUTA ABSOLUTA
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = path.dirname(__filename)
+    const configPath = path.join(__dirname, '../config.js') // Sube 1 carpeta porque setimg está en plugins
+
     let configFile = fs.readFileSync(configPath, 'utf8')
 
-    // Reemplaza la URL del fallback
-    configFile = configFile.replace(
-      /global\.botimg = global\.db\?\.\data\?\.\settings\?\.\botimg \|\| '.*?'/,
-      `global.botimg = global.db?.data?.settings?.botimg || '${link.url}'`
-    )
+    // Busca la línea y la reemplaza completa
+    const newLine = `global.botimg = global.db?.data?.settings?.botimg || '${link.url}'`
+    configFile = configFile.replace(/global\.botimg =.*?'https:\/\/files\.evogb\.win\/.*?'/, newLine)
 
-    fs.writeFileSync(configPath, configFile)
+    fs.writeFileSync(configPath, configFile, 'utf8')
 
-    let txt = `✅ *𝗜𝗠𝗔𝗚𝗘𝗡 𝗚𝗟𝗢𝗕𝗔𝗟 𝗔𝗖𝗧𝗨𝗔𝗟𝗜𝗭𝗔𝗗𝗔*
+    let txt = `✅ *𝗜𝗠𝗔𝗚𝗘𝗡 𝗔𝗖𝗧𝗨𝗔𝗟𝗜𝗭𝗔𝗗𝗔 𝗘𝗡 𝟯 𝗣𝗔𝗥𝗧𝗘𝗦*
 
-*➤ Nueva URL:* ${link.url}
-*➤ Guardado en:* DB + config.js
-*➤ Ahora el fallback también es esta imagen*
+*1. DB:* Guardado
+*2. Memoria:* Actualizado al instante
+*3. config.js:* Fallback cambiado
 
-> _Ya quedó permanente hasta en instalaciones desde 0_`
+*Nueva URL:* ${link.url}
+
+> _Haz.reset para que se recargue el config_`
 
     await conn.sendMessage(m.chat, { image: { url: link.url }, caption: txt }, { quoted: m })
     await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } })
@@ -50,7 +54,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   } catch (e) {
     console.error(e)
     await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
-    await conn.reply(m.chat, `*Error:* ${e.message}`, m)
+    await conn.reply(m.chat, `*Error al editar config:* ${e.message}\n\n*Asegúrate que el bot tenga permisos de escritura*`, m)
   }
 }
 
@@ -61,7 +65,6 @@ async function myCloud(content) {
   const formData = new FormData()
   formData.append("file", new Blob([content], { type: mime }), `${crypto.randomBytes(5).toString("hex")}.${ext}`)
   const response = await fetch("https://evogb.win/api/upload", { method: "POST", body: formData })
-  if (!response.ok) throw new Error()
   return await response.json()
 }
 
