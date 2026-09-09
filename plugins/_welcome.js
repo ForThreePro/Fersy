@@ -31,7 +31,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const userJid = m.messageStubParameters?.[0] || m.participant
   if (!userJid) return!0
 
-  const DEFAULT_IMG = 'https://files.evogb.win/E2yVdA.jpg'
+  const DEFAULT_IMG = global.botimg
   let imgBuffer = null
 
   // PASO 1: Intentar obtener foto del usuario
