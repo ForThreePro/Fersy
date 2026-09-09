@@ -13,7 +13,7 @@ let handler = async (m, { conn, participants, command }) => {
     }
 
     const getName = async (jid) => {
-        let name = jid.split('@')[0] // fallback con número
+        let name = jid.split('@')[0]
         try {
             let n = await conn.getName(jid)
             if(n && n!== 'undefined') name = n
@@ -24,23 +24,14 @@ let handler = async (m, { conn, participants, command }) => {
     // ===== HORNY =====
     if (command === 'horny') {
         let who = m.mentionedJid[0] || m.quoted?.sender || m.sender
-        let name = await getName(who)
         let pp = await getAvatar(who)
         let apiUrl = `https://api.stellarwa.xyz/generate/horny?avatar=${encodeURIComponent(pp)}&key=${key}`
-
         try {
             await m.reply(`😏 Generando...`)
             let res = await fetch(apiUrl, { timeout: 20000 })
             let buffer = await res.buffer()
-            await conn.sendMessage(m.chat, {
-                image: buffer,
-                caption: `@${who.split('@')[0]} está así ahora mismo 😏🔥`,
-                mentions: [who]
-            })
-        } catch (e) {
-            console.log('HORNY ERROR:', e)
-            m.reply(`⚠️ Error al generar la imagen`)
-        }
+            await conn.sendMessage(m.chat, { image: buffer, caption: `@${who.split('@')[0]} está así ahora mismo 😏🔥`, mentions: [who] })
+        } catch (e) { m.reply(`⚠️ Error al generar la imagen`) }
     }
 
     // ===== SHIP =====
@@ -48,55 +39,50 @@ let handler = async (m, { conn, participants, command }) => {
         if (!m.isGroup) return m.reply('⚠️ Solo funciona en grupos')
         let members = participants.map(u => u.id)
         if (members.length < 2) return m.reply('⚠️ Necesitan mínimo 2 personas')
-
         let user1, user2
-        if (m.mentionedJid.length >= 2) {
-            user1 = m.mentionedJid[0]
-            user2 = m.mentionedJid[1]
-        } else {
-            user1 = members[Math.floor(Math.random() * members.length)]
-            user2 = members[Math.floor(Math.random() * members.length)]
-            while(user1 === user2) user2 = members[Math.floor(Math.random() * members.length)]
-        }
-
-        let name1 = await getName(user1)
-        let name2 = await getName(user2)
-        await conn.sendMessage(m.chat, {
-            text: `💘 Calculando compatibilidad...\n\n@${user1.split('@')[0]} + @${user2.split('@')[0]}`,
-            mentions: [user1, user2]
-        })
-
+        if (m.mentionedJid.length >= 2) { user1 = m.mentionedJid[0]; user2 = m.mentionedJid[1] }
+        else { user1 = members[Math.floor(Math.random() * members.length)]; user2 = members[Math.floor(Math.random() * members.length)]; while(user1 === user2) user2 = members[Math.floor(Math.random() * members.length)] }
+        await conn.sendMessage(m.chat, { text: `💘 Calculando...\n\n@${user1.split('@')[0]} + @${user2.split('@')[0]}`, mentions: [user1, user2] })
         try {
-            let avatar1 = await getAvatar(user1)
-            let avatar2 = await getAvatar(user2)
-            let background = 'https://files.evogb.win/7BY3Yv.jpg'
+            let avatar1 = await getAvatar(user1); let avatar2 = await getAvatar(user2); let background = 'https://files.evogb.win/7BY3Yv.jpg'
             let apiUrl = `https://api.stellarwa.xyz/generate/ship?avatar1=${encodeURIComponent(avatar1)}&avatar2=${encodeURIComponent(avatar2)}&background=${encodeURIComponent(background)}&key=${key}`
-            let res = await fetch(apiUrl, { timeout: 20000 })
-            let buffer = await res.buffer()
+            let res = await fetch(apiUrl, { timeout: 20000 }); let buffer = await res.buffer()
             let porcentaje = Math.floor(Math.random() * 101)
             let explicacion = porcentaje < 20? `Hay 0 química 😅` : porcentaje < 40? `Poca compatibilidad 💛` : porcentaje < 60? `Hay algo ahí ✨` : porcentaje < 80? `Buena conexión ❤️` : porcentaje < 100? `Compatibilidad altísima 💖` : `100% ALMAS GEMELAS 💍`
-            await conn.sendMessage(m.chat, {
-                image: buffer,
-                caption: `💘 *RESULTADO DEL SHIP* 💘\n*@${user1.split('@')[0]}* + *@${user2.split('@')[0]}*\n\n*Compatibilidad: ${porcentaje}%*\n${explicacion}`,
-                mentions: [user1, user2]
-            })
-        } catch (e) {
-            console.log('SHIP ERROR:', e)
-            m.reply(`⚠️ Error al generar la imagen`)
-        }
+            await conn.sendMessage(m.chat, { image: buffer, caption: `💘 *RESULTADO DEL SHIP* 💘\n*@${user1.split('@')[0]}* + *@${user2.split('@')[0]}*\n\n*Compatibilidad: ${porcentaje}%*\n${explicacion}`, mentions: [user1, user2] })
+        } catch (e) { m.reply(`⚠️ Error al generar la imagen`) }
     }
 
-    // ===== SECURITY ARREGLADO PARA DETECTAR =====
+    // ===== SECURITY =====
     if (command === 'security') {
         let who = m.mentionedJid[0] || m.quoted?.sender || m.sender
-        let name = await getName(who)
         let pp = await getAvatar(who)
         let background = 'https://files.evogb.win/7BY3Yv.jpg'
         let createdTimestamp = Date.now()
-
         let apiUrl = `https://api.stellarwa.xyz/generate/security?avatar=${encodeURIComponent(pp)}&background=${encodeURIComponent(background)}&createdTimestamp=${createdTimestamp}&key=${key}`
-
         await m.reply(`🔍 Generando cartel de SE BUSCA para @${who.split('@')[0]}...`, null, { mentions: [who] })
+        try {
+            let res = await fetch(apiUrl, { timeout: 30000 }); let buffer = await res.buffer()
+            await conn.sendMessage(m.chat, { image: buffer, caption: `🚨 *SE BUSCA* 🚨\n@${who.split('@')[0]}\n\n*Recompensa: 1,000,000$*`, mentions: [who] })
+        } catch (e) { m.reply(`⚠️ Error al generar la imagen`) }
+    }
+
+    // ===== RANK2 NUEVO =====
+    if (command === 'rank') {
+        let who = m.mentionedJid[0] || m.quoted?.sender || m.sender
+        let name = await getName(who)
+        let pp = await getAvatar(who)
+        let background = 'https://files.evogb.win/7BY3Yv.jpg' // fondo del rank
+
+        // Datos random de ejemplo. Aquí conectas tu DB de niveles
+        let level = Math.floor(Math.random() * 100) + 1
+        let rank = Math.floor(Math.random() * 500) + 1
+        let currxp = Math.floor(Math.random() * 5000)
+        let needxp = currxp + Math.floor(Math.random() * 2000) + 1000
+
+        let apiUrl = `https://api.stellarwa.xyz/generate/rank2?username=${encodeURIComponent(name)}&avatar=${encodeURIComponent(pp)}&background=${encodeURIComponent(background)}&level=${level}&rank=${rank}&currxp=${currxp}&needxp=${needxp}&key=${key}`
+
+        await m.reply(`📊 Generando tarjeta de nivel para @${who.split('@')[0]}...`, null, { mentions: [who] })
 
         try {
             let res = await fetch(apiUrl, { timeout: 30000 })
@@ -105,17 +91,17 @@ let handler = async (m, { conn, participants, command }) => {
 
             await conn.sendMessage(m.chat, {
                 image: buffer,
-                caption: `🚨 *SE BUSCA* 🚨\n@${who.split('@')[0]}\n\n*Recompensa: 1,000,000$*\n*Delito: Ser muy sospechoso*`,
+                caption: `📊 *TARJETA DE NIVEL*\n@${who.split('@')[0]}\n\n*Nivel:* ${level}\n*Rank:* #${rank}\n*XP:* ${currxp}/${needxp}`,
                 mentions: [who]
             })
         } catch (e) {
-            console.log('SECURITY ERROR:', e)
+            console.log('RANK ERROR:', e)
             m.reply(`⚠️ Error al generar la imagen`)
         }
     }
 }
 
-handler.help = ['horny @tag', 'ship @tag1 @tag2', 'security @tag']
+handler.help = ['horny @tag', 'ship @tag1 @tag2', 'security @tag', 'rank @tag']
 handler.tags = ['fun']
-handler.command = ['horny', 'ship', 'security']
+handler.command = ['horny', 'ship', 'security', 'rank']
 export default handler
