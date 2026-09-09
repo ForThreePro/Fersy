@@ -1,17 +1,24 @@
 let handler = async (m, { conn }) => {
     let who = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
 
-    // ARREGLO 1: Sacar nombre bien. Si falla usa el número
-    let name = await conn.getName(who).catch(() => who.split('@')[0])
+    // ARREGLO: Sacar nombre con try catch
+    let name
+    try {
+        name = await conn.getName(who)
+        if (!name) name = who.split('@')[0] // Si viene vacío usa el número
+    } catch {
+        name = who.split('@')[0] // Si da error usa el número
+    }
 
     // URL por defecto
     let defaultAvatar = 'https://files.evogb.win/E2yVdA.jpg'
 
-    // Sacamos la foto
-    let pp = await conn.profilePictureUrl(who, 'image').catch(() => defaultAvatar)
-
-    // Validamos que sea string
-    if (typeof pp!== 'string' ||!pp ||!pp.startsWith('http')) {
+    // Sacamos la foto con try catch también
+    let pp
+    try {
+        pp = await conn.profilePictureUrl(who, 'image')
+        if (typeof pp!== 'string' ||!pp.startsWith('http')) pp = defaultAvatar
+    } catch {
         pp = defaultAvatar
     }
 
