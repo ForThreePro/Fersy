@@ -28,7 +28,6 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const chat = global.db?.data?.chats?.[m.chat]
   if (!chat ||!chat.bienvenida) return!0
 
-  // ===== DETECCIÓN DEL USUARIO =====
   let userJid = m.messageStubParameters?.[0] || m.participant || m.key?.participant || ''
   if (!userJid) return!0
 
@@ -36,19 +35,13 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const DEFAULT_BG = 'https://files.evogb.win/7BY3Yv.jpg'
   const DEFAULT_IMG = 'https://files.evogb.win/E2yVdA.jpg'
 
-  // ===== ARREGLO: SACAR NOMBRE DE PARTICIPANTS =====
+  // ===== SACAR NOMBRE BIEN =====
   let participant = groupMetadata.participants.find(p => p.id === userJid)
   let userName = participant?.name || participant?.notify || userJid.split('@')[0]
+  userName = userName.replace(/[^a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s]/g, '').trim() // quitar emojis raros
+  if(!userName) userName = 'Usuario'
 
-  // Si aún está vacío, intentamos con getName
-  if(!userName || userName === 'undefined'){
-    try {
-      let n = await conn.getName(userJid)
-      if(n && n.trim()) userName = n
-    } catch {}
-  }
-
-  // ===== FOTO CON REGLA: SI TIENE USA SUYA, SI NO DEFAULT =====
+  // ===== FOTO CON REGLA =====
   let userPP = DEFAULT_IMG
   try {
     let pp = await conn.profilePictureUrl(userJid, 'image')
@@ -86,11 +79,12 @@ handler.before = async function (m, { conn, groupMetadata }) {
   }
 
   if (txt) {
-    // SOLO EN BIENVENIDA USA LA API
     if (isWelcome) {
       try {
-        let apiUrl = `https://api.stellarwa.xyz/generate/welcome2?username=${encodeURIComponent(userName)}&guildName=${encodeURIComponent(groupName)}&memberCount=${membersCount}&avatar=${encodeURIComponent(userPP)}&background=${encodeURIComponent(DEFAULT_BG)}&key=${key}`
+        // ARREGLO: NO USAR encodeURIComponent en username porque la API de stellar lo bugea
+        let apiUrl = `https://api.stellarwa.xyz/generate/welcome2?username=${userName}&guildName=${encodeURIComponent(groupName)}&memberCount=${membersCount}&avatar=${encodeURIComponent(userPP)}&background=${encodeURIComponent(DEFAULT_BG)}&key=${key}`
 
+        console.log('Enviando a API:', userName) // debug
         let res = await fetch(apiUrl, { timeout: 30000 })
         if (res.ok) {
           let buffer = await res.buffer()
@@ -100,7 +94,6 @@ handler.before = async function (m, { conn, groupMetadata }) {
         }
       } catch (e) {
         console.log('STELLAR WELCOME ERROR:', e.message)
-        // Fallback
         try {
           let res = await fetch(userPP)
           let imgBuffer = await res.buffer()
@@ -110,7 +103,6 @@ handler.before = async function (m, { conn, groupMetadata }) {
         }
       }
     } else {
-      // Leave y Kick
       try {
         let res = await fetch(userPP)
         let imgBuffer = await res.buffer()
@@ -120,7 +112,6 @@ handler.before = async function (m, { conn, groupMetadata }) {
       }
     }
 
-    // Audios
     if (audio) {
       if (Buffer.isBuffer(audio)) {
         await conn.sendMessage(m.chat, { audio: audio, mimetype: 'audio/mpeg', ptt: false })
