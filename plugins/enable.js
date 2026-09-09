@@ -60,7 +60,7 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   if (fail) return
 
   // IMAGEN SAPITO
-  let catalogoImg = { url: 'https://files.evogb.win/QFXQtu.jpg' }
+  let catalogoImg = { url: global.botimg }
 
   let estadoTexto = isEnable? 'Activado 🌀' : 'Desactivado ✖️'
   let estadoEmoji = isEnable? '🟢' : '🔴'
