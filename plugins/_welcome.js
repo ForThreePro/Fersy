@@ -1,27 +1,3 @@
-import { WAMessageStubType } from '@whiskeysockets/baileys'
-
-const handler = async (m, { conn, args, isAdmin, isOwner }) => {
-  if (!isAdmin &&!isOwner) return conn.reply(m.chat, `🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n🍕 *Solo admins pueden usar este comando*`, m)
-  let chat = global.db.data.chats[m.chat]
-  if (!chat) global.db.data.chats[m.chat] = {}
-
-  if (/on/i.test(args[0])) {
-    chat.bienvenida = true
-    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🟢 *Activada con audios*`, m)
-  } else if (/off/i.test(args[0])) {
-    chat.bienvenida = false
-    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🔴 *Desactivada*`, m)
-  } else {
-    await conn.reply(m.chat, `🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n📌 *Uso:* ${m.prefix}bienvenida on/off`, m)
-  }
-}
-
-handler.help = ['bienvenida <on/off>']
-handler.tags = ['config']
-handler.command = /^(bienvenida|welcome|bye)$/i
-handler.group = true
-handler.admin = true
-
 handler.before = async function (m, { conn, groupMetadata }) {
   try {
     if (!m.messageStubType ||!m.isGroup) return!0
@@ -31,13 +7,13 @@ handler.before = async function (m, { conn, groupMetadata }) {
     const userJid = m.messageStubParameters?.[0] || m.participant
     if (!userJid) return!0
 
-    // ARREGLO: SIEMPRE tiene imagen, aunque falle
-    let pp = 'https://files.evogb.win/E2yVdA.jpg' // URL GARFIELD FALLBACK
+    // FIX: Imagen por defecto primero, y solo la cambiamos si SÍ tiene
+    let pp = 'https://files.evogb.win/E2yVdA.jpg' // GARFIELD FALLBACK
     try {
-      let userPP = await conn.profilePictureUrl(userJid, 'image')
-      if(userPP) pp = userPP
+      const userPP = await conn.profilePictureUrl(userJid, 'image')
+      if (userPP) pp = userPP
     } catch {
-      // Si no tiene foto, se queda con la de fallback
+      // Si no tiene foto, no pasa nada, usamos la de arriba
     }
 
     const userTag = `@${userJid.split('@')[0]}`
@@ -69,7 +45,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
 
     if (txt) {
       await conn.sendMessage(m.chat, {
-        image: { url: pp }, // <- Aquí siempre llega una URL válida
+        image: { url: pp }, // <- Ahora pp nunca está vacío
         caption: txt,
         mentions: [userJid]
       })
@@ -87,5 +63,3 @@ handler.before = async function (m, { conn, groupMetadata }) {
   }
   return!0
 }
-
-export default handler
