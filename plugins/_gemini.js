@@ -14,7 +14,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     try {
         // 1. PEDIR RESPUESTA A GEMINI BIEN PERUANO
-        let aiUrl = `https://api.stellarwa.xyz/ai/gemini?text=${encodeURIComponent(text + ". Responde como un pata peruano. Usa: pe, causa, mano, pata, a la, ya fue, bacán, al toque. Habla como hombre, directo y con confianza. Máximo 2 líneas")}&key=proyectsV2`
+        let aiUrl = `https://api.stellarwa.xyz/ai/gemini?text=${encodeURIComponent(text + ". Responde de forma normal, clara, profesional y amable. Sin jerga. Máximo 2 líneas")}&key=proyectsV2`
         let aiRes = await fetch(aiUrl)
         let aiJson = await aiRes.json()
 
