@@ -97,36 +97,34 @@ let handler = async (m, { conn, participants, command }) => {
         }
     }
 
-    // ===== SECURITY / WANTED =====
+// ===== SECURITY / WANTED =====
     if (command === 'security') {
         let who = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
         let name = await getName(who)
         let pp = await getAvatar(who)
 
-        // Stellarwa security usa background obligatorio
-        let background = 'https://files.evogb.win/7BY3Yv.jpg'
-        let apiUrl = `https://api.stellarwa.xyz/generate/security?avatar=${encodeURIComponent(pp)}&background=${encodeURIComponent(background)}&key=${key}`
+        let background = 'https://files.evogb.win/7BY3Yv.jpg' // fondo del cartel
+        let createdTimestamp = Date.now() // timestamp actual
+        let key = 'proyectsV2'
+
+        let apiUrl = `https://api.stellarwa.xyz/generate/security?avatar=${encodeURIComponent(pp)}&background=${encodeURIComponent(background)}&createdTimestamp=${createdTimestamp}&key=${key}`
 
         try {
-            m.reply(`🔍 Generando cartel...`)
+            m.reply(`🔍 Generando cartel de SE BUSCA...`)
             let res = await fetch(apiUrl, { timeout: 25000 })
-
-            if(!res.ok) {
-                let errorText = await res.text()
-                throw new Error(`API ${res.status}: ${errorText}`)
-            }
+            if(!res.ok) throw new Error(`API ${res.status}`)
 
             let buffer = await res.buffer()
-            if(buffer.length < 5000) throw new Error('La API devolvió imagen vacía')
+            if(buffer.length < 5000) throw new Error('Imagen vacía')
 
             await conn.sendMessage(m.chat, {
                 image: buffer,
-                caption: `🚨 *SE BUSCA* 🚨\n@${name}\n\n*Recompensa: 1,000,000$*\n*Delito: Ser muy guapo*`,
+                caption: `🚨 *SE BUSCA* 🚨\n@${name}\n\n*Recompensa: 1,000,000$*\n*Última vez visto: Hoy*`,
                 mentions: [who]
             })
         } catch (e) {
             console.log('SECURITY ERROR:', e)
-            m.reply(`⚠️ Error al generar la imagen\n*Posibles causas:*\n1. La API está saturada\n2. El avatar no carga\nIntenta en 10s`)
+            m.reply(`⚠️ Error al generar la imagen. La API está saturada`)
         }
     }
 
