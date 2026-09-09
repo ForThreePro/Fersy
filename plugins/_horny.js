@@ -4,7 +4,6 @@ let handler = async (m, { conn, participants, command }) => {
     let defaultImg = 'https://files.evogb.win/E2yVdA.jpg'
     let key = 'proyectsV2'
 
-    // ===== FUNCIÓN PARA SACAR AVATAR SEGURO =====
     const getAvatar = async (jid) => {
         try {
             let url = await conn.profilePictureUrl(jid, 'image')
@@ -13,7 +12,6 @@ let handler = async (m, { conn, participants, command }) => {
         return defaultImg
     }
 
-    // ===== FUNCIÓN PARA SACAR NOMBRE SEGURO =====
     const getName = async (jid) => {
         try {
             let name = await conn.getName(jid)
@@ -23,20 +21,17 @@ let handler = async (m, { conn, participants, command }) => {
         }
     }
 
-    // ===== COMANDO HORNY =====
+    // ===== HORNY =====
     if (command === 'horny') {
         let who = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
         let name = await getName(who)
         let pp = await getAvatar(who)
-
         let apiUrl = `https://api.stellarwa.xyz/generate/horny?avatar=${encodeURIComponent(pp)}&key=${key}`
 
         try {
             let res = await fetch(apiUrl, { timeout: 20000 })
             if(!res.ok) throw new Error('API ' + res.status)
             let buffer = await res.buffer()
-            if(buffer.length < 5000) throw new Error('Imagen vacía')
-
             await conn.sendMessage(m.chat, {
                 image: buffer,
                 caption: `@${name} está así ahora mismo 😏🔥`,
@@ -44,17 +39,16 @@ let handler = async (m, { conn, participants, command }) => {
             })
         } catch (e) {
             console.log(e)
-            m.reply(`⚠️ Error al generar la imagen. La API está saturada, intenta en 10s`)
+            m.reply(`⚠️ Error al generar la imagen`)
         }
     }
 
-    // ===== COMANDO SHIP =====
+    // ===== SHIP =====
     if (command === 'ship') {
         if (!m.isGroup) return m.reply('⚠️ Solo funciona en grupos')
         let members = participants.map(u => u.id)
         if (members.length < 2) return m.reply('⚠️ Necesitan mínimo 2 personas')
 
-        // Si menciona 2 usa esos, si no random
         let user1, user2
         if (m.mentionedJid.length >= 2) {
             user1 = m.mentionedJid[0]
@@ -77,13 +71,11 @@ let handler = async (m, { conn, participants, command }) => {
             let avatar1 = await getAvatar(user1)
             let avatar2 = await getAvatar(user2)
             let background = 'https://files.evogb.win/7BY3Yv.jpg'
-
             let apiUrl = `https://api.stellarwa.xyz/generate/ship?avatar1=${encodeURIComponent(avatar1)}&avatar2=${encodeURIComponent(avatar2)}&background=${encodeURIComponent(background)}&key=${key}`
 
             let res = await fetch(apiUrl, { timeout: 20000 })
             if(!res.ok) throw new Error('API ' + res.status)
             let buffer = await res.buffer()
-            if(buffer.length < 5000) throw new Error('Imagen vacía')
 
             let porcentaje = Math.floor(Math.random() * 101)
             let explicacion = ''
@@ -99,15 +91,36 @@ let handler = async (m, { conn, participants, command }) => {
                 caption: `💘 *RESULTADO DEL SHIP* 💘\n*@${name1}* + *@${name2}*\n\n*Compatibilidad: ${porcentaje}%*\n${explicacion}`,
                 mentions: [user1, user2]
             })
-
         } catch (e) {
             console.log(e)
-            m.reply(`⚠️ Error al generar la imagen. La API está saturada, intenta en 10s`)
+            m.reply(`⚠️ Error al generar la imagen`)
+        }
+    }
+
+    // ===== SECURITY / WANTED =====
+    if (command === 'security') {
+        let who = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
+        let name = await getName(who)
+        let pp = await getAvatar(who)
+        let apiUrl = `https://api.stellarwa.xyz/generate/security?avatar=${encodeURIComponent(pp)}&key=${key}`
+
+        try {
+            let res = await fetch(apiUrl, { timeout: 20000 })
+            if(!res.ok) throw new Error('API ' + res.status)
+            let buffer = await res.buffer()
+            await conn.sendMessage(m.chat, {
+                image: buffer,
+                caption: `🚨 *SE BUSCA* 🚨\n@${name}\n\nRecompensa: 1,000,000$`,
+                mentions: [who]
+            })
+        } catch (e) {
+            console.log(e)
+            m.reply(`⚠️ Error al generar la imagen`)
         }
     }
 }
 
-handler.help = ['horny @tag', 'ship @tag1 @tag2']
+handler.help = ['horny @tag', 'ship @tag1 @tag2', 'security @tag']
 handler.tags = ['fun']
-handler.command = ['horny', 'ship']
+handler.command = ['horny', 'ship', 'security']
 export default handler
