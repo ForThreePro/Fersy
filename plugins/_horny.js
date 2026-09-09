@@ -1,8 +1,10 @@
 import fetch from 'node-fetch'
+import FormData from 'form-data' // IMPORTANTE
 
 let handler = async (m, { conn, participants, command }) => {
     let defaultImg = 'https://files.evogb.win/E2yVdA.jpg'
     let defaultBg = 'https://files.evogb.win/7BY3Yv.jpg'
+    let defaultPost = 'https://files.evogb.win/8kP2Lm.jpg'
     let key = 'proyectsV2'
 
     const getAvatar = async (jid) => {
@@ -22,17 +24,16 @@ let handler = async (m, { conn, participants, command }) => {
         return name
     }
 
-    // Subir imagen a telegra.ph para usarla en la API
+    // Subir imagen
     const uploadImage = async (buffer) => {
         try {
             let form = new FormData()
-            form.append('file', buffer, 'image.jpg')
+            form.append('file', buffer, { filename: 'image.jpg' })
             let res = await fetch('https://telegra.ph/upload', { method: 'POST', body: form })
             let json = await res.json()
-            return 'https://telegra.ph' + json[0].src
-        } catch {
-            return defaultBg
-        }
+            if(json[0]?.src) return 'https://telegra.ph' + json[0].src
+        } catch (e) { console.log('UPLOAD ERROR:', e) }
+        return defaultPost
     }
 
     // ===== HORNY =====
@@ -103,8 +104,7 @@ let handler = async (m, { conn, participants, command }) => {
         let name = await getName(who)
         let pp = await getAvatar(who)
 
-        // Si respondes a una imagen, la usa
-        let postImage = 'https://files.evogb.win/8kP2Lm.jpg'
+        let postImage = defaultPost
         if (m.quoted?.mtype === 'imageMessage') {
             await m.reply(`📸 Subiendo imagen...`)
             let media = await m.quoted.download()
@@ -120,8 +120,9 @@ let handler = async (m, { conn, participants, command }) => {
 
         try {
             let res = await fetch(apiUrl, { timeout: 30000 })
-            if(!res.ok) throw new Error(`API ${res.status}`)
+            if(!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`)
             let buffer = await res.buffer()
+            if(buffer.length < 5000) throw new Error('Imagen vacía')
 
             await conn.sendMessage(m.chat, {
                 image: buffer,
@@ -130,7 +131,7 @@ let handler = async (m, { conn, participants, command }) => {
             })
         } catch (e) {
             console.log('IG ERROR:', e)
-            m.reply(`⚠️ Error al generar la imagen`)
+            m.reply(`⚠️ Error: ${e.message}`)
         }
     }
 }
