@@ -18,15 +18,17 @@ let handler = async (m, { conn, usedPrefix }) => {
     if (!link.url) throw new Error('No se obtuvo URL')
 
     // 1. GUARDAR EN DB
-    global.botimg = link.url
     if (!global.db.data.settings) global.db.data.settings = {}
     global.db.data.settings.botimg = link.url
 
-    // 2. EDITAR EL CONFIG.JS PARA CAMBIAR EL FALLBACK
+    // 2. ACTUALIZAR VARIABLE AL INSTANTE
+    global.botimg = link.url
+
+    // 3. EDITAR EL CONFIG.JS PARA CAMBIAR EL FALLBACK
     let configPath = path.join('./config.js')
     let configFile = fs.readFileSync(configPath, 'utf8')
 
-    // Busca la linea del fallback y la reemplaza
+    // Reemplaza la URL del fallback
     configFile = configFile.replace(
       /global\.botimg = global\.db\?\.\data\?\.\settings\?\.\botimg \|\| '.*?'/,
       `global.botimg = global.db?.data?.settings?.botimg || '${link.url}'`
@@ -34,18 +36,13 @@ let handler = async (m, { conn, usedPrefix }) => {
 
     fs.writeFileSync(configPath, configFile)
 
-    let txt = `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
+    let txt = `✅ *𝗜𝗠𝗔𝗚𝗘𝗡 𝗚𝗟𝗢𝗕𝗔𝗟 𝗔𝗖𝗧𝗨𝗔𝗟𝗜𝗭𝗔𝗗𝗔*
 
-*━━━━━━━━━━*
-*✅ IMAGEN PERMANENTE ACTUALIZADA*
-
-*➤ Enlace:* ${link.url}
+*➤ Nueva URL:* ${link.url}
 *➤ Guardado en:* DB + config.js
-*➤ Bots:* Ricky | Nox | Antitop | Lovesitap | Garfield
+*➤ Ahora el fallback también es esta imagen*
 
-*Nota:* Aunque borres la DB o instales desde 0, esta imagen sera el fallback
-*━━━━━━━━━━*
-> _"Ahora si es permanente de verdad"_ ⚡`
+> _Ya quedó permanente hasta en instalaciones desde 0_`
 
     await conn.sendMessage(m.chat, { image: { url: link.url }, caption: txt }, { quoted: m })
     await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } })
@@ -70,6 +67,6 @@ async function myCloud(content) {
 
 handler.help = ['setimg'];
 handler.tags = ['owner'];
-handler.command = ['setimg', 'setimage'];
+handler.command = ['setimg'];
 handler.rowner = true;
 export default handler
