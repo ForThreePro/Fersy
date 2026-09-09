@@ -1,101 +1,102 @@
-const react = async (conn, m, text) => {
-  try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
-}
+import os from 'os'
+import { performance } from 'perf_hooks'
 
-// Memoria temporal. Se borra al reiniciar
-global.perfilesTemp = global.perfilesTemp || new Map()
+// IMAGEN FIJA GARFIELD
+const GARFIELD_IMG = 'https://files.evogb.win/QFXQtu.jpg'
 
-function getPerfil(jid) {
-  if (!global.perfilesTemp.has(jid)) {
-    global.perfilesTemp.set(jid, {
-      age: '', birth: '', country: '', hobby: '', bio: '', gender: ''
-    })
+let handler = async (m, { conn, usedPrefix }) => {
+  let loadMsg = await conn.reply(m.chat, `🐱 𓆩 𝗖𝗔𝗥𝗚𝗔𝗡𝗗𝗢 𝗠𝗘𝗡𝗨 𓆪 🐱\n\n⏳ *Espere un momento...*\n> Cargando sistema Garfield...`, m)
+
+  let taguser = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
+
+  // FOTO FIJA
+  let img = { url: GARFIELD_IMG }
+
+  let uptime = process.uptime() * 1000
+  let _uptime = clockString(uptime)
+  let totalreg = Object.keys(global.db.data.users).length
+  let totalcmd = Object.values(global.plugins).filter(p => p.help &&!p.disabled).length
+  let start = performance.now()
+  let end = performance.now()
+  let ping = (end - start).toFixed(2)
+
+  let owner = global.owner?.[0]?.[0] || '51927174369'
+  let ownerTag = `@${owner}`
+  let numBot = conn.user.jid.split('@')[0]
+
+  let help = Object.values(global.plugins).filter(p => p.help &&!p.disabled)
+  let groups = {}
+  for (let plugin of help) {
+    let category = plugin.tags? plugin.tags[0] : 'otros'
+    if (!groups[category]) groups[category] = []
+    if (Array.isArray(plugin.help)) groups[category].push(...plugin.help)
+    else groups[category].push(plugin.help)
   }
-  return global.perfilesTemp.get(jid)
-}
 
-let handler = async (m, { conn }) => {
-  await react(conn, m, "👤")
+  const icons = {
+    search: '🔍', download: '⬇️', game: '🎮', rpg: '⚔️', config: '⚙️',
+    group: '👥', owner: '👑', info: 'ℹ️', fun: '😂', anime: '🌸',
+    sticker: '🧩', tools: '🛠️', nsfw: '🔞', audio: '🎵', prem: '🍃', otros: '📁'
+  }
 
-  let who = m.mentionedJid?.[0] || m.sender
-  let perfil = getPerfil(who)
-  let dbUser = global.db?.data?.users?.[who] || {}
+  const categoryNames = {
+    search: 'BUSQUEDA', download: 'DESCARGAS', game: 'JUEGOS', rpg: 'RPG',
+    config: 'CONFIG', group: 'GRUPOS', owner: 'OWNER', info: 'INFO',
+    fun: 'DIVERSION', anime: 'ANIME', sticker: 'STICKERS', tools: 'HERRAMIENTAS',
+    nsfw: 'NSFW', audio: 'AUDIO', prem: 'PREM', otros: 'OTROS'
+  }
 
-  let name
-  try { name = await conn.getName(who) } catch { name = m.pushName || 'Usuario' }
-  let number = who.split('@')[0]
+  let menu = `🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n`
+  menu += `⤷ ┇ 𝐕𝐄𝐑𝐒𝐈𝐎𝐍 ﹒ 3.0 PREM ：✿ 。\n`
+  menu += `꒰ ◞⁺⊹ ．estado: *EN LINEA* • ${_uptime}\n\n`
+  menu += ` ꒱ ׁ. ᘏ 𝗨𝗦𝗨𝗔𝗥𝗜𝗢 𝗔𝗖𝗧𝗜𝗩𝗢 ׅ 𝆬 ָ֢ ෆ\n`
+  menu += `🐱 ࣪ ꕀ @${taguser.split('@')[0]}. ˚. ᵎᵎ\n`
+  menu += `> *Bienvenido al sistema Garfield*\n\n`
+  menu += `──🍃 *INFORMACION DEL BOT* ╏ 💚\n`
+  menu += `*Usuarios*: ${totalreg} | *Comandos*: ${totalcmd}\n`
+  menu += `*Owner*: ${ownerTag}\n`
+  menu += `*Numero*: +${numBot}\n\n`
+  menu += ` ׅ 🍃 : 𝖲𝖨𝖲𝖳𝖤𝖬𝖠 ﹙ 🌿 ﹚\n`
+  menu += `> ﹒ RAM: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}mb / ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}gb\n`
+  menu += ` ᶻz　*${new Date().toLocaleDateString('es', {weekday: 'long', timeZone: 'America/Lima'})}* ─ ${new Date().toLocaleDateString('es', {timeZone: 'America/Lima'})} ─ ${new Date().toLocaleTimeString('es', {timeZone: 'America/Lima'})}　⋌\n\n`
+  menu += `© ❛ *ping*. ${ping}ms\n`
+  menu += `名 ─ *modo:* public﹔\n\n`
+  menu += `> ❍ 𝖴𝗌𝖺. 𝖺𝗇𝗍𝖾𝗌 𝖽𝖾 𝖼𝖺𝖽𝖺 𝖼𝗈𝗆𝖺𝗇𝖽𝗈 𝗉𝖺𝗋𝖺 𝖺𝖼𝗍𝗂𝗏𝖺𝗋𝗅𝗈\n`
 
-  let level = dbUser.level || 0
-  let exp = dbUser.exp || 0
-  let money = dbUser.money || 0
-  let limit = dbUser.limit || 0
+  for (let category in groups) {
+    let icon = icons[category] || '📁'
+    let catName = categoryNames[category] || category.toUpperCase()
+    menu += `.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.${icon}꒷\n`
+    for (let cmd of groups[category]) {
+      menu += `${icon} ➛.${cmd}\n`
+    }
+    menu += ` ㅤ└──.✦ ── ⊰ ̟!!.✦. ˙\n\n`
+  }
 
-  let age = perfil.age || 'No registrado'
-  let birth = perfil.birth || 'No registrado'
-  let country = perfil.country || 'No registrado'
-  let hobby = perfil.hobby || 'No registrado'
-  let bio = perfil.bio || 'Sin biografía'
-  let gender = perfil.gender || 'No especificado'
-
-  let reqXp = (level + 1) * 100
-  let xpProgress = exp - (level * 100)
-
-  let caption = `╭─「 PERFIL GARFIELD 」
-│
-│ 👤 *NOMBRE:* ${name}
-│ 📱 *NUMERO:* @${number}
-│ 🌍 *PAÍS:* ${country}
-│ ⚧️ *GÉNERO:* ${gender}
-│ 🎂 *EDAD:* ${age}
-│ 📅 *CUMPLE:* ${birth}
-│
-│ 🎯 *HOBBY:* ${hobby}
-│ 📝 *BIO:* ${bio}
-│
-│ 📊 *NIVEL:* ${level}
-│ ⭐ *EXP:* ${xpProgress}/${reqXp}
-│ 💰 *DINERO:* $${money}
-│ 💎 *DIAMANTES:* ${limit}
-│
-╰───────────────────`
-
-  let pp
-  try { pp = await conn.profilePictureUrl(who, 'image') }
-  catch { pp = 'https://i.ibb.co/1p9Q0V3/default.jpg' }
+  menu += `━━━━━━━━━━━\n`
+  menu += `🐱 ***Garfield Bot Oficial*** 🐱\n`
+  menu += `*Owner*: ${ownerTag}\n`
+  menu += `*Contacto*: +${numBot}\n`
+  menu += `*Version*: 3.0 PREM\n`
+  menu += `*Power*: Nivel Garfield\n`
+  menu += `> "Odio los lunes... pero amo la lasaña" 🍕\n`
+  menu += `━━━━━━━━━━━`
 
   await conn.sendMessage(m.chat, {
-    image: { url: pp },
-    caption: caption,
-    mentions: [who]
+    image: img,
+    caption: menu,
+    mentions: [taguser, owner]
   }, { quoted: m })
-
-  await react(conn, m, "✅")
 }
 
-// COMANDOS PARA EDITAR
-handler.before = async (m) => {
-  if (!m.text) return
-  let perfil = getPerfil(m.sender)
-  let [cmd,...text] = m.text.trim().split(' ')
-  text = text.join(' ')
-  if(!text && cmd!== '.verperfil') return
+handler.help = ['menu', 'help', 'menú']
+handler.tags = ['info']
+handler.command = /^(menu|help|menú)$/i
 
-  if (cmd === '.setedad') { perfil.age = text; return m.reply(`✅ Edad: ${text}`) }
-  if (cmd === '.setcumple') {
-    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(text)) return m.reply(`Formato:.setcumple DD/MM/YYYY`)
-    perfil.birth = text; return m.reply(`✅ Cumple: ${text}`)
-  }
-  if (cmd === '.setpais') { perfil.country = text; return m.reply(`✅ País: ${text}`) }
-  if (cmd === '.sethobby') { perfil.hobby = text; return m.reply(`✅ Hobby: ${text}`) }
-  if (cmd === '.setbio') { perfil.bio = text; return m.reply(`✅ Bio actualizada`) }
-  if (cmd === '.setgenero') { perfil.gender = text; return m.reply(`✅ Género: ${text}`) }
-  if (cmd === '.borrarperfil') {
-    global.perfilesTemp.delete(m.sender)
-    return m.reply(`✅ Perfil borrado`)
-  }
-}
-
-handler.help = ['perfil @user']
-handler.tags = ['rg']
-handler.command = ['perfil', 'p', 'profile']
 export default handler
+
+function clockString(ms) {
+  let h = isNaN(ms)? '--' : Math.floor(ms / 3600000)
+  let m = isNaN(ms)? '--' : Math.floor(ms / 60000) % 60
+  return [h, m].map(v => v.toString().padStart(2, 0)).join('h ') + 'm'
+}
