@@ -8,7 +8,7 @@ const handler = async (m, { conn, args, isAdmin, isOwner }) => {
 
   if (/on/i.test(args[0])) {
     chat.bienvenida = true
-    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🟢 *Activada con imágenes de Stellar*`, m)
+    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🟢 *Activada con audios*`, m)
   } else if (/off/i.test(args[0])) {
     chat.bienvenida = false
     await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🔴 *Desactivada*`, m)
@@ -28,25 +28,26 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const chat = global.db?.data?.chats?.[m.chat]
   if (!chat ||!chat.bienvenida) return!0
 
-  let userJid = m.messageStubParameters?.[0] || m.participant || m.key?.participant || ''
+  const userJid = m.messageStubParameters?.[0] || m.participant
   if (!userJid) return!0
 
-  const key = 'proyectsV2'
-  const DEFAULT_BG = 'https://files.evogb.win/7BY3Yv.jpg'
   const DEFAULT_IMG = 'https://files.evogb.win/E2yVdA.jpg'
+  let imgBuffer = null
 
-  // ===== SACAR NOMBRE BIEN =====
-  let participant = groupMetadata.participants.find(p => p.id === userJid)
-  let userName = participant?.name || participant?.notify || userJid.split('@')[0]
-  userName = userName.replace(/[^a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s]/g, '').trim() // quitar emojis raros
-  if(!userName) userName = 'Usuario'
-
-  // ===== FOTO CON REGLA =====
-  let userPP = DEFAULT_IMG
+  // PASO 1: Intentar obtener foto del usuario
   try {
-    let pp = await conn.profilePictureUrl(userJid, 'image')
-    if(pp && pp.startsWith('https')) userPP = pp
-  } catch {}
+    let userPP = await conn.profilePictureUrl(userJid, 'image')
+    let res = await fetch(userPP)
+    imgBuffer = await res.buffer()
+  } catch {
+    // PASO 2: Si falla, descargar la de Garfield por defecto
+    try {
+      let res = await fetch(DEFAULT_IMG)
+      imgBuffer = await res.buffer()
+    } catch {
+      imgBuffer = null // si hasta la default falla, mandamos solo texto
+    }
+  }
 
   const userTag = `@${userJid.split('@')[0]}`
   const groupName = groupMetadata.subject
@@ -54,62 +55,33 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const membersCount = groupMetadata.participants.length
 
   let txt = '', audio = null
-  let isWelcome = false
 
   switch (m.messageStubType) {
     case WAMessageStubType.GROUP_PARTICIPANT_ADD:
-      isWelcome = true
       audio = chat.audiowelcome
       txt = chat.customWelcome? chat.customWelcome.replace(/@user/gi, userTag).replace(/@group/gi, groupName).replace(/@desc/gi, groupDesc) :
-        `😼 𓆩 ***𝗡𝗨𝗘𝗩𝗢 𝗚𝗔𝗧𝗜𝗧𝗢*** 𓆪 😼\n\n🐱 *${userTag}* llegó a *${groupName}*\n🍕 *Miembro N°:* ${membersCount}`
+`😼 𓆩 ***𝗡𝗨𝗘𝗩𝗢 𝗚𝗔𝗧𝗜𝗧𝗢*** 𓆪 😼\n\n🐱 *${userTag}* llegó a *${groupName}*\n🍕 *Miembro N°:* ${membersCount}`
       break
 
     case WAMessageStubType.GROUP_PARTICIPANT_LEAVE:
       audio = chat.audiobye
       txt = chat.customBye? chat.customBye.replace(/@user/gi, userTag).replace(/@group/gi, groupName) :
-        `😾 𓆩 ***𝗦𝗘 𝗙𝗨𝗘 𝗗𝗘𝗟 𝗦𝗢𝗙𝗔*** 𓆪 😾\n\n💤 *${userTag}* se durmió fuera de *${groupName}*\n📉 *Quedamos:* ${membersCount}`
+`😾 𓆩 ***𝗦𝗘 𝗙𝗨𝗘 𝗗𝗘𝗟 𝗦𝗢𝗙𝗔*** 𓆪 😾\n\n💤 *${userTag}* se durmió fuera de *${groupName}*\n📉 *Quedamos:* ${membersCount}`
       break
 
     case WAMessageStubType.GROUP_PARTICIPANT_REMOVE:
       audio = chat.audiokick
       txt = chat.customKick? chat.customKick.replace(/@user/gi, userTag).replace(/@group/gi, groupName) :
-        `🙀 𓆩 ***𝗘𝗫𝗣𝗨𝗟𝗦𝗔𝗗𝗢*** 𓆪 🙀\n\n🥊 *${userTag}* fue pateado de *${groupName}*`
+`🙀 𓆩 ***𝗘𝗫𝗣𝗨𝗟𝗦𝗔𝗗𝗢*** 𓆪 🙀\n\n🥊 *${userTag}* fue pateado de *${groupName}*`
       break
-    default: return!0
   }
 
   if (txt) {
-    if (isWelcome) {
-      try {
-        // ARREGLO: NO USAR encodeURIComponent en username porque la API de stellar lo bugea
-        let apiUrl = `https://api.stellarwa.xyz/generate/welcome2?username=${userName}&guildName=${encodeURIComponent(groupName)}&memberCount=${membersCount}&avatar=${encodeURIComponent(userPP)}&background=${encodeURIComponent(DEFAULT_BG)}&key=${key}`
-
-        console.log('Enviando a API:', userName) // debug
-        let res = await fetch(apiUrl, { timeout: 30000 })
-        if (res.ok) {
-          let buffer = await res.buffer()
-          await conn.sendMessage(m.chat, { image: buffer, caption: txt, mentions: [userJid] })
-        } else {
-          throw new Error(await res.text())
-        }
-      } catch (e) {
-        console.log('STELLAR WELCOME ERROR:', e.message)
-        try {
-          let res = await fetch(userPP)
-          let imgBuffer = await res.buffer()
-          await conn.sendMessage(m.chat, { image: imgBuffer, caption: txt, mentions: [userJid] })
-        } catch {
-          await conn.sendMessage(m.chat, { text: txt, mentions: [userJid] })
-        }
-      }
+    // PASO 3: Mandar SIEMPRE con imagen si se pudo descargar
+    if (imgBuffer) {
+      await conn.sendMessage(m.chat, { image: imgBuffer, caption: txt, mentions: [userJid] })
     } else {
-      try {
-        let res = await fetch(userPP)
-        let imgBuffer = await res.buffer()
-        await conn.sendMessage(m.chat, { image: imgBuffer, caption: txt, mentions: [userJid] })
-      } catch {
-        await conn.sendMessage(m.chat, { text: txt, mentions: [userJid] })
-      }
+      await conn.sendMessage(m.chat, { text: txt, mentions: [userJid] })
     }
 
     if (audio) {
