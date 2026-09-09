@@ -6,8 +6,8 @@ let handler = async (m, { conn, usedPrefix }) => {
 
   let taguser = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
 
-  // FOTO GLOBAL
-  let img = { url: global.botimg }
+  // FOTO GLOBAL CON FALLBACK
+  let img = { url: global.botimg || 'https://files.evogb.win/rJ2MBG.jpg' }
 
   let uptime = process.uptime() * 1000
   let _uptime = clockString(uptime)
@@ -79,7 +79,6 @@ let handler = async (m, { conn, usedPrefix }) => {
   menu += `> "Odio los lunes... pero amo la lasaña" 🍕\n`
   menu += `━━━━━━━━━━━`
 
-  // await conn.sendMessage(m.chat, { delete: loadMsg.key }) <-- ELIMINADO
   await conn.sendMessage(m.chat, {
     image: img,
     caption: menu,
