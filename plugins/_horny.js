@@ -22,6 +22,19 @@ let handler = async (m, { conn, participants, command }) => {
         return name
     }
 
+    // Subir imagen a telegra.ph para usarla en la API
+    const uploadImage = async (buffer) => {
+        try {
+            let form = new FormData()
+            form.append('file', buffer, 'image.jpg')
+            let res = await fetch('https://telegra.ph/upload', { method: 'POST', body: form })
+            let json = await res.json()
+            return 'https://telegra.ph' + json[0].src
+        } catch {
+            return defaultBg
+        }
+    }
+
     // ===== HORNY =====
     if (command === 'horny') {
         let who = m.mentionedJid[0] || m.quoted?.sender || m.sender
@@ -84,44 +97,45 @@ let handler = async (m, { conn, participants, command }) => {
         } catch (e) { m.reply(`⚠️ Error al generar la imagen`) }
     }
 
-    // ===== INSTAGRAM =====
+    // ===== INSTAGRAM ARREGLADO =====
     if (command === 'instagram' || command === 'ig') {
         let who = m.mentionedJid[0] || m.quoted?.sender || m.sender
         let name = await getName(who)
         let pp = await getAvatar(who)
+
+        // Si respondes a una imagen, la usa
         let postImage = 'https://files.evogb.win/8kP2Lm.jpg'
+        if (m.quoted?.mtype === 'imageMessage') {
+            await m.reply(`📸 Subiendo imagen...`)
+            let media = await m.quoted.download()
+            postImage = await uploadImage(media)
+        }
+
         let likeCount = Math.floor(Math.random() * 100000) + 1000
         let likeText = `${name} y ${Math.floor(Math.random() * 5000)} personas más`
-        let apiUrl = `https://api.stellarwa.xyz/generate/instagram?username=${encodeURIComponent(name)}&avatar=${encodeURIComponent(pp)}&postImage=${encodeURIComponent(postImage)}&likeCount=${likeCount}&likeText=${encodeURIComponent(likeText)}&key=${key}`
-        await m.reply(`📸 Generando post de Instagram para @${who.split('@')[0]}...`, null, { mentions: [who] })
-        try {
-            let res = await fetch(apiUrl, { timeout: 30000 }); let buffer = await res.buffer()
-            await conn.sendMessage(m.chat, { image: buffer, caption: `📸 *POST DE INSTAGRAM FALSO*\n@${who.split('@')[0]}\n\n*Likes:* ${likeCount.toLocaleString()}`, mentions: [who] })
-        } catch (e) { m.reply(`⚠️ Error al generar la imagen`) }
-    }
 
-    // ===== WELCOME2 NUEVO =====
-    if (command === 'welcome2') {
-        let who = m.mentionedJid[0] || m.quoted?.sender || m.sender
-        let name = await getName(who)
-        let pp = await getAvatar(who)
-        let groupName = await conn.getName(m.chat)
-        let memberCount = participants.length
-        let apiUrl = `https://api.stellarwa.xyz/generate/welcome2?username=${encodeURIComponent(name)}&guildName=${encodeURIComponent(groupName)}&memberCount=${memberCount}&avatar=${encodeURIComponent(pp)}&background=${encodeURIComponent(defaultBg)}&key=${key}`
+        let apiUrl = `https://api.stellarwa.xyz/generate/instagram?username=${encodeURIComponent(name)}&avatar=${encodeURIComponent(pp)}&postImage=${encodeURIComponent(postImage)}&likeCount=${likeCount}&likeText=${encodeURIComponent(likeText)}&key=${key}`
+
+        await m.reply(`📸 Generando post de Instagram para @${who.split('@')[0]}...`, null, { mentions: [who] })
 
         try {
             let res = await fetch(apiUrl, { timeout: 30000 })
+            if(!res.ok) throw new Error(`API ${res.status}`)
             let buffer = await res.buffer()
+
             await conn.sendMessage(m.chat, {
                 image: buffer,
-                caption: `👋 *BIENVENIDO/A*\n@${who.split('@')[0]}\n\n*Al grupo:* ${groupName}\n*Miembro N°:* ${memberCount}`,
+                caption: `📸 *POST DE INSTAGRAM FALSO*\n@${who.split('@')[0]}\n\n*Likes:* ${likeCount.toLocaleString()}\n*Le gusta a:* ${likeText}`,
                 mentions: [who]
             })
-        } catch (e) { m.reply(`⚠️ Error al generar bienvenida`) }
+        } catch (e) {
+            console.log('IG ERROR:', e)
+            m.reply(`⚠️ Error al generar la imagen`)
+        }
     }
 }
 
-handler.help = ['horny @tag', 'ship @tag1 @tag2', 'security @tag', 'rank @tag', 'instagram @tag', 'welcome2 @tag']
+handler.help = ['horny @tag', 'ship @tag1 @tag2', 'security @tag', 'rank @tag', 'instagram @tag']
 handler.tags = ['fun']
-handler.command = ['horny', 'ship', 'security', 'rank', 'instagram', 'ig', 'welcome2']
+handler.command = ['horny', 'ship', 'security', 'rank', 'instagram', 'ig']
 export default handler
