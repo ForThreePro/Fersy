@@ -2,40 +2,50 @@ import fetch from 'node-fetch'
 
 let handler = async (m, { conn, participants, command }) => {
     let defaultImg = 'https://files.evogb.win/E2yVdA.jpg'
-    let key = 'proyectsV2' // TU KEY
+    let key = 'proyectsV2'
 
-    // ===== COMANDO.HORNY =====
+    // ===== HORNY =====
     if (command === 'horny') {
         let who = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
+        let jid = who
 
+        // Nombre bien
         let name
-        try {
-            name = await conn.getName(who)
-            if (!name) name = who.split('@')[0]
-        } catch {
-            name = who.split('@')[0]
-        }
+        try { name = await conn.getName(jid) || jid.split('@')[0] }
+        catch { name = jid.split('@')[0] }
 
-        let pp
+        // Foto con doble validación
+        let pp = defaultImg
         try {
-            pp = await conn.profilePictureUrl(who, 'image')
-            if (typeof pp!== 'string' ||!pp.startsWith('http')) pp = defaultImg
-        } catch {
-            pp = defaultImg
-        }
+            let p = await conn.profilePictureUrl(jid, 'image')
+            if (p && p.startsWith('http')) pp = p
+        } catch {}
 
         let url = `https://api.stellarwa.xyz/generate/horny?avatar=${encodeURIComponent(pp)}&key=${key}`
-        let txt = `@${who.split('@')[0]} está así ahora mismo 😏🔥`
-        await conn.sendFile(m.chat, url, 'horny.jpg', txt, m, { mentions: [who] })
+
+        try {
+            let res = await fetch(url)
+            if(!res.ok) throw 'API Error'
+            let buffer = await res.buffer()
+
+            // ARREGLO MENCION: usar @nombre + mentions
+            let txt = `@${name} está así ahora mismo 😏🔥`
+            await conn.sendMessage(m.chat, {
+                image: buffer,
+                caption: txt,
+                mentions: [jid] // ESTO HACE QUE SALGA AZUL
+            })
+        } catch {
+            m.reply(`⚠️ Error al generar la imagen. Intenta de nuevo`)
+        }
     }
 
-    // ===== COMANDO.SHIP =====
+    // ===== SHIP =====
     if (command === 'ship') {
         if (!m.isGroup) return m.reply('⚠️ Solo funciona en grupos')
         let members = participants.map(u => u.id)
-        if (members.length < 2) return m.reply('⚠️ Necesitan mínimo 2 personas en el grupo')
+        if (members.length < 2) return m.reply('⚠️ Necesitan mínimo 2 personas')
 
-        // NUEVO: Si menciona 2 personas las usa. Si no, random
         let user1, user2
         if (m.mentionedJid.length >= 2) {
             user1 = m.mentionedJid[0]
@@ -46,32 +56,33 @@ let handler = async (m, { conn, participants, command }) => {
             while(user1 === user2) user2 = members[Math.floor(Math.random() * members.length)]
         }
 
-        let tag1 = '@' + user1.split('@')[0]
-        let tag2 = '@' + user2.split('@')[0]
+        let name1, name2
+        try { name1 = await conn.getName(user1) || user1.split('@')[0] } catch { name1 = user1.split('@')[0] }
+        try { name2 = await conn.getName(user2) || user2.split('@')[0] } catch { name2 = user2.split('@')[0] }
 
         await conn.sendMessage(m.chat, {
-            text: `💘 Calculando compatibilidad...\n\n${tag1} + ${tag2}`,
+            text: `💘 Calculando compatibilidad...\n\n@${name1} + @${name2}`,
             mentions: [user1, user2]
         })
 
         try {
-            let avatar1
+            let avatar1 = defaultImg
             try {
-                avatar1 = await conn.profilePictureUrl(user1, 'image')
-                if (typeof avatar1!== 'string' ||!avatar1.startsWith('http')) avatar1 = defaultImg
-            } catch { avatar1 = defaultImg }
+                let p1 = await conn.profilePictureUrl(user1, 'image')
+                if (p1 && p1.startsWith('http')) avatar1 = p1
+            } catch {}
 
-            let avatar2
+            let avatar2 = defaultImg
             try {
-                avatar2 = await conn.profilePictureUrl(user2, 'image')
-                if (typeof avatar2!== 'string' ||!avatar2.startsWith('http')) avatar2 = defaultImg
-            } catch { avatar2 = defaultImg }
+                let p2 = await conn.profilePictureUrl(user2, 'image')
+                if (p2 && p2.startsWith('http')) avatar2 = p2
+            } catch {}
 
             let background = 'https://files.evogb.win/7BY3Yv.jpg'
             let url = `https://api.stellarwa.xyz/generate/ship?avatar1=${encodeURIComponent(avatar1)}&avatar2=${encodeURIComponent(avatar2)}&background=${encodeURIComponent(background)}&key=${key}`
 
             let res = await fetch(url)
-            if(!res.ok) throw await res.text()
+            if(!res.ok) throw 'API Error'
             let buffer = await res.buffer()
 
             let porcentaje = Math.floor(Math.random() * 101)
@@ -83,21 +94,17 @@ let handler = async (m, { conn, participants, command }) => {
             else if(porcentaje < 100) explicacion = `Compatibilidad altísima. Tienen futuro juntos 💖`
             else explicacion = `100% ALMAS GEMELAS. Están destinados 💍`
 
-            let name1, name2
-            try { name1 = await conn.getName(user1) } catch { name1 = user1.split('@')[0] }
-            try { name2 = await conn.getName(user2) } catch { name2 = user2.split('@')[0] }
-
             let caption = `💘 *RESULTADO DEL SHIP* 💘\n*@${name1}* + *@${name2}*\n\n*Compatibilidad: ${porcentaje}%*\n${explicacion}`
 
             await conn.sendMessage(m.chat, {
                 image: buffer,
                 caption: caption,
-                mentions: [user1, user2]
+                mentions: [user1, user2] // MENCION AZUL
             })
 
         } catch (e) {
             console.log(e)
-            m.reply(`⚠️ Error: ${e}`)
+            m.reply(`⚠️ Error al generar la imagen. Intenta de nuevo`)
         }
     }
 }
