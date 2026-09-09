@@ -28,26 +28,27 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const chat = global.db?.data?.chats?.[m.chat]
   if (!chat ||!chat.bienvenida) return!0
 
-  const userJid = m.messageStubParameters?.[0] || m.participant
+  // ===== DETECCIÓN DEL USUARIO MEJORADA =====
+  let userJid = m.messageStubParameters?.[0] || m.participant || m.key?.participant || ''
   if (!userJid) return!0
 
   const key = 'proyectsV2'
   const DEFAULT_BG = 'https://files.evogb.win/7BY3Yv.jpg'
   const DEFAULT_IMG = 'https://files.evogb.win/E2yVdA.jpg'
 
-  // ===== ARREGLO 1: NOMBRE =====
-  let userName = userJid.split('@')[0] // fallback por si falla
+  // ===== NOMBRE SIN UNDEFINED =====
+  let userName = userJid.split('@')[0]
   try {
     let n = await conn.getName(userJid)
     if(n && n!== 'undefined' && n.trim()!== '') userName = n
   } catch {}
 
-  // ===== ARREGLO 2: FOTO DE PERFIL CON REGLA =====
+  // ===== FOTO CON REGLA =====
   let userPP = DEFAULT_IMG
   try {
     let pp = await conn.profilePictureUrl(userJid, 'image')
-    if(pp && pp.startsWith('https')) userPP = pp // Solo si sí tiene foto
-  } catch {} // Si no tiene, se queda la default
+    if(pp && pp.startsWith('https')) userPP = pp
+  } catch {} // Si no tiene, queda la default
 
   const userTag = `@${userJid.split('@')[0]}`
   const groupName = groupMetadata.subject
@@ -76,6 +77,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
       txt = chat.customKick? chat.customKick.replace(/@user/gi, userTag).replace(/@group/gi, groupName) :
         `🙀 𓆩 ***𝗘𝗫𝗣𝗨𝗟𝗦𝗔𝗗𝗢*** 𓆪 🙀\n\n🥊 *${userTag}* fue pateado de *${groupName}*`
       break
+    default: return!0
   }
 
   if (txt) {
@@ -84,17 +86,16 @@ handler.before = async function (m, { conn, groupMetadata }) {
       try {
         let apiUrl = `https://api.stellarwa.xyz/generate/welcome2?username=${encodeURIComponent(userName)}&guildName=${encodeURIComponent(groupName)}&memberCount=${membersCount}&avatar=${encodeURIComponent(userPP)}&background=${encodeURIComponent(DEFAULT_BG)}&key=${key}`
 
-        console.log('API URL:', apiUrl) // para debug
         let res = await fetch(apiUrl, { timeout: 30000 })
         if (res.ok) {
           let buffer = await res.buffer()
           await conn.sendMessage(m.chat, { image: buffer, caption: txt, mentions: [userJid] })
         } else {
-          throw new Error('API falló')
+          throw new Error(await res.text())
         }
       } catch (e) {
-        console.log('STELLAR WELCOME ERROR:', e)
-        // Fallback: imagen normal si la API falla
+        console.log('STELLAR WELCOME ERROR:', e.message)
+        // Fallback
         try {
           let res = await fetch(userPP)
           let imgBuffer = await res.buffer()
@@ -104,7 +105,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
         }
       }
     } else {
-      // Leave y Kick siguen normal
+      // Leave y Kick
       try {
         let res = await fetch(userPP)
         let imgBuffer = await res.buffer()
