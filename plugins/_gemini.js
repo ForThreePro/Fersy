@@ -1,9 +1,4 @@
 import fetch from 'node-fetch'
-import fs from 'fs'
-import * as googleTTS from 'google-tts-api'
-import ffmpeg from 'fluent-ffmpeg'
-import path from 'path'
-import { tmpdir } from 'os'
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
     if (!text) return m.reply(`🤖 *Ejemplo:* ${usedPrefix + command} explícame el universo`)
@@ -12,7 +7,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     
     try {
         // 1. PEDIR RESPUESTA A GEMINI COMPLETA
-        let aiUrl = `https://api.stellarwa.xyz/ai/gemini?text=${encodeURIComponent(text + ". Responde de forma normal, clara y amable. Puedes explayarte")}&key=garfield-vip`
+        let aiUrl = `https://api.stellarwa.xyz/ai/gemini?text=${encodeURIComponent(text + ". Responde de forma normal, clara y amable")}&key=proyectsV2`
         let aiRes = await fetch(aiUrl)
         let aiJson = await aiRes.json()
         
@@ -26,45 +21,23 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         
         await m.reply(`🤖 *Enviando ${chunks.length} audios...*`)
         
-        // 3. ENVIAR AUDIO POR CADA PEDAZO
+        // 3. ENVIAR AUDIO POR CADA PEDAZO USANDO API DE STELLAR
         for (let i = 0; i < chunks.length; i++) {
             let chunk = chunks[i]
             
-            let url = googleTTS.getAudioUrl(chunk, {
-                lang: 'es',
-                slow: false,
-                host: 'https://translate.google.com',
-                timeout: 10000,
-            })
-
-            let tmpFilePath = path.join(tmpdir(), `ia-${Date.now()}-${i}.opus`)
-
-            await new Promise((resolve, reject) => {
-                ffmpeg(url)
-               .audioCodec('libopus')
-               .toFormat('opus')
-               .outputOptions([
-                        '-avoid_negative_ts make_zero',
-                        '-ac 1',
-                        '-b:a 64k'
-                    ])
-               .on('end', () => resolve(true))
-               .on('error', (err) => reject(err))
-               .save(tmpFilePath)
-            })
-
-            let audioBuffer = fs.readFileSync(tmpFilePath)
+            // TTS DE STELLAR - YA VIENE EN MP3
+            let ttsUrl = `https://api.stellarwa.xyz/tts?text=${encodeURIComponent(chunk)}&lang=es`
+            let ttsRes = await fetch(ttsUrl)
+            let audioBuffer = await ttsRes.buffer()
 
             await conn.sendMessage(m.chat, {
                 audio: audioBuffer,
-                mimetype: 'audio/ogg; codecs=opus',
+                mimetype: 'audio/mpeg', // MP3 en vez de opus
                 ptt: true
             }, { quoted: m })
             
-            if (fs.existsSync(tmpFilePath)) fs.unlinkSync(tmpFilePath)
-            
-            // Esperar 500ms entre audios para que no se trabe
-            await new Promise(resolve => setTimeout(resolve, 500))
+            // Esperar 600ms entre audios
+            await new Promise(resolve => setTimeout(resolve, 600))
         }
         
         await m.react('✅')
