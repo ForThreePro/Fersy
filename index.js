@@ -1,95 +1,49 @@
-import { join, dirname } from 'path';
-import { createRequire } from 'module';
-import { fileURLToPath } from 'url';
-import { watchFile, unwatchFile, existsSync, mkdirSync } from 'fs';
-import cfonts from 'cfonts';
-import './plugins/serbot-serbot.js';
-import { createInterface } from 'readline';
-import yargs from 'yargs';
-import chalk from 'chalk';
-import { spawn } from 'child_process';
+import { existsSync, promises as fs } from 'fs'
+import path from 'path'
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(__dirname);
-const { name, version } = require(join(__dirname, './package.json'));
-const rl = createInterface(process.stdin, process.stdout);
+var handler = async (m, { conn, usedPrefix }) => {
 
-const inicializarEntorno = () => {
-  const carpetas = ['tmp', 'Sesiones/Subbots', 'Sesiones/Principal'];
-  carpetas.forEach(dir => {
-    if (dir?.trim() && !existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
+if (global.conn.user.jid !== conn.user.jid) {
+return conn.reply(m.chat, '⚠️ *Utiliza este comando directamente en el número principal del Bot*', m)
+}
+await conn.reply(m.chat, '😴 *Iniciando proceso de eliminación de todos los archivos de sesión, excepto el archivo creds.json...*', m)
+
+// CORREGIDO: Sesiones con S
+let sessionPath = `./Sesiones/Principal/`
+
+try {
+
+if (!existsSync(sessionPath)) {
+return await conn.reply(m.chat, '🧐 *La carpeta no existe: ' + sessionPath + '*', m)
+}
+
+let files = await fs.readdir(sessionPath)
+let filesDeleted = 0
+
+for (const file of files) {
+    // Protege creds.json y creds-*.json
+    if (file !== 'creds.json' && !file.startsWith('creds')) {
+        await fs.unlink(path.join(sessionPath, file))
+        filesDeleted++;
     }
-  });
-};
+}
 
-const mostrarBanner = () => {
-  cfonts.say('nox bot', {
-    font: 'block',
-    align: 'center',
-    colors: ['blue', 'white'],
-    background: 'black'
-  });
+if (filesDeleted === 0) {
+await conn.reply(m.chat, '🧐 *No había archivos para eliminar*',  m)
+} else {
+await conn.reply(m.chat, `😮‍💨 *Se eliminaron ${filesDeleted} archivos de sesión*`,  m)
+await conn.reply(m.chat, `⭐ *¡Listo! Ahora haz .restart y escanea QR*`, m)
+}
 
-  cfonts.say('Developed By • Nox Bot MD', {
-    font: 'console',
-    align: 'center',
-    colors: ['cyan']
-  });
-};
+} catch (err) {
+console.error('Error:', err);
+await conn.reply(m.chat, '⚠️ *Ocurrió un fallo: ' + err.message + '*',  m)
+}
 
-let ejecucionActiva = false;
-let procesoHijo;
+}
+handler.help = ['dsowner']
+handler.tags = ['fix', 'owner']
+handler.command = ['delai', 'delyaemori', 'dsowner', 'clearallsession']
+handler.rowner = true
 
-const ejecutarProceso = (archivo) => {
-  if (ejecucionActiva) return;
-  ejecucionActiva = true;
-
-  const rutaArchivo = join(__dirname, archivo);
-  const argumentos = [rutaArchivo, ...process.argv.slice(2)];
-  
-  procesoHijo = spawn('node', argumentos, { stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
-
-  procesoHijo.on('message', codigo => {
-    if (codigo === 'reset') {
-      procesoHijo.kill();
-      ejecucionActiva = false;
-      ejecutarProceso(archivo);
-    } else if (codigo === 'uptime') {
-      procesoHijo.send(process.uptime());
-    }
-  });
-
-  procesoHijo.on('exit', estado => {
-    ejecucionActiva = false;
-    console.error('🚩 Error :\n', estado);
-    process.exit();
-  });
-
-  const opciones = yargs(process.argv.slice(2)).exitProcess(false).parse();
-  if (!opciones['test'] && !rl.listenerCount('line')) {
-    rl.on('line', entrada => {
-      if (procesoHijo?.connected) {
-        procesoHijo.send(entrada.trim());
-      }
-    });
-  }
-
-  watchFile(argumentos[0], () => {
-    unwatchFile(argumentos[0]);
-    if (procesoHijo) procesoHijo.kill();
-    ejecucionActiva = false;
-    ejecutarProceso(archivo);
-  });
-};
-
-process.on('warning', alerta => {
-  if (alerta.name === 'MaxListenersExceededWarning') {
-    console.warn('🚩 Se excedió el límite de Listeners en :');
-    console.warn(alerta.stack);
-  }
-});
-
-inicializarEntorno();
-mostrarBanner();
-ejecutarProceso('main.js');
+export default handler
