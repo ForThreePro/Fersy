@@ -80,9 +80,8 @@ const handler = async (m, { isOwner, isAdmin, conn, participants, args }) => {
 *Powered by*: ***Garfield Bot Oficial*** 🍕
 *Owner*: @whois.yallico`
 
-    // IMAGENES ROTATORIAS
-    const images = [global.botimg]
-const imageUrl = { url: images[Math.floor(Math.random() * images.length)] }
+    // IMAGEN FIJA GARFIELD
+    const imageUrl = { url: 'https://files.evogb.win/QFXQtu.jpg' } // <-- AQUI TU LINK
 
     await conn.sendMessage(m.chat, {
       image: imageUrl,
