@@ -33,8 +33,8 @@ global.group = 'https://chat.whatsapp.com/CBuLXuVZcg9FEfCSHiY6b0'
 global.canal = 'https://whatsapp.com/channel/0029Vaua0ZD3gvWjQaIpSy18'
 global.insta = 'https://www.insta.com/sebastian_barboza13'
 
-// IMAGEN GLOBAL CON FALLBACK Y CARGA DESDE DB
-global.botimg = global.db?.data?.settings?.botimg || 'https://files.evogb.win/QFXQtu.jpg'
+// IMAGEN GLOBAL FIJA
+global.botimg = 'https://files.evogb.win/QFXQtu.jpg'
 
 global.estilo = { 
   key: { 
