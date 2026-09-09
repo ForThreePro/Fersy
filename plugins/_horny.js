@@ -1,6 +1,7 @@
 import fetch from 'node-fetch'
 
 let handler = async (m, { conn, participants, command }) => {
+    console.log("COMANDO EJECUTADO:", command) // DEBUG
     let defaultImg = 'https://files.evogb.win/E2yVdA.jpg'
     let key = 'proyectsV2'
 
@@ -23,7 +24,7 @@ let handler = async (m, { conn, participants, command }) => {
 
     // ===== HORNY =====
     if (command === 'horny') {
-        let who = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
+        let who = m.mentionedJid[0] || m.quoted?.sender || m.sender
         let name = await getName(who)
         let pp = await getAvatar(who)
         let apiUrl = `https://api.stellarwa.xyz/generate/horny?avatar=${encodeURIComponent(pp)}&key=${key}`
@@ -32,11 +33,7 @@ let handler = async (m, { conn, participants, command }) => {
             let res = await fetch(apiUrl, { timeout: 20000 })
             if(!res.ok) throw new Error('API ' + res.status)
             let buffer = await res.buffer()
-            await conn.sendMessage(m.chat, {
-                image: buffer,
-                caption: `@${name} está así ahora mismo 😏🔥`,
-                mentions: [who]
-            })
+            await conn.sendMessage(m.chat, { image: buffer, caption: `@${name} está así ahora mismo 😏🔥`, mentions: [who] })
         } catch (e) {
             console.log(e)
             m.reply(`⚠️ Error al generar la imagen`)
@@ -61,74 +58,49 @@ let handler = async (m, { conn, participants, command }) => {
 
         let name1 = await getName(user1)
         let name2 = await getName(user2)
-
-        await conn.sendMessage(m.chat, {
-            text: `💘 Calculando compatibilidad...\n\n@${name1} + @${name2}`,
-            mentions: [user1, user2]
-        })
+        await conn.sendMessage(m.chat, { text: `💘 Calculando...\n\n@${name1} + @${name2}`, mentions: [user1, user2] })
 
         try {
             let avatar1 = await getAvatar(user1)
             let avatar2 = await getAvatar(user2)
             let background = 'https://files.evogb.win/7BY3Yv.jpg'
             let apiUrl = `https://api.stellarwa.xyz/generate/ship?avatar1=${encodeURIComponent(avatar1)}&avatar2=${encodeURIComponent(avatar2)}&background=${encodeURIComponent(background)}&key=${key}`
-
             let res = await fetch(apiUrl, { timeout: 20000 })
-            if(!res.ok) throw new Error('API ' + res.status)
             let buffer = await res.buffer()
-
             let porcentaje = Math.floor(Math.random() * 101)
-            let explicacion = ''
-            if(porcentaje < 20) explicacion = `Hay 0 química. Mejor amigos y ya 😅`
-            else if(porcentaje < 40) explicacion = `Poca compatibilidad. Se caen bien pero nada más 💛`
-            else if(porcentaje < 60) explicacion = `Hay algo ahí... Tal vez con tiempo funcione ✨`
-            else if(porcentaje < 80) explicacion = `Buena conexión. Se ven muy bien juntos ❤️`
-            else if(porcentaje < 100) explicacion = `Compatibilidad altísima. Tienen futuro juntos 💖`
-            else explicacion = `100% ALMAS GEMELAS. Están destinados 💍`
-
-            await conn.sendMessage(m.chat, {
-                image: buffer,
-                caption: `💘 *RESULTADO DEL SHIP* 💘\n*@${name1}* + *@${name2}*\n\n*Compatibilidad: ${porcentaje}%*\n${explicacion}`,
-                mentions: [user1, user2]
-            })
+            let explicacion = porcentaje < 20? `Hay 0 química 😅` : porcentaje < 40? `Poca compatibilidad 💛` : porcentaje < 60? `Hay algo ahí ✨` : porcentaje < 80? `Buena conexión ❤️` : porcentaje < 100? `Compatibilidad altísima 💖` : `100% ALMAS GEMELAS 💍`
+            await conn.sendMessage(m.chat, { image: buffer, caption: `💘 *RESULTADO DEL SHIP* 💘\n*@${name1}* + *@${name2}*\n\n*Compatibilidad: ${porcentaje}%*\n${explicacion}`, mentions: [user1, user2] })
         } catch (e) {
             console.log(e)
             m.reply(`⚠️ Error al generar la imagen`)
         }
     }
 
-// ===== SECURITY / WANTED =====
+    // ===== SECURITY ARREGLADO =====
     if (command === 'security') {
-        let who = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
+        await m.reply(`🔍 Generando cartel... espera 5s`) // Para saber que si entró
+        let who = m.mentionedJid[0] || m.quoted?.sender || m.sender
         let name = await getName(who)
         let pp = await getAvatar(who)
-
-        let background = 'https://files.evogb.win/7BY3Yv.jpg' // fondo del cartel
-        let createdTimestamp = Date.now() // timestamp actual
-        let key = 'proyectsV2'
+        let background = 'https://files.evogb.win/7BY3Yv.jpg'
+        let createdTimestamp = Date.now()
 
         let apiUrl = `https://api.stellarwa.xyz/generate/security?avatar=${encodeURIComponent(pp)}&background=${encodeURIComponent(background)}&createdTimestamp=${createdTimestamp}&key=${key}`
+        console.log("URL:", apiUrl) // DEBUG
 
         try {
-            m.reply(`🔍 Generando cartel de SE BUSCA...`)
-            let res = await fetch(apiUrl, { timeout: 25000 })
-            if(!res.ok) throw new Error(`API ${res.status}`)
-
+            let res = await fetch(apiUrl, { timeout: 30000 })
+            if(!res.ok) throw new Error(`API ${res.status} - ${await res.text()}`)
             let buffer = await res.buffer()
-            if(buffer.length < 5000) throw new Error('Imagen vacía')
-
-            await conn.sendMessage(m.chat, {
-                image: buffer,
-                caption: `🚨 *SE BUSCA* 🚨\n@${name}\n\n*Recompensa: 1,000,000$*\n*Última vez visto: Hoy*`,
-                mentions: [who]
-            })
+            await conn.sendMessage(m.chat, { image: buffer, caption: `🚨 *SE BUSCA* 🚨\n@${name}\n\n*Recompensa: 1,000,000$*`, mentions: [who] })
         } catch (e) {
             console.log('SECURITY ERROR:', e)
-            m.reply(`⚠️ Error al generar la imagen. La API está saturada`)
+            m.reply(`⚠️ Error: ${e.message}`)
         }
     }
+}
 
 handler.help = ['horny @tag', 'ship @tag1 @tag2', 'security @tag']
 handler.tags = ['fun']
-handler.command = ['horny', 'ship', 'security']
+handler.command = ['horny', 'ship', 'security'] // IMPORTANTE: aqui van los 3
 export default handler
