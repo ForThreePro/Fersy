@@ -31,13 +31,16 @@ handler.before = async function (m, { conn, groupMetadata }) {
     const userJid = m.messageStubParameters?.[0] || m.participant
     if (!userJid) return!0
 
-    // REGLA: 1. Imagen por defecto. 2. Si tiene foto la cambia
-    let pp = 'https://files.evogb.win/E2yVdA.jpg' // FOTO POR DEFECTO GARFIELD
+    // 1. Foto por defecto fija
+    const DEFAULT_IMG = 'https://files.evogb.win/E2yVdA.jpg'
+    let pp = DEFAULT_IMG
+
+    // 2. Intentar obtener foto del user. Si falla, se queda con DEFAULT_IMG
     try {
-      const userProfile = await conn.profilePictureUrl(userJid, 'image')
-      pp = userProfile // Si entra aquí SÍ tiene foto, la usa
-    } catch {
-      // Si entra aquí NO tiene foto, se queda con la de Garfield
+      const userPP = await conn.profilePictureUrl(userJid, 'image')
+      if (userPP && userPP.startsWith('http')) pp = userPP
+    } catch (e) {
+      console.log('Usuario sin foto, usando default')
     }
 
     const userTag = `@${userJid.split('@')[0]}`
@@ -68,11 +71,16 @@ handler.before = async function (m, { conn, groupMetadata }) {
     }
 
     if (txt) {
-      await conn.sendMessage(m.chat, {
-        image: { url: pp }, // <- Aquí manda la del user o la de Garfield
-        caption: txt,
-        mentions: [userJid]
-      })
+      // PLAN B: Si por alguna razón falla el envio con imagen, manda solo texto
+      try {
+        await conn.sendMessage(m.chat, {
+          image: { url: pp }, // pp NUNCA es undefined ahora
+          caption: txt,
+          mentions: [userJid]
+        })
+      } catch {
+        await conn.sendMessage(m.chat, { text: txt, mentions: [userJid] })
+      }
 
       if (audio) {
         if (Buffer.isBuffer(audio)) {
