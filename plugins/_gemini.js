@@ -6,19 +6,19 @@ import path from 'path'
 import { tmpdir } from 'os'
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-    if (!text) return m.reply(`😼 *Ejemplo:* ${usedPrefix + command} cuéntame un chiste de lasaña`)
+    if (!text) return m.reply(`🤖 *Ejemplo:* ${usedPrefix + command} ¿qué día es hoy?`)
     
     await m.react('⏳')
     
     try {
-        // 1. PEDIR RESPUESTA A GEMINI COMO GARFIELD
-        let aiUrl = `https://api.stellarwa.xyz/ai/gemini?text=${encodeURIComponent(text + ". Responde como Garfield: sarcástico, flojo, ama la lasaña, odia los lunes. Máximo 2 lineas")}&key=garfield-vip`
+        // 1. PEDIR RESPUESTA A GEMINI NORMAL
+        let aiUrl = `https://api.stellarwa.xyz/ai/gemini?text=${encodeURIComponent(text + ". Responde de forma normal, clara y amable. Máximo 3 lineas")}&key=garfield-vip`
         let aiRes = await fetch(aiUrl)
         let aiJson = await aiRes.json()
         
-        let respuesta = aiJson.result || aiJson.data || aiJson.response || "Miau, no entendí 🐱"
+        let respuesta = aiJson.result || aiJson.data || aiJson.response || "No pude entender eso"
         
-        // 2. CONVERTIR A AUDIO CON TU MISMO TTS
+        // 2. CONVERTIR A AUDIO
         let url = googleTTS.getAudioUrl(respuesta, {
             lang: 'es',
             slow: false,
@@ -26,7 +26,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
             timeout: 10000,
         })
 
-        let tmpFilePath = path.join(tmpdir(), `garfield-${Date.now()}.opus`)
+        let tmpFilePath = path.join(tmpdir(), `ia-${Date.now()}.opus`)
 
         await new Promise((resolve, reject) => {
             ffmpeg(url)
@@ -48,10 +48,10 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         await conn.sendMessage(m.chat, {
             audio: audioBuffer,
             mimetype: 'audio/ogg; codecs=opus',
-            ptt: true // nota de voz
+            ptt: true
         }, { quoted: m })
 
-        await m.reply(`😼 *Garfield dice:* ${respuesta}`)
+        await m.reply(`🤖 *IA:* ${respuesta}`)
         
         if (fs.existsSync(tmpFilePath)) fs.unlinkSync(tmpFilePath)
         await m.react('✅')
@@ -59,13 +59,13 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     } catch (e) {
         console.log(e)
         await m.react('❌')
-        await m.reply(`⚠️ Error: Gemini o TTS falló\nIntenta de nuevo`)
+        await m.reply(`⚠️ Error: Intenta de nuevo`)
     }
 }
 
-handler.help = ['garfield <texto>']
+handler.help = ['ia <texto>', 'bot <texto>']
 handler.tags = ['ai']
-handler.command = ['garfield', 'gato', 'habla']
+handler.command = ['ia', 'bot', 'voz']
 handler.register = false
 
 export default handler
