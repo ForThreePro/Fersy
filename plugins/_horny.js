@@ -1,10 +1,8 @@
 import fetch from 'node-fetch'
-import FormData from 'form-data' // IMPORTANTE
 
 let handler = async (m, { conn, participants, command }) => {
     let defaultImg = 'https://files.evogb.win/E2yVdA.jpg'
     let defaultBg = 'https://files.evogb.win/7BY3Yv.jpg'
-    let defaultPost = 'https://files.evogb.win/8kP2Lm.jpg'
     let key = 'proyectsV2'
 
     const getAvatar = async (jid) => {
@@ -22,18 +20,6 @@ let handler = async (m, { conn, participants, command }) => {
             if(n && n!== 'undefined') name = n
         } catch {}
         return name
-    }
-
-    // Subir imagen
-    const uploadImage = async (buffer) => {
-        try {
-            let form = new FormData()
-            form.append('file', buffer, { filename: 'image.jpg' })
-            let res = await fetch('https://telegra.ph/upload', { method: 'POST', body: form })
-            let json = await res.json()
-            if(json[0]?.src) return 'https://telegra.ph' + json[0].src
-        } catch (e) { console.log('UPLOAD ERROR:', e) }
-        return defaultPost
     }
 
     // ===== HORNY =====
@@ -97,46 +83,9 @@ let handler = async (m, { conn, participants, command }) => {
             await conn.sendMessage(m.chat, { image: buffer, caption: `📊 *TARJETA DE NIVEL*\n@${who.split('@')[0]}\n\n*Nivel:* ${level}\n*Rank:* #${rank}\n*XP:* ${currxp}/${needxp}`, mentions: [who] })
         } catch (e) { m.reply(`⚠️ Error al generar la imagen`) }
     }
-
-    // ===== INSTAGRAM ARREGLADO =====
-    if (command === 'instagram' || command === 'ig') {
-        let who = m.mentionedJid[0] || m.quoted?.sender || m.sender
-        let name = await getName(who)
-        let pp = await getAvatar(who)
-
-        let postImage = defaultPost
-        if (m.quoted?.mtype === 'imageMessage') {
-            await m.reply(`📸 Subiendo imagen...`)
-            let media = await m.quoted.download()
-            postImage = await uploadImage(media)
-        }
-
-        let likeCount = Math.floor(Math.random() * 100000) + 1000
-        let likeText = `${name} y ${Math.floor(Math.random() * 5000)} personas más`
-
-        let apiUrl = `https://api.stellarwa.xyz/generate/instagram?username=${encodeURIComponent(name)}&avatar=${encodeURIComponent(pp)}&postImage=${encodeURIComponent(postImage)}&likeCount=${likeCount}&likeText=${encodeURIComponent(likeText)}&key=${key}`
-
-        await m.reply(`📸 Generando post de Instagram para @${who.split('@')[0]}...`, null, { mentions: [who] })
-
-        try {
-            let res = await fetch(apiUrl, { timeout: 30000 })
-            if(!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`)
-            let buffer = await res.buffer()
-            if(buffer.length < 5000) throw new Error('Imagen vacía')
-
-            await conn.sendMessage(m.chat, {
-                image: buffer,
-                caption: `📸 *POST DE INSTAGRAM FALSO*\n@${who.split('@')[0]}\n\n*Likes:* ${likeCount.toLocaleString()}\n*Le gusta a:* ${likeText}`,
-                mentions: [who]
-            })
-        } catch (e) {
-            console.log('IG ERROR:', e)
-            m.reply(`⚠️ Error: ${e.message}`)
-        }
-    }
 }
 
-handler.help = ['horny @tag', 'ship @tag1 @tag2', 'security @tag', 'rank @tag', 'instagram @tag']
+handler.help = ['horny @tag', 'ship @tag1 @tag2', 'security @tag', 'rank @tag']
 handler.tags = ['fun']
-handler.command = ['horny', 'ship', 'security', 'rank', 'instagram', 'ig']
+handler.command = ['horny', 'ship', 'security', 'rank']
 export default handler
