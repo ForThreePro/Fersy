@@ -102,23 +102,33 @@ let handler = async (m, { conn, participants, command }) => {
         let who = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
         let name = await getName(who)
         let pp = await getAvatar(who)
-        let apiUrl = `https://api.stellarwa.xyz/generate/security?avatar=${encodeURIComponent(pp)}&key=${key}`
+
+        // Stellarwa security usa background obligatorio
+        let background = 'https://files.evogb.win/7BY3Yv.jpg'
+        let apiUrl = `https://api.stellarwa.xyz/generate/security?avatar=${encodeURIComponent(pp)}&background=${encodeURIComponent(background)}&key=${key}`
 
         try {
-            let res = await fetch(apiUrl, { timeout: 20000 })
-            if(!res.ok) throw new Error('API ' + res.status)
+            m.reply(`🔍 Generando cartel...`)
+            let res = await fetch(apiUrl, { timeout: 25000 })
+
+            if(!res.ok) {
+                let errorText = await res.text()
+                throw new Error(`API ${res.status}: ${errorText}`)
+            }
+
             let buffer = await res.buffer()
+            if(buffer.length < 5000) throw new Error('La API devolvió imagen vacía')
+
             await conn.sendMessage(m.chat, {
                 image: buffer,
-                caption: `🚨 *SE BUSCA* 🚨\n@${name}\n\nRecompensa: 1,000,000$`,
+                caption: `🚨 *SE BUSCA* 🚨\n@${name}\n\n*Recompensa: 1,000,000$*\n*Delito: Ser muy guapo*`,
                 mentions: [who]
             })
         } catch (e) {
-            console.log(e)
-            m.reply(`⚠️ Error al generar la imagen`)
+            console.log('SECURITY ERROR:', e)
+            m.reply(`⚠️ Error al generar la imagen\n*Posibles causas:*\n1. La API está saturada\n2. El avatar no carga\nIntenta en 10s`)
         }
     }
-}
 
 handler.help = ['horny @tag', 'ship @tag1 @tag2', 'security @tag']
 handler.tags = ['fun']
