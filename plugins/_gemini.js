@@ -11,7 +11,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     await m.react('⏳')
     
     try {
-        // 1. PEDIR RESPUESTA A GEMINI NORMAL
+        // 1. PEDIR RESPUESTA A GEMINI
         let aiUrl = `https://api.stellarwa.xyz/ai/gemini?text=${encodeURIComponent(text + ". Responde de forma normal, clara y amable. Máximo 3 lineas")}&key=garfield-vip`
         let aiRes = await fetch(aiUrl)
         let aiJson = await aiRes.json()
@@ -44,14 +44,12 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
         let audioBuffer = fs.readFileSync(tmpFilePath)
 
-        // 3. ENVIAR AUDIO + TEXTO
+        // 3. SOLO ENVIAR AUDIO - QUITÉ EL TEXTO
         await conn.sendMessage(m.chat, {
             audio: audioBuffer,
             mimetype: 'audio/ogg; codecs=opus',
             ptt: true
         }, { quoted: m })
-
-        await m.reply(`🤖 *IA:* ${respuesta}`)
         
         if (fs.existsSync(tmpFilePath)) fs.unlinkSync(tmpFilePath)
         await m.react('✅')
