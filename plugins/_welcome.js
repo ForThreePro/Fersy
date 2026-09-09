@@ -1,3 +1,27 @@
+import { WAMessageStubType } from '@whiskeysockets/baileys'
+
+const handler = async (m, { conn, args, isAdmin, isOwner }) => {
+  if (!isAdmin &&!isOwner) return conn.reply(m.chat, `🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n🍕 *Solo admins pueden usar este comando*`, m)
+  let chat = global.db.data.chats[m.chat]
+  if (!chat) global.db.data.chats[m.chat] = {}
+
+  if (/on/i.test(args[0])) {
+    chat.bienvenida = true
+    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🟢 *Activada con audios*`, m)
+  } else if (/off/i.test(args[0])) {
+    chat.bienvenida = false
+    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🔴 *Desactivada*`, m)
+  } else {
+    await conn.reply(m.chat, `🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n📌 *Uso:* ${m.prefix}bienvenida on/off`, m)
+  }
+}
+
+handler.help = ['bienvenida <on/off>']
+handler.tags = ['config']
+handler.command = /^(bienvenida|welcome|bye)$/i
+handler.group = true
+handler.admin = true
+
 handler.before = async function (m, { conn, groupMetadata }) {
   try {
     if (!m.messageStubType ||!m.isGroup) return!0
@@ -7,13 +31,13 @@ handler.before = async function (m, { conn, groupMetadata }) {
     const userJid = m.messageStubParameters?.[0] || m.participant
     if (!userJid) return!0
 
-    // FIX: Imagen por defecto primero, y solo la cambiamos si SÍ tiene
-    let pp = 'https://files.evogb.win/E2yVdA.jpg' // GARFIELD FALLBACK
+    // REGLA: 1. Imagen por defecto. 2. Si tiene foto la cambia
+    let pp = 'https://files.evogb.win/E2yVdA.jpg' // FOTO POR DEFECTO GARFIELD
     try {
-      const userPP = await conn.profilePictureUrl(userJid, 'image')
-      if (userPP) pp = userPP
+      const userProfile = await conn.profilePictureUrl(userJid, 'image')
+      pp = userProfile // Si entra aquí SÍ tiene foto, la usa
     } catch {
-      // Si no tiene foto, no pasa nada, usamos la de arriba
+      // Si entra aquí NO tiene foto, se queda con la de Garfield
     }
 
     const userTag = `@${userJid.split('@')[0]}`
@@ -45,7 +69,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
 
     if (txt) {
       await conn.sendMessage(m.chat, {
-        image: { url: pp }, // <- Ahora pp nunca está vacío
+        image: { url: pp }, // <- Aquí manda la del user o la de Garfield
         caption: txt,
         mentions: [userJid]
       })
@@ -63,3 +87,5 @@ handler.before = async function (m, { conn, groupMetadata }) {
   }
   return!0
 }
+
+export default handler
