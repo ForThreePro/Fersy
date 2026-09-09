@@ -35,11 +35,19 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const DEFAULT_BG = 'https://files.evogb.win/7BY3Yv.jpg'
   const DEFAULT_IMG = 'https://files.evogb.win/E2yVdA.jpg'
 
-  // Datos
-  let userName = 'Usuario'
-  try { userName = await conn.getName(userJid) } catch {}
+  // ===== ARREGLO 1: NOMBRE =====
+  let userName = userJid.split('@')[0] // fallback por si falla
+  try {
+    let n = await conn.getName(userJid)
+    if(n && n!== 'undefined' && n.trim()!== '') userName = n
+  } catch {}
+
+  // ===== ARREGLO 2: FOTO DE PERFIL CON REGLA =====
   let userPP = DEFAULT_IMG
-  try { userPP = await conn.profilePictureUrl(userJid, 'image') } catch {}
+  try {
+    let pp = await conn.profilePictureUrl(userJid, 'image')
+    if(pp && pp.startsWith('https')) userPP = pp // Solo si sí tiene foto
+  } catch {} // Si no tiene, se queda la default
 
   const userTag = `@${userJid.split('@')[0]}`
   const groupName = groupMetadata.subject
@@ -76,6 +84,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
       try {
         let apiUrl = `https://api.stellarwa.xyz/generate/welcome2?username=${encodeURIComponent(userName)}&guildName=${encodeURIComponent(groupName)}&memberCount=${membersCount}&avatar=${encodeURIComponent(userPP)}&background=${encodeURIComponent(DEFAULT_BG)}&key=${key}`
 
+        console.log('API URL:', apiUrl) // para debug
         let res = await fetch(apiUrl, { timeout: 30000 })
         if (res.ok) {
           let buffer = await res.buffer()
