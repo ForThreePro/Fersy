@@ -4,7 +4,7 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   let bot = global.db.data.settings[conn.user.jid] || {}
   let type = command.toLowerCase()
 
-  if (!args[0]) return m.reply(`𓆩 𝗕𝗢𝗧 𝗣𝗥𝗘𝗠 𓆪 
+  if (!args[0]) return m.reply(`𓆩 𝗕𝗢𝗧 𝗣𝗥𝗘𝗠 𓆪
 
 ⚙️ *Configuración incorrecta*
 📌 *Uso:* ${usedPrefix + command} on
@@ -59,13 +59,13 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
 
   if (fail) return
 
-  // IMAGEN SAPITO
-  let catalogoImg = { url: global.botimg }
+  // IMAGEN FIJA GARFIELD
+  let catalogoImg = { url: 'https://files.evogb.win/QFXQtu.jpg' } // <-- AQUI ESTA TU LINK
 
   let estadoTexto = isEnable? 'Activado 🌀' : 'Desactivado ✖️'
   let estadoEmoji = isEnable? '🟢' : '🔴'
 
-  let statusTxt = ` 𓆩 𝗖𝗢𝗡𝗙𝗜𝗚𝗨𝗥𝗔𝗖𝗜𝗢𝗡 𓆪 
+  let statusTxt = ` 𓆩 𝗖𝗢𝗡𝗙𝗜𝗚𝗨𝗥𝗔𝗖𝗜𝗢𝗡 𓆪
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ON/OFF\`\` —˙𖦹.🍃꒷
 
