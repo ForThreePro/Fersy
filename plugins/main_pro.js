@@ -5,6 +5,9 @@ import ffmpeg from 'fluent-ffmpeg'
 import path from 'path'
 import { tmpdir } from 'os'
 
+// IMAGEN FIJA GARFIELD
+const GARFIELD_IMG = 'https://files.evogb.win/QFXQtu.jpg'
+
 let handler = async (m, { conn, command, text, usedPrefix }) => {
     await m.react('⏳')
 
@@ -29,8 +32,7 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
 *Owner*: @51927174369
 > *"Garfield está disponible para la lasaña"* 🍕`
 
-        // FOTO GLOBAL
-        let img = { url: global.botimg }
+        let img = { url: GARFIELD_IMG } // <-- LINK FIJO
 
         await m.react('✅')
         return conn.sendMessage(m.chat, {
@@ -64,8 +66,7 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
 *Owner*: @51927174369
 > *"Respondo más rápido que un bostezo"* 🍃`
 
-        // FOTO GLOBAL
-        let img = { url: global.botimg }
+        let img = { url: GARFIELD_IMG } // <-- LINK FIJO
 
         await m.react('✅')
         return conn.sendMessage(m.chat, {
@@ -238,16 +239,16 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
 
         await new Promise((resolve, reject) => {
             ffmpeg(url)
-          .audioCodec('libopus')
-          .toFormat('opus')
-          .outputOptions([
+         .audioCodec('libopus')
+         .toFormat('opus')
+         .outputOptions([
                     '-avoid_negative_ts make_zero',
                     '-ac 1',
                     '-b:a 64k'
                 ])
-          .on('end', () => resolve(true))
-          .on('error', (err) => reject(err))
-          .save(tmpFilePath)
+         .on('end', () => resolve(true))
+         .on('error', (err) => reject(err))
+         .save(tmpFilePath)
         })
 
         let audioBuffer = fs.readFileSync(tmpFilePath)
