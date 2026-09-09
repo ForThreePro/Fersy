@@ -31,11 +31,13 @@ handler.before = async function (m, { conn, groupMetadata }) {
     const userJid = m.messageStubParameters?.[0] || m.participant
     if (!userJid) return!0
 
-    let pp
+    // ARREGLO: SIEMPRE tiene imagen, aunque falle
+    let pp = 'https://files.evogb.win/E2yVdA.jpg' // URL GARFIELD FALLBACK
     try {
-      pp = await conn.profilePictureUrl(userJid, 'image')
+      let userPP = await conn.profilePictureUrl(userJid, 'image')
+      if(userPP) pp = userPP
     } catch {
-      pp = 'https://files.evogb.win/E2yVdA.jpg' // URL GARFIELD FALLBACK
+      // Si no tiene foto, se queda con la de fallback
     }
 
     const userTag = `@${userJid.split('@')[0]}`
@@ -67,7 +69,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
 
     if (txt) {
       await conn.sendMessage(m.chat, {
-        image: { url: pp },
+        image: { url: pp }, // <- Aquí siempre llega una URL válida
         caption: txt,
         mentions: [userJid]
       })
