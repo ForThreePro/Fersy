@@ -2,60 +2,47 @@ import { existsSync, promises as fs } from 'fs'
 import path from 'path'
 
 var handler = async (m, { conn }) => {
-
 if (global.conn.user.jid !== conn.user.jid) {
-return conn.reply(m.chat, '⚠️ *Utiliza este comando directamente en el número principal del Bot*', m)
-}
-await conn.reply(m.chat, '😴 *Buscando carpeta de sesión...*', m)
-
-// PRUEBA LAS 3 CARPETAS MÁS COMUNES
-const rutas = [
-    `./Sesiones/Principal/`,
-    `./sesiones/Principal/`,
-    `./sessions/Principal/`
-]
-
-let sessionPath = null
-for (let ruta of rutas) {
-    if (existsSync(ruta)) {
-        sessionPath = ruta
-        break
-    }
+return conn.reply(m.chat, '⚠️ *Usa esto en el número principal*', m)
 }
 
-if (!sessionPath) {
-return await conn.reply(m.chat, '🧐 *No encontré ninguna carpeta: Sesiones/Principal, sesiones/Principal o sessions/Principal*', m)
-}
+let rutas = [`./Sesiones/Principal/`, `./sesiones/Principal/`, `./sessions/Principal/`]
+let sessionPath = rutas.find(r => existsSync(r))
 
-await conn.reply(m.chat, `✅ *Carpeta encontrada:* ${sessionPath}\n\n*Iniciando limpieza...*`, m)
+if (!sessionPath) return m.reply('🧐 *No encontré la carpeta de sesión*')
 
-try {
+await m.reply(`😴 *Limpiando archivos basura de sesión...*`)
+
 let files = await fs.readdir(sessionPath)
 let filesDeleted = 0
 
 for (const file of files) {
-    if (file !== 'creds.json' && !file.startsWith('creds')) {
-        await fs.unlink(path.join(sessionPath, file))
-        filesDeleted++;
+    // REGLA DE ORO: SOLO BORRAR ESTOS 3 TIPOS DE BASURA
+    // 1. No tocar nada que empiece con creds
+    // 2. No tocar app-state
+    // 3. Solo borrar pre-keys, sessions, y archivos viejos
+    if (
+        file.startsWith('pre-key-') || 
+        file.startsWith('sender-key') || 
+        file.startsWith('session-') ||
+        file.startsWith('app-state-sync-key') === false && file.includes('app-state') // por si acaso
+    ) {
+        if (!file.startsWith('creds') && !file.startsWith('app-state')) {
+            await fs.unlink(path.join(sessionPath, file))
+            filesDeleted++;
+        }
     }
 }
 
 if (filesDeleted === 0) {
-await conn.reply(m.chat, '🧐 *No había archivos para eliminar*',  m)
+await m.reply(`🧐 *No había basura que limpiar. Todo limpio*`)
 } else {
-await conn.reply(m.chat, `😮‍💨 *Se eliminaron ${filesDeleted} archivos de sesión*`,  m)
-await conn.reply(m.chat, `⭐ *¡Listo! Ahora haz .restart y escanea QR*`, m)
-}
-
-} catch (err) {
-console.error('Error:', err);
-await conn.reply(m.chat, '⚠️ *Ocurrió un fallo: ' + err.message + '*',  m)
+await m.reply(`😮‍💨 *Se eliminaron ${filesDeleted} archivos de caché*\n\n*✅ Listo. El bot sigue conectado y no necesita reinicio*`)
 }
 
 }
 handler.help = ['dsowner']
 handler.tags = ['fix', 'owner']
-handler.command = ['delai', 'delyaemori', 'dsowner', 'clearallsession']
+handler.command = ['dsowner','delai','clearcache']
 handler.rowner = true
-
 export default handler
