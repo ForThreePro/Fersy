@@ -2,14 +2,14 @@ let handler = async (m, { conn }) => {
     let who = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
     let name = await conn.getName(who)
 
-    // URL por defecto si no tiene foto
+    // URL por defecto
     let defaultAvatar = 'https://files.evogb.win/E2yVdA.jpg'
 
-    // Intentamos sacar la foto. Si falla, usamos la default
+    // Sacamos la foto
     let pp = await conn.profilePictureUrl(who, 'image').catch(() => defaultAvatar)
 
-    // VALIDACIÓN EXTRA: por si devuelve "" o null
-    if (!pp ||!pp.startsWith('http')) {
+    // FORZAMOS A QUE SEA STRING. Si no es, usamos la default
+    if (typeof pp!== 'string' ||!pp ||!pp.startsWith('http')) {
         pp = defaultAvatar
     }
 
