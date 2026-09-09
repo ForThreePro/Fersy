@@ -1,4 +1,5 @@
 import { WAMessageStubType } from '@whiskeysockets/baileys'
+import fetch from 'node-fetch'
 
 const handler = async (m, { conn, args, isAdmin, isOwner }) => {
   if (!isAdmin &&!isOwner) return conn.reply(m.chat, `🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n🍕 *Solo admins pueden usar este comando*`, m)
@@ -31,13 +32,22 @@ handler.before = async function (m, { conn, groupMetadata }) {
   if (!userJid) return!0
 
   const DEFAULT_IMG = 'https://files.evogb.win/E2yVdA.jpg'
-  let pp = DEFAULT_IMG
+  let imgBuffer = null
 
-  // PASO 1: Conseguir foto. Si falla, no importa
+  // PASO 1: Intentar obtener foto del usuario
   try {
-    let res = await conn.profilePictureUrl(userJid, 'image')
-    if (res) pp = res
-  } catch {}
+    let userPP = await conn.profilePictureUrl(userJid, 'image')
+    let res = await fetch(userPP)
+    imgBuffer = await res.buffer()
+  } catch {
+    // PASO 2: Si falla, descargar la de Garfield por defecto
+    try {
+      let res = await fetch(DEFAULT_IMG)
+      imgBuffer = await res.buffer()
+    } catch {
+      imgBuffer = null // si hasta la default falla, mandamos solo texto
+    }
+  }
 
   const userTag = `@${userJid.split('@')[0]}`
   const groupName = groupMetadata.subject
@@ -67,24 +77,20 @@ handler.before = async function (m, { conn, groupMetadata }) {
   }
 
   if (txt) {
-    // PASO 2: Intentar mandar con imagen. Si falla, mandar solo texto
-    try {
-      await conn.sendMessage(m.chat, { image: { url: pp }, caption: txt, mentions: [userJid] })
-    } catch (e) {
-      console.log('Fallo imagen, mandando solo texto:', e)
+    // PASO 3: Mandar SIEMPRE con imagen si se pudo descargar
+    if (imgBuffer) {
+      await conn.sendMessage(m.chat, { image: imgBuffer, caption: txt, mentions: [userJid] })
+    } else {
       await conn.sendMessage(m.chat, { text: txt, mentions: [userJid] })
     }
 
-    // PASO 3: Audio aparte
-    try {
-      if (audio) {
-        if (Buffer.isBuffer(audio)) {
-          await conn.sendMessage(m.chat, { audio: audio, mimetype: 'audio/mpeg', ptt: false })
-        } else if (typeof audio === 'string' && audio.startsWith('http')) {
-          await conn.sendMessage(m.chat, { audio: { url: audio }, mimetype: 'audio/mpeg', ptt: false })
-        }
+    if (audio) {
+      if (Buffer.isBuffer(audio)) {
+        await conn.sendMessage(m.chat, { audio: audio, mimetype: 'audio/mpeg', ptt: false })
+      } else if (typeof audio === 'string' && audio.startsWith('http')) {
+        await conn.sendMessage(m.chat, { audio: { url: audio }, mimetype: 'audio/mpeg', ptt: false })
       }
-    } catch {}
+    }
   }
   return!0
 }
