@@ -7,22 +7,18 @@ import { tmpdir } from 'os'
 let handler = async (m, { conn, text, usedPrefix, command }) => {
     if (!text) {
         let texto = `
-🐱 *𓆩 ***Garfield Bot Oficial*** 𓆪* 🐱
+🤖 *IA PERUANA CON VOZ* 🇵🇪
 
-.⃟𖥔 ݁. 𖦹˙— *\`\`IA CON VOZ\`\`* —˙𖦹.🍃꒷
+*⤷ ┇ USO* 
 
- *⤷ ┇ USO* ：✿ 。
+── *EJEMPLO* ╏ 
+➛ ${usedPrefix}ia ¿qué día es hoy?
+➛ ${usedPrefix}ia explícame el universo causa
+➛ ${usedPrefix}ia dame un dato de Perú
 
-──🍃 *EJEMPLO* ╏ 💚
-💚 ➛ ${usedPrefix}ia ¿qué día es hoy?
-💚 ➛ ${usedPrefix}ia explícame el universo
-
-──🍃 *NOTA* ╏ 🌿
-🌿 ➛ *Te responderé con notas de voz*
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"Pregúntame y te contesto maullando"* 🍕`
+*⤷ ┇ NOTA* ╏ 
+➛ *Te respondo con audios y modo peruano pe*
+`
         await m.react('❌')
         return m.reply(texto)
     }
@@ -30,22 +26,22 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     await m.react('⏳')
 
     try {
-        // 1. PEDIR RESPUESTA A GEMINI
-        let aiUrl = `https://api.stellarwa.xyz/ai/gemini?text=${encodeURIComponent(text + ". Responde de forma normal, clara y amable como Garfield. Con humor")}&key=proyectsV2`
+        // 1. PEDIR RESPUESTA A GEMINI EN MODO PERUANO
+        let aiUrl = `https://api.stellarwa.xyz/ai/gemini?text=${encodeURIComponent(text + ". Responde en español de Perú. Usa jerga peruana normal: pe, causa, mano, pata, bacán, chévere, ya fue. Sé amable y directo. Máximo 4 párrafos")}&key=proyectsV2`
         let aiRes = await fetch(aiUrl)
         let aiJson = await aiRes.json()
 
-        let respuesta = aiJson.result || aiJson.data || aiJson.response || "No pude entender eso humano"
+        let respuesta = aiJson.result || aiJson.data || aiJson.response || "No te entendí pe causa"
 
-        // 2. DIVIDIR EN PEDAZOS DE 200 CARACTERES PARA GOOGLE TTS
+        // 2. DIVIDIR EN PEDAZOS DE 200 CARACTERES
         let chunks = []
         for (let i = 0; i < respuesta.length; i += 200) {
             chunks.push(respuesta.substring(i, i + 200))
         }
 
-        if(chunks.length > 1) await m.reply(`🐱 *Enviando ${chunks.length} audios...*`)
+        if(chunks.length > 1) await m.reply(`🤖 *Enviando ${chunks.length} audios...*`)
 
-        // 3. ENVIAR AUDIO POR CADA PEDAZO - MISMO TTS QUE TU GARFIELD.JS
+        // 3. ENVIAR AUDIO POR CADA PEDAZO
         for (let i = 0; i < chunks.length; i++) {
             let chunk = chunks[i]
 
@@ -56,7 +52,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
                 timeout: 10000,
             })
 
-            let tmpFilePath = path.join(tmpdir(), `garfield-ia-${Date.now()}-${i}.opus`)
+            let tmpFilePath = path.join(tmpdir(), `ia-pe-${Date.now()}-${i}.opus`)
 
             await new Promise((resolve, reject) => {
                 ffmpeg(url)
@@ -82,7 +78,6 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
             if (fs.existsSync(tmpFilePath)) fs.unlinkSync(tmpFilePath)
 
-            // Esperar entre audios
             await new Promise(resolve => setTimeout(resolve, 600))
         }
 
@@ -91,23 +86,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     } catch (e) {
         console.log(e)
         await m.react('❌')
-        let texto = `
-🐱 *𓆩 ***Garfield Bot Oficial*** 𓆪* 🐱
-
-.⃟𖥔 ݁. 𖦹˙— *\`\`ERROR\`\`* —˙𖦹.🍃꒷
-
- *⤷ ┇ FALLÓ* ：✿ 。
-
-──🍃 *MOTIVO* ╏ 💚
-💚 ➛ ${e.message}
-
-──🍃 *NOTA* ╏ 🌿
-🌿 ➛ *Intenta de nuevo más tarde*
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"Hasta yo me canso a veces"* 🍕`
-        return m.reply(texto)
+        await m.reply(`⚠️ Error: ${e.message}\n\nIntenta de nuevo pe`)
     }
 }
 
