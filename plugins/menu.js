@@ -1,13 +1,16 @@
 import os from 'os'
 import { performance } from 'perf_hooks'
 
+// IMAGEN FIJA GARFIELD
+const GARFIELD_IMG = 'https://files.evogb.win/QFXQtu.jpg'
+
 let handler = async (m, { conn, usedPrefix }) => {
   let loadMsg = await conn.reply(m.chat, `🐱 𓆩 𝗖𝗔𝗥𝗚𝗔𝗡𝗗𝗢 𝗠𝗘𝗡𝗨 𓆪 🐱\n\n⏳ *Espere un momento...*\n> Cargando sistema Garfield...`, m)
 
   let taguser = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
 
-  // FOTO GLOBAL CON FALLBACK
-  let img = { url: global.botimg || 'https://files.evogb.win/QFXQtu.jpg' }
+  // FOTO FIJA
+  let img = { url: GARFIELD_IMG }
 
   let uptime = process.uptime() * 1000
   let _uptime = clockString(uptime)
