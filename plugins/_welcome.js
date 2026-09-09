@@ -8,7 +8,7 @@ const handler = async (m, { conn, args, isAdmin, isOwner }) => {
 
   if (/on/i.test(args[0])) {
     chat.bienvenida = true
-    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🟢 *Activada con audios*`, m)
+    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🟢 *Activada con imagen de Garfield*`, m)
   } else if (/off/i.test(args[0])) {
     chat.bienvenida = false
     await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🔴 *Desactivada*`, m)
@@ -31,7 +31,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const userJid = m.messageStubParameters?.[0] || m.participant
   if (!userJid) return!0
 
-  const DEFAULT_IMG = global.botimg
+  const DEFAULT_IMG = 'https://files.evogb.win/QFXQtu.jpg' // <-- LINK FIJO
   let imgBuffer = null
 
   // PASO 1: Intentar obtener foto del usuario
@@ -45,7 +45,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
       let res = await fetch(DEFAULT_IMG)
       imgBuffer = await res.buffer()
     } catch {
-      imgBuffer = null // si hasta la default falla, mandamos solo texto
+      imgBuffer = null
     }
   }
 
@@ -77,7 +77,6 @@ handler.before = async function (m, { conn, groupMetadata }) {
   }
 
   if (txt) {
-    // PASO 3: Mandar SIEMPRE con imagen si se pudo descargar
     if (imgBuffer) {
       await conn.sendMessage(m.chat, { image: imgBuffer, caption: txt, mentions: [userJid] })
     } else {
