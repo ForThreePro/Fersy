@@ -31,17 +31,22 @@ handler.before = async function (m, { conn, groupMetadata }) {
     const userJid = m.messageStubParameters?.[0] || m.participant
     if (!userJid) return!0
 
-    // 1. Foto por defecto fija
     const DEFAULT_IMG = 'https://files.evogb.win/E2yVdA.jpg'
     let pp = DEFAULT_IMG
 
-    // 2. Intentar obtener foto del user. Si falla, se queda con DEFAULT_IMG
+    // FIX: Intentar 2 veces. Algunos jid necesitan "s.whatsapp.net"
     try {
-      const userPP = await conn.profilePictureUrl(userJid, 'image')
-      if (userPP && userPP.startsWith('http')) pp = userPP
-    } catch (e) {
-      console.log('Usuario sin foto, usando default')
+      pp = await conn.profilePictureUrl(userJid, 'image')
+    } catch {
+      try {
+        pp = await conn.profilePictureUrl(userJid, 'image')
+      } catch {
+        pp = DEFAULT_IMG // Si falla 2 veces, usa default
+      }
     }
+
+    // Validación extra: si vino vacío o no es url, usa default
+    if (!pp ||!pp.startsWith('http')) pp = DEFAULT_IMG
 
     const userTag = `@${userJid.split('@')[0]}`
     const groupName = groupMetadata.subject
@@ -71,10 +76,9 @@ handler.before = async function (m, { conn, groupMetadata }) {
     }
 
     if (txt) {
-      // PLAN B: Si por alguna razón falla el envio con imagen, manda solo texto
       try {
         await conn.sendMessage(m.chat, {
-          image: { url: pp }, // pp NUNCA es undefined ahora
+          image: { url: pp },
           caption: txt,
           mentions: [userJid]
         })
