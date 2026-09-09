@@ -1,24 +1,15 @@
 import crypto from "crypto"
 import { FormData, Blob } from "formdata-node"
 import { fileTypeFromBuffer } from "file-type"
+import fs from 'fs'
+import path from 'path'
 
 let handler = async (m, { conn, usedPrefix }) => {
   let q = m.quoted? m.quoted : m
   let mime = (q.msg || q).mimetype || ''
-  
-  if (!mime || !/image/.test(mime)) 
-    return conn.reply(m.chat, `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
 
-*━━━━━━━━━━*
-*⚠️ ERROR DE USO ⚠️*
-
-*Instrucciones:*
-*➤* Responde a una *imagen* con ${usedPrefix}setimg
-*➤* Solo se aceptan: *Imagen JPG/PNG*
-
-*━━━━━━━━━━*
-*Owner:* @whois.yallico 
-*WhatsApp:* +51 927 174 369`, m)
+  if (!mime ||!/image/.test(mime))
+    return conn.reply(m.chat, `🐱 *Responde a una imagen con* ${usedPrefix}setimg`, m)
 
   try {
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } })
@@ -26,57 +17,44 @@ let handler = async (m, { conn, usedPrefix }) => {
     let link = await myCloud(media)
     if (!link.url) throw new Error('No se obtuvo URL')
 
-    // GUARDAR EN GLOBAL Y DB PARA LOS 4 BOTS
+    // 1. GUARDAR EN DB
     global.botimg = link.url
     if (!global.db.data.settings) global.db.data.settings = {}
     global.db.data.settings.botimg = link.url
 
+    // 2. EDITAR EL CONFIG.JS PARA CAMBIAR EL FALLBACK
+    let configPath = path.join('./config.js')
+    let configFile = fs.readFileSync(configPath, 'utf8')
+
+    // Busca la linea del fallback y la reemplaza
+    configFile = configFile.replace(
+      /global\.botimg = global\.db\?\.\data\?\.\settings\?\.\botimg \|\| '.*?'/,
+      `global.botimg = global.db?.data?.settings?.botimg || '${link.url}'`
+    )
+
+    fs.writeFileSync(configPath, configFile)
+
     let txt = `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
 
 *━━━━━━━━━━*
-*✅ IMAGEN GLOBAL ACTUALIZADA*
+*✅ IMAGEN PERMANENTE ACTUALIZADA*
 
-*📊 DATOS*
 *➤ Enlace:* ${link.url}
-*➤ Peso:* ${formatBytes(media.length)}
-*➤ Servidor:* *evogb.win*
+*➤ Guardado en:* DB + config.js
 *➤ Bots:* Ricky | Nox | Antitop | Lovesitap | Garfield
 
+*Nota:* Aunque borres la DB o instales desde 0, esta imagen sera el fallback
 *━━━━━━━━━━*
-*Owner:* @whois.yallico 
-*WhatsApp:* +51 927 174 369
-> _"Todos los menus usaran esta imagen ahora"_ ☁️⚡`
+> _"Ahora si es permanente de verdad"_ ⚡`
 
-    await conn.sendMessage(m.chat, {
-      image: { url: link.url },
-      caption: txt,
-      mentions: [m.sender]
-    }, { quoted: m })
-    
+    await conn.sendMessage(m.chat, { image: { url: link.url }, caption: txt }, { quoted: m })
     await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } })
+
   } catch (e) {
     console.error(e)
     await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
-    await conn.reply(m.chat, `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
-
-*━━━━━━━━━━*
-*❌ ERROR DE SUBIDA ❌*
-
-*Aviso:*
-*➤* No se pudo subir la imagen
-*➤* Intenta con otra imagen
-
-*━━━━━━━━━━*
-*Owner:* @whois.yallico 
-*WhatsApp:* +51 927 174 369`, m)
+    await conn.reply(m.chat, `*Error:* ${e.message}`, m)
   }
-}
-
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 B'
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  return `${(bytes / 1024 ** i).toFixed(2)} ${sizes[i]}`
 }
 
 async function myCloud(content) {
