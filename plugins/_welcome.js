@@ -28,7 +28,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const chat = global.db?.data?.chats?.[m.chat]
   if (!chat ||!chat.bienvenida) return!0
 
-  // ===== DETECCIÓN DEL USUARIO MEJORADA =====
+  // ===== DETECCIÓN DEL USUARIO =====
   let userJid = m.messageStubParameters?.[0] || m.participant || m.key?.participant || ''
   if (!userJid) return!0
 
@@ -36,19 +36,24 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const DEFAULT_BG = 'https://files.evogb.win/7BY3Yv.jpg'
   const DEFAULT_IMG = 'https://files.evogb.win/E2yVdA.jpg'
 
-  // ===== NOMBRE SIN UNDEFINED =====
-  let userName = userJid.split('@')[0]
-  try {
-    let n = await conn.getName(userJid)
-    if(n && n!== 'undefined' && n.trim()!== '') userName = n
-  } catch {}
+  // ===== ARREGLO: SACAR NOMBRE DE PARTICIPANTS =====
+  let participant = groupMetadata.participants.find(p => p.id === userJid)
+  let userName = participant?.name || participant?.notify || userJid.split('@')[0]
 
-  // ===== FOTO CON REGLA =====
+  // Si aún está vacío, intentamos con getName
+  if(!userName || userName === 'undefined'){
+    try {
+      let n = await conn.getName(userJid)
+      if(n && n.trim()) userName = n
+    } catch {}
+  }
+
+  // ===== FOTO CON REGLA: SI TIENE USA SUYA, SI NO DEFAULT =====
   let userPP = DEFAULT_IMG
   try {
     let pp = await conn.profilePictureUrl(userJid, 'image')
     if(pp && pp.startsWith('https')) userPP = pp
-  } catch {} // Si no tiene, queda la default
+  } catch {}
 
   const userTag = `@${userJid.split('@')[0]}`
   const groupName = groupMetadata.subject
