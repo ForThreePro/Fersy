@@ -1,63 +1,52 @@
-import fs from 'fs'
-import crypto from "crypto"
-import { FormData, Blob } from "formdata-node"
-import { fileTypeFromBuffer } from "file-type"
+import uploadImage from '../lib/uploadImage.js'
 
-let handler = async (m, { conn, args, isOwner, isROwner }) => {
-if (!isOwner &&!isROwner) return m.reply(`*Solo Owner*`)
+let handler = async (m, { conn, usedPrefix }) => {
+  let q = m.quoted? m.quoted : m
+  let mime = (q.msg || q).mimetype || ''
 
-let link = args[0]
-let q = m.quoted? m.quoted : m
-let mime = (q.msg || q).mimetype || ''
+  if (!mime)
+    return conn.reply(m.chat, `🍰 *Responde a una imagen con* ${usedPrefix}setimg 🌸`, m)
 
-try {
-    // CASO 1: RESPONDIÓ A UNA IMAGEN
-    if (!link && mime.startsWith('image/')) {
-        await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } })
-        let media = await q.download()
-        let upload = await myCloud(media)
-        if (!upload.url) throw new Error('No se pudo subir')
-        link = upload.url
-    }
+  if (!/image\/(jpe?g|png)/.test(mime))
+    return conn.reply(m.chat, `🍰 *Solo se aceptan imagenes JPG/PNG* 🌸`, m)
 
-    // CASO 2: PEGO LINK DIRECTO
-    if (!link) return m.reply(`*USO INCORRECTO*\n\n*Opción 1:*.setimg https://i.imgur.com/tu-foto.jpg\n*Opción 2:* Responde a una imagen con.setimg`)
-    if (!link.startsWith('http')) return m.reply(`*El link debe ser un URL valido*`)
+  await m.react('⏳')
 
-    // Actualizar variable global
-    global.botimg = link
+  try {
+    let media = await q.download()
+    let url = await uploadImage(media)
 
-    // Guardar en config.json para que no se pierda al reiniciar
-    let config = {}
-    if (fs.existsSync('./config.json')) {
-        config = JSON.parse(fs.readFileSync('./config.json'))
-    }
-    config.botimg = link
-    fs.writeFileSync('./config.json', JSON.stringify(config, null, 2))
+    // Guardar en global y en DB para que sobreviva al.reset
+    global.botimg = url
+    if (!global.db.data.settings) global.db.data.settings = {}
+    global.db.data.settings.botimg = url
 
-    await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } })
-    await m.reply(`*✅ IMAGEN GLOBAL ACTUALIZADA*\n\n*➤ Nuevo link:* ${link}\n*➤ Servidor:* evogb.win\n*➤ Estado:* Se aplico en todos los comandos`)
+    let txt = `🍰 𓆩 𝗜𝗠𝗔𝗚𝗘𝗡 𝗚𝗟𝗢𝗕𝗔𝗟 𝗔𝗖𝗧𝗨𝗔𝗟𝗜𝗭𝗔𝗗𝗔 𓆪 🌸
 
-} catch (e) {
-    console.log(e)
-    await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
-    m.reply(`*Error al subir/guardar la imagen*`)
-}
-}
+.⃟𖥔 ݁. 𖦹˙— \`\`SETIMG\`\` —˙𖦹.🍜꒷
 
-async function myCloud(content) {
-  const fileType = await fileTypeFromBuffer(content)
-  const ext = fileType? fileType.ext : 'jpg'
-  const mime = fileType? fileType.mime : 'image/jpeg'
-  const formData = new FormData()
-  formData.append("file", new Blob([content], { type: mime }), `${crypto.randomBytes(5).toString("hex")}.${ext}`)
-  const response = await fetch("https://evogb.win/api/upload", { method: "POST", body: formData })
-  if (!response.ok) throw new Error()
-  return await response.json()
+✅ *Imagen actualizada correctamente*
+🌐 *Bots afectados:* Ricky | Nox | Antitop | Lovesitap
+📎 *Link:* ${url}
+
+> "Desde ahora todos los menus usaran esta imagen" 💎`
+
+    await conn.sendMessage(m.chat, {
+      image: { url: url },
+      caption: txt
+    }, { quoted: m })
+
+    await m.react('✅')
+  } catch (e) {
+    console.error(e)
+    await m.react('❌')
+    return m.reply(`🍰 *Error:* ${e.message}`)
+  }
 }
 
-handler.help = ['setimg <link> o responde a imagen']
+handler.help = ['setimg']
 handler.tags = ['owner']
-handler.command = ['setimg', 'img', 'fotobot']
-handler.owner = true
+handler.command = /^(setimg|setimage)$/i
+handler.rowner = true
+
 export default handler
