@@ -4,15 +4,37 @@ import path from 'path'
 let user = a => '@' + a.split('@')[0]
 
 function handler(m, { groupMetadata, command, conn, text }) {
-    if (!groupMetadata) return m.reply('🐱 *Este comando solo funciona en grupos*')
-    if (!text) return m.reply(`🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱
+    const react = async (text) => {
+        try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+    }
 
-*Ejemplo de uso:*
-.top *Mejores en PVP*
-.top *Más activos*`)
+    if (!groupMetadata) {
+        return m.reply(`𐔌 ꒱ ***TOP 10*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ Este comando solo funciona en grupos\n━━━━━━━━━━━`)
+    }
+
+    if (!text) {
+        await react('❌')
+        let error = `𐔌 ꒱ ***TOP 10*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`FORMATO\`\` —˙𖦹.🏆꒷
+
+── *📖 USO* ╏
+➛ top <motivo del ranking>
+
+── *💡 EJEMPLOS* ╏
+➛ top Mejores en PVP
+➛ top Más activos
+➛ top Más tóxicos
+
+━━━━━━━━━━━`
+        return conn.sendMessage(m.chat, { text: error }, { quoted: m })
+    }
 
     let ps = groupMetadata.participants.map(v => v.id)
-    if (ps.length < 10) return m.reply('🍕 *Se necesitan mínimo 10 miembros en el grupo*')
+    if (ps.length < 10) {
+        await react('⚠️')
+        return m.reply(`𐔌 ꒱ ***TOP 10*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n⚠️ ➛ Se necesitan mínimo 10 miembros en el grupo\n━━━━━━━━━━━`)
+    }
 
     let a = ps.getRandom()
     let b = ps.getRandom()
@@ -31,12 +53,11 @@ function handler(m, { groupMetadata, command, conn, text }) {
 
     let vn = `https://hansxd.nasihosting.com/sound/sound${k}.mp3`
 
-    let top = `🐱 𓆩 𝗧𝗢𝗣 𝟭𝟬 𓆪 🐱
+    let top = `𐔌 ꒱ ***TOP 10*** 𐔌 ꒱ 🏆
 
-.⃟𖥔 ݁. 𖦹˙— \`\` ${text.toUpperCase()} \`\` —˙𖦹.🍕꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`${text.toUpperCase()}\`\` —˙𖦹.${x}꒷
 
- ⤷ ┇ *RANKING* ：✿ 。
-
+── *🏅 RANKING* ╏
 ${x} *1.* ${user(a)}
 ${x} *2.* ${user(b)}
 ${x} *3.* ${user(c)}
@@ -48,10 +69,15 @@ ${x} *8.* ${user(h)}
 ${x} *9.* ${user(i)}
 ${x} *10.* ${user(j)}
 
-━━━━━━━━━━━
-*Powered by*: ***Garfield Bot Oficial*** 🍕`
+── *📝 NOTA* ╏
+🎲 ➛ Ranking 100% aleatorio y divertido
 
-    m.reply(top, null, { mentions: [a, b, c, d, e, f, g, h, i, j]})
+━━━━━━━━━━━`
+
+    m.reply(top, null, { mentions: [a, b, c, d, e, f, g, h, i, j] })
+
+    // Descomenta si quieres que mande audio
+    // conn.sendFile(m.chat, vn, 'top.mp3', null, m, true, { type: 'audioMessage', ptt: true })
 }
 
 handler.help = ['top <texto>']
