@@ -5,7 +5,7 @@ const filePath = './temp_groups.json'
 // LISTA DE NUMEROS AUTORIZADOS
 // Pon tu numero con codigo de pais sin + ni espacios
 const OWNER_NUMBERS = [
-  '51927174369' // tu numero
+  '51927174369' // +51 927 174 369
 ]
 
 if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, '[]')
@@ -28,7 +28,7 @@ setInterval(async () => {
     if (timeLeft <= 300000 && timeLeft > 0 &&!i.warned) {
       try {
         await global.conn.sendMessage(i.id, {
-          text: `⏰ *AVISO*\nEl bot se saldrá de este grupo en 5 minutos por temporizador.`
+          text: `𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ⏰\n\n.⃟𖥔 ݁. 𖦹˙— \`\`AVISO\`\` —˙𖦹.⏰꒷\n\n── *📝 AVISO* ╏\n⏰ ➛ El bot se saldrá de este grupo en 5 minutos\n━━━━━━━━━━━`
         })
         i.warned = true
         saveTempGroups()
@@ -40,7 +40,9 @@ setInterval(async () => {
       let attempts = 0
       while (attempts < 3) {
         try {
-          await global.conn.sendMessage(i.id, { text: '⏰ Temporizador finalizado. Saliendo...' })
+          await global.conn.sendMessage(i.id, {
+            text: `𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ 👋\n\n.⃟𖥔 ݁. 𖦹˙— \`\`SALIDA\`\` —˙𖦹.👋꒷\n\n── *📝 AVISO* ╏\n⏰ ➛ Temporizador finalizado. Saliendo...\n━━━━━━━━━━━`
+          })
           await new Promise(r => setTimeout(r, 1500))
           await global.conn.groupLeave(i.id)
           console.log(`[TEMP] Sali del grupo: ${i.name}`)
@@ -85,28 +87,65 @@ function isOwner(m) {
 }
 
 let handler = async (m, { conn, args, command }) => {
+
   // BLOQUEO PARA NO AUTORIZADOS
-  if (!isOwner(m)) return m.reply('❌ No tienes permiso para usar este comando.')
+  if (!isOwner(m)) {
+    await react(conn, m, "❌")
+    return m.reply(`𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ No tienes permiso para usar este comando\n━━━━━━━━━━━`)
+  }
 
   // COMANDO: TEMPLIST
   if (command === 'templist') {
-    if (global.tempGroups.length === 0) return m.reply('❌ No hay grupos con temporizador activo.')
+    if (global.tempGroups.length === 0) {
+      await react(conn, m, "⚠️")
+      return m.reply(`𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n⚠️ ➛ No hay grupos con temporizador activo\n━━━━━━━━━━━`)
+    }
 
     let list = global.tempGroups.map((v, i) => {
       let timeLeft = v.exitTime - Date.now()
       return `│ ${i+1}. *${v.name}*\n│ ⏰ Falta: ${msToTime(timeLeft)}`
     }).join('\n')
 
-    return m.reply(`╭─「 LISTA DE TEMPORIZADORES 」
-│
+    let texto = `𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ 📋
+
+.⃟𖥔 ݁. 𖦹˙— \`\`LISTA ACTIVA\`\` —˙𖦹.📋꒷
+
+── *📊 GRUPOS* ╏
 ${list}
-│
-╰───────────────────────`)
+
+── *📝 NOTA* ╏
+💡 ➛ Usa tempcancel para cancelar
+
+━━━━━━━━━━━`
+    await react(conn, m, "📋")
+    return m.reply(texto)
   }
 
   // COMANDO: TEMPORIZADOR
-  if (!m.isGroup) return m.reply('❌ Solo en grupos')
-  if (!args[0]) return m.reply(`Ejemplo: *temporizador 30d*\nFormatos: 1m 5h 2d 1d5h30m`)
+  if (!m.isGroup) {
+    await react(conn, m, "❌")
+    return m.reply(`𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ Solo funciona en grupos\n━━━━━━━━━━━`)
+  }
+
+  if (!args[0]) {
+    await react(conn, m, "❌")
+    let error = `𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`FORMATO\`\` —˙𖦹.⏰꒷
+
+── *📖 USO* ╏
+➛ temporizador 30d
+➛ temporizador 5h
+➛ temporizador 1d5h30m
+
+── *💡 EJEMPLOS* ╏
+➛ 1m = 1 minuto
+➛ 2h = 2 horas
+➛ 3d = 3 días
+
+━━━━━━━━━━━`
+    return m.reply(error)
+  }
 
   let time = args[0].toLowerCase()
   let ms = 0
@@ -119,7 +158,10 @@ ${list}
     if (type === 'h') ms += val * 3600000
     if (type === 'm') ms += val * 60000
   }
-  if (ms < 60000) return m.reply('❌ Mínimo 1 minuto')
+  if (ms < 60000) {
+    await react(conn, m, "❌")
+    return m.reply(`𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ Mínimo 1 minuto\n━━━━━━━━━━━`)
+  }
 
   const exitTime = Date.now() + ms
   const groupId = m.chat
@@ -133,36 +175,59 @@ ${list}
 
   const fecha = new Date(exitTime).toLocaleString('es-PE', { timeZone: 'America/Lima' })
 
-  await m.reply(`╭─「 TEMPORIZADOR ACTIVADO 」
-│
-│ 🏠 *GRUPO:* ${groupName}
-│ ⏰ *SALIDA EN:* ${msToTime(ms)}
-│ 📅 *FECHA:* ${fecha}
-│
-╰───────────────────────
-Usa *tempcancel* para cancelar.`)
+  let ok = `𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ACTIVADO\`\` —˙𖦹.⏰꒷
+
+── *📊 INFORMACIÓN* ╏
+🏠 ➛ Grupo: ${groupName}
+⏰ ➛ Salida en: ${msToTime(ms)}
+📅 ➛ Fecha: ${fecha}
+
+── *📝 NOTA* ╏
+🗑️ ➛ Usa tempcancel para cancelar
+
+━━━━━━━━━━━`
   await react(conn, m, "✅")
+  return m.reply(ok)
 }
 
 // CANCELAR
 handler.before = async (m, { conn, command }) => {
   if (command === 'tempcancel') {
-    // BLOQUEO PARA NO AUTORIZADOS
-    if (!isOwner(m)) return m.reply('❌ No tienes permiso para usar este comando.')
 
-    if (!m.isGroup) return m.reply('❌ Solo en grupos')
+    // BLOQUEO PARA NO AUTORIZADOS
+    if (!isOwner(m)) {
+      await react(conn, m, "❌")
+      return m.reply(`𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ No tienes permiso para usar este comando\n━━━━━━━━━━━`)
+    }
+
+    if (!m.isGroup) {
+      await react(conn, m, "❌")
+      return m.reply(`𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ Solo funciona en grupos\n━━━━━━━━━━━`)
+    }
+
     let index = global.tempGroups.findIndex(v => v.id === m.chat)
-    if (index === -1) return m.reply('❌ No hay temporizador activo.')
+    if (index === -1) {
+      await react(conn, m, "⚠️")
+      return m.reply(`𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n⚠️ ➛ No hay temporizador activo\n━━━━━━━━━━━`)
+    }
+
     const groupName = global.tempGroups[index].name
     global.tempGroups.splice(index, 1)
     saveTempGroups()
-    await m.reply(`╭─「 TEMPORIZADOR CANCELADO 」
-│
-│ 🏠 *GRUPO:* ${groupName}
-│ ✅ *ESTADO:* Cancelado
-│
-╰───────────────────────`)
+
+    let cancel = `𐔌 ꒱ ***TEMPORIZADOR*** 𐔌 ꒱ 🗑️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`CANCELADO\`\` —˙𖦹.🗑️꒷
+
+── *📊 INFORMACIÓN* ╏
+🏠 ➛ Grupo: ${groupName}
+✅ ➛ Estado: Cancelado
+
+━━━━━━━━━━━`
     await react(conn, m, "🗑️")
+    return m.reply(cancel)
   }
 }
 
