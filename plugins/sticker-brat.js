@@ -5,42 +5,49 @@ import path from 'path'
 import { tmpdir } from 'os'
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
+  const react = async (text) => {
+    try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+  }
+
   let q = m.quoted ? m.quoted : m
   let txt = text || q.text || q.caption || q.body || ''
 
-  if (!txt) return m.reply(`🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟 - 𝗕𝗥𝗔𝗧* 🐱
+  if (!txt) {
+    await react('❌')
+    return m.reply(`𐔌 ꒱ ***BRAT*** 𐔌 ꒱ ⚠️
 
-*━━━━━━━━━━*
-*⚠️ ERROR DE USO*
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR DE USO\`\` —˙𖦹.⚠️꒷
 
-*➤* Escribe el texto para generar el *sticker Brat*
-*➤* Ejemplo: *${usedPrefix + command} Hola Garfield*
+── *📖 USO* ╏
+➛ Escribe el texto para generar el sticker
+➛ Ejemplo: ${usedPrefix}${command} Hola
 
-*━━━━━━━━━━*`)
+━━━━━━━━━━━`)
+  }
 
-  await m.react('🖌️')
+  await react('🖌️')
 
   let isAnimated = command.endsWith('anim') || command.endsWith('2')
   let apiUrl = `https://api.evogb.org/tools/brat?text=${encodeURIComponent(txt)}&animated=${isAnimated}&key=sasuke`
 
   let response = await fetch(apiUrl)
   if (!response.ok) {
-    await m.react('❌')
-    return m.reply(`🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
+    await react('❌')
+    return m.reply(`𐔌 ꒱ ***BRAT*** 𐔌 ꒱ ⚠️
 
-*━━━━━━━━━━*
-*❌ ERROR*
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
-*➤* Error al generar el *sticker*
-*➤* Intenta de nuevo
+── *📝 AVISO* ╏
+❌ ➛ Error al generar el sticker
+🔄 ➛ Intenta de nuevo
 
-*━━━━━━━━━━*`)
+━━━━━━━━━━━`)
   }
 
   let inputBuffer = await response.buffer()
   let ext = isAnimated ? 'mp4' : 'png'
-  let tmpInput = path.join(tmpdir(), `garfield-${Date.now()}.${ext}`)
-  let tmpOutput = path.join(tmpdir(), `garfield-${Date.now()}.webp`)
+  let tmpInput = path.join(tmpdir(), `brat-${Date.now()}.${ext}`)
+  let tmpOutput = path.join(tmpdir(), `brat-${Date.now()}.webp`)
 
   fs.writeFileSync(tmpInput, inputBuffer)
 
@@ -49,11 +56,11 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     if (isAnimated) {
       process
         .fps(15)
-        .videoFilters('scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000')
+        .videoFilters('scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000')
         .outputOptions(['-loop 0', '-preset default', '-an', '-vsync 0'])
     } else {
       process
-        .videoFilters('scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000')
+        .videoFilters('scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000')
     }
 
     process
@@ -67,14 +74,14 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
   await conn.sendMessage(m.chat, {
     sticker: stickerBuffer,
-    packname: '***Garfield Bot Oficial***',
-    author: ''
+    packname: 'Sticker',
+    author: 'Bot'
   }, { quoted: m })
 
   if (fs.existsSync(tmpInput)) fs.unlinkSync(tmpInput)
   if (fs.existsSync(tmpOutput)) fs.unlinkSync(tmpOutput)
 
-  await m.react('✅')
+  await react('✅')
 }
 
 handler.help = ['brat <texto>']
