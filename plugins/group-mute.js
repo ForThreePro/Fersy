@@ -1,44 +1,85 @@
 let mutedUsers = new Set()
 
 let handler = async (m, { conn, command, participants }) => {
+    const react = async (text) => {
+        try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+    }
+
     let mentionedJid = m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : false
-    if (!mentionedJid) return m.reply(`🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱
+    if (!mentionedJid) {
+        await react('❌')
+        let error = `𐔌 ꒱ ***SILENCIAR USUARIO*** 𐔌 ꒱ ⚠️
 
-*Uso:*
-.mute @user → Para mutear
-.unmute @user → Para desmutear
+.⃟𖥔 ݁. 𖦹˙— \`\`FORMATO\`\` —˙𖦹.🔇꒷
 
-> *Etiqueta a una persona o responde a un mensaje*`)
+── *📖 USO* ╏
+➛ Menciona a un usuario
+➛ Responde al mensaje del usuario
+
+── *💡 COMANDOS* ╏
+➛ mute @user
+➛ unmute @user
+
+━━━━━━━━━━━`
+        return conn.sendMessage(m.chat, { text: error }, { quoted: m })
+    }
 
     let isUserAdmin = participants.find(p => p.id === mentionedJid)?.admin
-    if (isUserAdmin) return m.reply(`🍕 *No puedes mutear a un administrador.*`)
-    if (mentionedJid === conn.user.jid) return m.reply(`🍕 *No puedo mutearme a mi mismo.*`)
+    if (isUserAdmin) {
+        await react('❌')
+        return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***SILENCIAR USUARIO*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ No puedes silenciar a un administrador\n━━━━━━━━━━━` }, { quoted: m })
+    }
+    if (mentionedJid === conn.user.jid) {
+        await react('❌')
+        return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***SILENCIAR USUARIO*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ No puedo silenciarme a mí mismo\n━━━━━━━━━━━` }, { quoted: m })
+    }
 
     if (command === "mute") {
-        if (mutedUsers.has(mentionedJid)) return m.reply(`📛 *Este usuario ya está muteado*`)
+        if (mutedUsers.has(mentionedJid)) {
+            await react('⚠️')
+            return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***SILENCIAR USUARIO*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n⚠️ ➛ Este usuario ya está silenciado\n━━━━━━━━━━━` }, { quoted: m })
+        }
         mutedUsers.add(mentionedJid)
-        await m.react('🔇')
-        conn.reply(m.chat, `🐱 𓆩 𝗨𝗦𝗨𝗔𝗥𝗜𝗢 𝗠𝗨𝗧𝗘𝗔𝗗𝗢 𓆪 🐱
+        await react('🔇')
 
-🔇 *Usuario:* @${mentionedJid.split('@')[0]}
-👑 *Por:* @${m.sender.split('@')[0]}
+        let muteMsg = `𐔌 ꒱ ***SILENCIAR USUARIO*** 𐔌 ꒱ ✅
 
-> *Sus mensajes serán eliminados automaticamente* 🍕`, m, { mentions: [mentionedJid, m.sender] })
+.⃟𖥔 ݁. 𖦹˙— \`\`SILENCIADO\`\` —˙𖦹.🔇꒷
+
+── *📊 INFORMACIÓN* ╏
+🔇 ➛ Usuario: @${mentionedJid.split('@')[0]}
+👑 ➛ Por: @${m.sender.split('@')[0]}
+
+── *📝 NOTA* ╏
+🗑️ ➛ Sus mensajes serán eliminados automáticamente
+
+━━━━━━━━━━━`
+        conn.sendMessage(m.chat, { text: muteMsg, mentions: [mentionedJid, m.sender] }, { quoted: m })
     } else if (command === "unmute") {
-        if (!mutedUsers.has(mentionedJid)) return m.reply(`😼 *Este usuario no está muteado*`)
+        if (!mutedUsers.has(mentionedJid)) {
+            await react('⚠️')
+            return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***SILENCIAR USUARIO*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n⚠️ ➛ Este usuario no está silenciado\n━━━━━━━━━━━` }, { quoted: m })
+        }
         mutedUsers.delete(mentionedJid)
-        await m.react('🔊')
-        conn.reply(m.chat, `🐱 𓆩 𝗨𝗦𝗨𝗔𝗥𝗜𝗢 𝗗𝗘𝗦𝗠𝗨𝗧𝗘𝗔𝗗𝗢 𓆪 🐱
+        await react('🔊')
 
-🔊 *Usuario:* @${mentionedJid.split('@')[0]}
-👑 *Por:* @${m.sender.split('@')[0]}
+        let unmuteMsg = `𐔌 ꒱ ***SILENCIAR USUARIO*** 𐔌 ꒱ ✅
 
-> *Ya puede volver a maullar* 🍕`, m, { mentions: [mentionedJid, m.sender] })
+.⃟𖥔 ݁. 𖦹˙— \`\`DESILENCIADO\`\` —˙𖦹.🔊꒷
+
+── *📊 INFORMACIÓN* ╏
+🔊 ➛ Usuario: @${mentionedJid.split('@')[0]}
+👑 ➛ Por: @${m.sender.split('@')[0]}
+
+── *📝 NOTA* ╏
+✅ ➛ Ya puede volver a enviar mensajes
+
+━━━━━━━━━━━`
+        conn.sendMessage(m.chat, { text: unmuteMsg, mentions: [mentionedJid, m.sender] }, { quoted: m })
     }
 }
 
 handler.before = async (m, { conn }) => {
-    // Si el remitente del mensaje está en la lista de muteados, eliminamos el mensaje
     if (mutedUsers.has(m.sender)) {
         try {
             await conn.sendMessage(m.chat, { delete: m.key })
