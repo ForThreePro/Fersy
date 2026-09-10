@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 
-// FUNCION PARA REACCIONES COMPATIBLE
+// FUNCION PARA REACCIONES
 const react = async (conn, m, text) => {
   try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
 }
@@ -8,23 +8,56 @@ const react = async (conn, m, text) => {
 const handler = async (m, { args, conn }) => {
   try {
     if (!args[0]) {
-      return conn.reply(
-        m.chat,
-        `DESCARGADOR DE FACEBOOK
+      let menuUso = `𐔌 ꒱ ***.facebook*** 𐔌 ꒱ 📥
 
-Uso:.facebook <link de facebook>
-Ejemplo:.facebook https://www.facebook.com/watch?v=123`,
-        m
-      )
+.⃟𖥔 ݁. 𖦹˙— \`\`DESCARGAS\`\` —˙𖦹.📱꒷
+
+── *📝 DESCRIPCIÓN* ╏
+📥 ➛ Descarga videos de Facebook
+📥 ➛ Calidad: HD si está disponible
+
+── *📖 USO* ╏
+➛.*facebook* <link>
+➛.*fb* <link>
+
+── *💡 EJEMPLO* ╏
+➛.*facebook* https://www.facebook.com/watch?v=123
+
+── *🔗 SOPORTE* ╏
+📱 ➛ facebook.com
+📱 ➛ fb.watch
+
+━━━━━━━━━━━`
+      return conn.sendMessage(m.chat, { text: menuUso }, { quoted: m })
     }
 
     if (!args[0].match(/facebook\.com|fb\.watch/)) {
       await react(conn, m, '❌')
-      return m.reply('⚠️ El enlace no es válido de Facebook.')
+      let menuError = `𐔌 ꒱ ***.facebook*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
+
+── *📝 DESCRIPCIÓN* ╏
+❌ ➛ El enlace no es válido
+
+── *📖 USO* ╏
+➛ Solo links de: *facebook.com* o *fb.watch*
+
+━━━━━━━━━━━`
+      return conn.sendMessage(m.chat, { text: menuError }, { quoted: m })
     }
 
     await react(conn, m, '⏳')
-    await m.reply('⏳ Procesando video...')
+    await m.reply(`𐔌 ꒱ ***.facebook*** 𐔌 ꒱ ⏳
+
+.⃟𖥔 ݁. 𖦹˙— \`\`PROCESANDO\`\` —˙𖦹.⚙️꒷
+
+── *📊 ESTADO* ╏
+🔍 ➛ Analizando enlace...
+📥 ➛ Obteniendo video...
+⬇️ ➛ Preparando descarga...
+
+━━━━━━━━━━━`)
 
     const api = `https://yosoyyo-api-ofc.onrender.com/api/facebook?url=${encodeURIComponent(args[0])}&apiKey=yosoyyo_sk_2nbk5m69`
     const res = await fetch(api)
@@ -40,29 +73,42 @@ Ejemplo:.facebook https://www.facebook.com/watch?v=123`,
 
     if (!videoUrl) {
       await react(conn, m, '❌')
-      return conn.reply(
-        m.chat,
-        '❌ No se pudo obtener el enlace de descarga del video.',
-        m
-      )
+      let menuNoVideo = `𐔌 ꒱ ***.facebook*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
+
+── *📝 DESCRIPCIÓN* ╏
+❌ ➛ No se pudo obtener el enlace de descarga
+
+── *💡 SOLUCIÓN* ╏
+🔧 ➛ Verifica que el video sea público
+🔧 ➛ Intenta con otro enlace
+
+━━━━━━━━━━━`
+      return conn.sendMessage(m.chat, { text: menuNoVideo }, { quoted: m })
     }
 
     const titulo = info.title || 'Video de Facebook'
-    const duracion = info.duration? `\n⏱️ DURACIÓN: ${info.duration}` : ''
-    const autorTxt = author.username? `\n👤 AUTOR: ${author.username}` : ''
-
-    let txt = `╭─「 VIDEO DE FACEBOOK 」
-│
-│ 📝 TÍTULO: ${titulo}${duracion}${autorTxt}
-│
-╰───────────────────────
-Descargando...`
+    const duracion = info.duration || 'Desconocida'
+    const autorTxt = author.username || 'Desconocido'
 
     await conn.sendFile(
       m.chat,
       videoUrl,
       'facebook.mp4',
-      txt,
+      `𐔌 ꒱ ***.facebook*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`COMPLETADO\`\` —˙𖦹.📥꒷
+
+── *📊 INFORMACIÓN* ╏
+📌 ➛ Título: *${titulo}*
+⏱️ ➛ Duración: *${duracion}*
+👤 ➛ Autor: *${autorTxt}*
+
+── *📥 DESCARGA* ╏
+⬇️ ➛ Enviando video...
+
+━━━━━━━━━━━`,
       m
     )
 
@@ -71,7 +117,19 @@ Descargando...`
   } catch (error) {
     console.log('Facebook API Error:', error.message)
     await react(conn, m, '❌')
-    await m.reply(`❌ Error: ${error.message}`)
+    let menuErr = `𐔌 ꒱ ***.facebook*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
+
+── *📝 DESCRIPCIÓN* ╏
+❌ ➛ ${error.message}
+
+── *💡 SOLUCIÓN* ╏
+🔧 ➛ Verifica tu conexión
+🔧 ➛ Intenta más tarde
+
+━━━━━━━━━━━`
+    return conn.sendMessage(m.chat, { text: menuErr }, { quoted: m })
   }
 }
 
@@ -79,5 +137,4 @@ handler.command = ['facebook', 'fb']
 handler.tags = ['descargas']
 handler.help = ['facebook <link>']
 handler.limit = true
-
 export default handler
