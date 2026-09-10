@@ -1,52 +1,41 @@
-let handler = async (m, { conn, text, participants }) => {
-  const users = participants.map(u => conn.decodeJid(u.id))
-  const group = await conn.groupMetadata(m.chat).catch(() => ({}))
-  const groupName = group.subject || 'Grupo'
-  
-  // FECHA: lunes, 7 de septiembre
-  const fecha = new Date().toLocaleDateString('es-PE', { 
-    weekday: 'long', 
-    day: 'numeric', 
-    month: 'long' 
-  })
-  
-  const footer = `\n\n> *${groupName}* • ${fecha}`
-  
-  const mime = m.mtype
-  const type = /imageMessage|videoMessage|conversation|extendedTextMessage/.test(mime)
-  
-  if (!m.quoted && type) {
-    if ((mime === 'imageMessage')) {
-      conn.sendMessage(m.chat, { 
-        image: await m.download?.(), 
-        mentions: users, 
-        caption: (text ? text : "") + footer
-      }, { quoted: m });
-    } else if ((mime === 'videoMessage')) {
-      conn.sendMessage(m.chat, { 
-        video: await m.download?.(), 
-        mentions: users, 
-        mimetype: 'video/mp4', 
-        caption: (text ? text : "") + footer
-      }, { quoted: m })
-    } else if ((mime === ("conversation") || ("extendedTextMessage"))) {
-      conn.sendMessage(m.chat, { 
-        text: (text ? text : "Zurdo’s Bot") + footer, 
-        mentions: users 
-      }, { quoted: m })
-    }
-  } else if (m.quoted) {
-    const quotedText = m.quoted.text || m.quoted.caption || "Mensaje reenviado"
-    await conn.sendMessage(m.chat, { 
-      text: quotedText + footer, 
-      mentions: users 
-    }, { quoted: m })
-  }
-}
-handler.help = ['notify', 'hidetag']
-handler.tags = ['adm']
-handler.command = ['hidetag', 'notify', 'n', 'noti', 'notificar', 'notif', 'aviso', 'avisar',]
-handler.group = true
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys'
+import * as fs from 'fs'
+
+var handler = async (m, { conn, text, participants, isOwner, isAdmin }) => {
+if (!m.quoted && !text) return conn.reply(m.chat, `《✧》 Por favor, ingresa un texto o cita un mensaje.`, m)
+try { 
+let users = participants.map(u => conn.decodeJid(u.id))
+let q = m.quoted ? m.quoted : m || m.text || m.sender
+let c = m.quoted ? await m.getQuotedObj() : m.msg || m.text || m.sender
+let msg = conn.cMod(m.chat, generateWAMessageFromContent(m.chat, { [m.quoted ? q.mtype : 'extendedTextMessage']: m.quoted ? c.message[q.mtype] : { text: '' || c }}, { quoted: null, userJid: conn.user.id }), text || q.text, conn.user.jid, { mentions: users })
+await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id })
+} catch {    
+let users = participants.map(u => conn.decodeJid(u.id))
+let quoted = m.quoted ? m.quoted : m
+let mime = (quoted.msg || quoted).mimetype || ''
+let isMedia = /image|video|sticker|audio/.test(mime)
+let more = String.fromCharCode(8206)
+let masss = more.repeat(850)
+let htextos = `${text ? text : ''}`
+if ((isMedia && quoted.mtype === 'imageMessage') && htextos) {
+var mediax = await quoted.download?.()
+conn.sendMessage(m.chat, { image: mediax, mentions: users, caption: htextos, mentions: users }, { quoted: null })
+} else if ((isMedia && quoted.mtype === 'videoMessage') && htextos) {
+var mediax = await quoted.download?.()
+conn.sendMessage(m.chat, { video: mediax, mentions: users, mimetype: 'video/mp4', caption: htextos }, { quoted: null })
+} else if ((isMedia && quoted.mtype === 'audioMessage') && htextos) {
+var mediax = await quoted.download?.()
+conn.sendMessage(m.chat, { audio: mediax, mentions: users, mimetype: 'audio/mp4', fileName: `Hidetag.mp3` }, { quoted: null })
+} else if ((isMedia && quoted.mtype === 'stickerMessage') && htextos) {
+var mediax = await quoted.download?.()
+conn.sendMessage(m.chat, {sticker: mediax, mentions: users}, { quoted: null })
+} else {
+await conn.reply(m.chat, htextos, null, { mentions: [users] })
+}}}
+
+handler.help = ['hidetag', 'tag']
+handler.tags = ['grupo']
+handler.command = ['hidetag', 'tag', 'n']
 handler.admin = true
 
 export default handler
