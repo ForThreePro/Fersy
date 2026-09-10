@@ -5,74 +5,50 @@ import ffmpeg from 'fluent-ffmpeg'
 import path from 'path'
 import { tmpdir } from 'os'
 
-// IMAGEN FIJA GARFIELD
-const GARFIELD_IMG = 'https://files.evogb.win/QFXQtu.jpg'
-
 let handler = async (m, { conn, command, text, usedPrefix }) => {
-    await m.react('⏳')
+    const react = async (text) => {
+        try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+    }
 
     // OWNER
     if (command === 'owner' || command === 'creator') {
         let owner = '51927174369@s.whatsapp.net'
-        let texto = `
-🐱 *𓆩 DUEÑO DEL BOT 𓆪* 🐱
+        let texto = `𐔌 ꒱ ***OWNER*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— *\`\`OWNER\`\`* —˙𖦹.🍃꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`INFORMACIÓN\`\` —˙𖦹.👑꒷
 
- *⤷ ┇ INFORMACION* ：✿ 。
+── *📊 CONTACTO* ╏
+👑 ➛ Owner: @${owner.split('@')[0]}
+📱 ➛ Número: +51 927 174 369
 
-──🍃 *CONTACTO* ╏ 💚
-💚 ➛ *Owner:* @${owner.split('@')[0]}
-💚 ➛ *Numero:* +51 927 174 369
+── *📝 NOTA* ╏
+💬 ➛ Contacta solo para cosas importantes
 
-──🍃 *NOTA* ╏ 🌿
-🌿 ➛ *Contacta solo para cosas importantes*
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"Garfield está disponible para la lasaña"* 🍕`
-
-        let img = { url: GARFIELD_IMG } // <-- LINK FIJO
-
-        await m.react('✅')
-        return conn.sendMessage(m.chat, {
-            image: img,
-            caption: texto,
-            mentions: [owner]
-        })
+━━━━━━━━━━━`
+        await react('✅')
+        return conn.sendMessage(m.chat, { text: texto, mentions: [owner] }, { quoted: m })
     }
 
     // PING
     if (command === 'ping' || command === 'p') {
         let start = new Date * 1
-        await conn.reply(m.chat, '🐱 *Calculando...*', m)
+        await conn.reply(m.chat, `𐔌 ꒱ ***PING*** 𐔌 ꒱ ⏳\n\n── *📊 ESTADO* ╏\n⏳ ➛ Calculando...`, m)
         let end = new Date * 1
         let speed = end - start
-        let texto = `
-🐱 *𓆩 PING DE GARFIELD 𓆪* 🐱
+        let texto = `𐔌 ꒱ ***PING*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— *\`\`VELOCIDAD\`\`* —˙𖦹.🍃꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`VELOCIDAD\`\` —˙𖦹.📡꒷
 
- *⤷ ┇ ESTADO* ：✿ 。
+── *📊 ESTADÍSTICAS* ╏
+📡 ➛ Velocidad: ${speed}ms
+✅ ➛ Estado: Activo
 
-──🍃 *ESTADISTICAS* ╏ 💚
-💚 ➛ *Velocidad:* ${speed}ms
-💚 ➛ *Estado:* Activo y durmiendo
+── *📝 NOTA* ╏
+🌐 ➛ Servidor estable
 
-──🍃 *NOTA* ╏ 🌿
-🌿 ➛ *Servidor estable*
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"Respondo más rápido que un bostezo"* 🍃`
-
-        let img = { url: GARFIELD_IMG } // <-- LINK FIJO
-
-        await m.react('✅')
-        return conn.sendMessage(m.chat, {
-            image: img,
-            caption: texto
-        }, { quoted: m })
+━━━━━━━━━━━`
+        await react('✅')
+        return conn.sendMessage(m.chat, { text: texto }, { quoted: m })
     }
 
     if (command === 'cleartmp') {
@@ -80,92 +56,72 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
         if (fs.existsSync(tmpPath)) {
             fs.readdirSync(tmpPath).forEach(file => fs.unlinkSync(`${tmpPath}/${file}`))
         }
-        let texto = `
-🐱 *𓆩 ***Garfield Bot Oficial*** 𓆪* 🐱
+        let texto = `𐔌 ꒱ ***LIMPIEZA*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— *\`\`LIMPIEZA\`\`* —˙𖦹.🍃꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`CACHE\`\` —˙𖦹.🗑️꒷
 
- *⤷ ┇ CACHE PURIFICADO* ：✿ 。
+── *📊 RESULTADO* ╏
+🗑️ ➛ Caché temporal eliminado
+💾 ➛ Memoria liberada con éxito
 
-──🍃 *RESULTADO* ╏ 💚
-💚 ➛ *Caché temporal eliminado*
-💚 ➛ *Memoria liberada con éxito*
+── *📝 NOTA* ╏
+✅ ➛ El bot está más ligero
 
-──🍃 *NOTA* ╏ 🌿
-🌿 ➛ *El bot está más ligero*
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"He limpiado mi cama para dormir mejor"* 🍕`
-        await m.react('✅')
+━━━━━━━━━━━`
+        await react('✅')
         return m.reply(texto)
     }
 
     if (command === 'cpu') {
         let cpu = os.loadavg()[0].toFixed(2)
-        let texto = `
-🐱 *𓆩 ***Garfield Bot Oficial*** 𓆪* 🐱
+        let texto = `𐔌 ꒱ ***CPU*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— *\`\`CPU\`\`* —˙𖦹.🍃꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`PROCESADOR\`\` —˙𖦹.💻꒷
 
- *⤷ ┇ ESTADO DEL PROCESADOR* ：✿ 。
+── *📊 ESTADÍSTICAS* ╏
+💻 ➛ Carga CPU: ${cpu}%
 
-──🍃 *ESTADISTICAS* ╏ 💚
-💚 ➛ *Carga CPU:* ${cpu}%
+── *📝 NOTA* ╏
+⚠️ ➛ Si supera 90% el bot va lento
 
-──🍃 *NOTA* ╏ 🌿
-🌿 ➛ *Si supera 90% el bot va lento*
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"Mi energía está al ${cpu}% para comer lasaña"* 🍕`
-        await m.react('✅')
+━━━━━━━━━━━`
+        await react('✅')
         return m.reply(texto)
     }
 
     if (command === 'ram') {
         const used = process.memoryUsage()
         let ram = (used.heapUsed / 1024 / 1024).toFixed(2)
-        let texto = `
-🐱 *𓆩 ***Garfield Bot Oficial*** 𓆪* 🐱
+        let texto = `𐔌 ꒱ ***RAM*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— *\`\`RAM\`\`* —˙𖦹.🍃꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`MEMORIA\`\` —˙𖦹.💾꒷
 
- *⤷ ┇ MEMORIA EN USO* ：✿ 。
+── *📊 ESTADÍSTICAS* ╏
+💾 ➛ Consumo RAM: ${ram} MB
 
-──🍃 *ESTADISTICAS* ╏ 💚
-💚 ➛ *Consumo RAM:* ${ram} MB
+── *📝 NOTA* ╏
+📊 ➛ Memoria usada por el proceso
 
-──🍃 *NOTA* ╏ 🌿
-🌿 ➛ *Memoria usada por el proceso*
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"Tengo suficiente RAM para seguir durmiendo"* 🍕`
-        await m.react('✅')
+━━━━━━━━━━━`
+        await react('✅')
         return m.reply(texto)
     }
 
     if (command === 'uptime') {
         let _uptime = process.uptime() * 1000
         let uptime = clockString(_uptime)
-        let texto = `
-🐱 *𓆩 ***Garfield Bot Oficial*** 𓆪* 🐱
+        let texto = `𐔌 ꒱ ***UPTIME*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— *\`\`UPTIME\`\`* —˙𖦹.🍃꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`TIEMPO ACTIVO\`\` —˙𖦹.⏱️꒷
 
- *⤷ ┇ TIEMPO ACTIVO* ：✿ 。
+── *📊 ESTADÍSTICAS* ╏
+⏱️ ➛ Tiempo activo: ${uptime}
 
-──🍃 *ESTADISTICAS* ╏ 💚
-💚 ➛ *Tiempo activo:* ${uptime}
+── *📝 NOTA* ╏
+🔄 ➛ Desde que se inició el bot
 
-──🍃 *NOTA* ╏ 🌿
-🌿 ➛ *Desde que se inició el bot*
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"Llevo ronroneando ${uptime} sin parar"* 🍕`
-        await m.react('✅')
+━━━━━━━━━━━`
+        await react('✅')
         return m.reply(texto)
     }
 
@@ -176,26 +132,21 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
         let cpu = os.loadavg()[0].toFixed(2)
         let ram = (used.heapUsed / 1024 / 1024).toFixed(2)
 
-        let texto = `
-🐱 *𓆩 ***Garfield Bot Oficial*** 𓆪* 🐱
+        let texto = `𐔌 ꒱ ***INFO DEL SISTEMA*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— *\`\`REPORTE DE SISTEMA\`\`* —˙𖦹.🍃꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`REPORTE COMPLETO\`\` —˙𖦹.📊꒷
 
- *⤷ ┇ ESTADO COMPLETO DEL BOT* ：✿ 。
+── *📊 ESTADÍSTICAS* ╏
+⏱️ ➛ Uptime: ${muptime}
+💾 ➛ Memoria RAM: ${ram} MB
+💻 ➛ Carga CPU: ${cpu}%
 
-──🍃 *ESTADISTICAS* ╏ 💚
-💚 ➛ *Uptime:* ${muptime}
-💚 ➛ *Memoria RAM:* ${ram} MB
-💚 ➛ *Carga CPU:* ${cpu}%
+── *📝 DETALLES* ╏
+👑 ➛ Desarrollado por: Sebastián Barboza
+✅ ➛ Estado: Operativo
 
-──🍃 *DETALLES* ╏ 🌿
-🌿 ➛ *Desarrollado por:* Sebastián Barboza
-🌿 ➛ *Estado:* Operativo
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"Todos mis sistemas están al 100% para la siesta"* 🍕`
-        await m.react('✅')
+━━━━━━━━━━━`
+        await react('✅')
         return m.reply(texto)
     }
 
@@ -204,28 +155,23 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
         let txt = text || q.text || q.caption || q.body || ''
 
         if (!txt) {
-            let texto = `
-🐱 *𓆩 ***Garfield Bot Oficial*** 𓆪* 🐱
+            await react('❌')
+            let texto = `𐔌 ꒱ ***TTS*** 𐔌 ꒱ ⚠️
 
-.⃟𖥔 ݁. 𖦹˙— *\`\`ERROR\`\`* —˙𖦹.🍃꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
- *⤷ ┇ FALTA TEXTO* ：✿ 。
+── *📖 USO* ╏
+➛ Escribe el texto que deseas convertir
+➛ O responde a un mensaje
 
-──🍃 *USO* ╏ 💚
-💚 ➛ *Escribe el texto que deseas convertir a audio*
-💚 ➛ *O responde a un mensaje*
+── *💡 EJEMPLO* ╏
+➛ ${usedPrefix}tts Hola, ¿cómo estás?
 
-──🍃 *EJEMPLO* ╏ 🌿
-🌿 ➛ ${usedPrefix}tts Hola, ¿cómo estás?
-
-━━━━━━━━━━━
-*Owner*: @51927174369
-> *"Necesito escuchar tu maullido guerrero"* 🍕`
-            await m.react('❌')
+━━━━━━━━━━━`
             return m.reply(texto)
         }
 
-        await m.react('🎙️')
+        await react('🎙️')
 
         let lang = 'es'
         let url = googleTTS.getAudioUrl(txt, {
@@ -235,20 +181,20 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
             timeout: 10000,
         })
 
-        let tmpFilePath = path.join(tmpdir(), `garfield-${Date.now()}.opus`)
+        let tmpFilePath = path.join(tmpdir(), `tts-${Date.now()}.opus`)
 
         await new Promise((resolve, reject) => {
             ffmpeg(url)
-         .audioCodec('libopus')
-         .toFormat('opus')
-         .outputOptions([
+        .audioCodec('libopus')
+        .toFormat('opus')
+        .outputOptions([
                     '-avoid_negative_ts make_zero',
                     '-ac 1',
                     '-b:a 64k'
                 ])
-         .on('end', () => resolve(true))
-         .on('error', (err) => reject(err))
-         .save(tmpFilePath)
+        .on('end', () => resolve(true))
+        .on('error', (err) => reject(err))
+        .save(tmpFilePath)
         })
 
         let audioBuffer = fs.readFileSync(tmpFilePath)
@@ -260,7 +206,7 @@ let handler = async (m, { conn, command, text, usedPrefix }) => {
         }, { quoted: m })
 
         if (fs.existsSync(tmpFilePath)) fs.unlinkSync(tmpFilePath)
-        await m.react('✅')
+        await react('✅')
     }
 }
 
