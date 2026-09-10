@@ -3,15 +3,24 @@ import path from 'path'
 import axios from 'axios'
 
 let handler = async (m, { conn, args, command, text }) => {
+  const react = async (text) => {
+    try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+  }
 
-  // 1..obtener + nombre.js
+  // 1. OBTENER
   if (command === 'obtener') {
-    if (!args[0]) return m.reply(`🐱 *𝗖𝗢𝗧𝗜 𝗕𝗢𝗧𝗦 𝗫 𝗠𝗔𝗥𝗜𝗘* 🐱\n\n*Uso:* *.obtener nombre.js*`)
+    if (!args[0]) {
+      await react('❌')
+      return m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📖 USO* ╏\n➛ obtener nombre.js\n━━━━━━━━━━━`)
+    }
 
     let fileName = args[0].endsWith('.js')? args[0] : args[0] + '.js'
     let filePath = path.join('./plugins', fileName)
 
-    if (!fs.existsSync(filePath)) return m.reply(`❌ *Marie dice:* No encontré el archivo *${fileName}*`)
+    if (!fs.existsSync(filePath)) {
+      await react('❌')
+      return m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ No encontré el archivo *${fileName}*\n━━━━━━━━━━━`)
+    }
 
     try {
       let fileContent = fs.readFileSync(filePath, 'utf-8')
@@ -21,30 +30,33 @@ let handler = async (m, { conn, args, command, text }) => {
           document: Buffer.from(fileContent),
           mimetype: 'text/javascript',
           fileName: fileName,
-          caption: `🐱 𓆩 𝗔𝗥𝗖𝗛𝗜𝗩𝗢 𝗘𝗡𝗩𝗜𝗔𝗗𝗢 𓆪 🐱\n\n💖 *Archivo:* ${fileName}`
+          caption: `𐔌 ꒱ ***ARCHIVO ENVIADO*** 𐔌 ꒱ ✅\n\n── *📊 DATOS* ╏\n📁 ➛ Archivo: ${fileName}\n━━━━━━━━━━━`
         }, { quoted: m })
       } else {
-        await m.reply(`🐱 𓆩 𝗖𝗢𝗡𝗧𝗘𝗡𝗜𝗗𝗢 𝗗𝗘 ${fileName.toUpperCase()} 𓆪 🐱
+        let msg = `𐔌 ꒱ ***${fileName.toUpperCase()}*** 𐔌 ꒱ 📄
 
-.⃟𖥔 ݁. 𖦹˙— \`\`COTTI BOTS\`\` —˙𖦹.💖꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`CONTENIDO\`\` —˙𖦹.📄꒷
 
 \`\`javascript
 ${fileContent}
 \`\`
 
-━━━━━━━━━━━
-*Powered by*: ***COTTI BOTS x Marie*** 🌸`)
+━━━━━━━━━━━`
+        await m.reply(msg)
       }
-      await m.react('✅')
+      await react('✅')
     } catch (e) {
-      await m.react('❌')
-      m.reply(`❌ Error al leer: ${e.message}`)
+      await react('❌')
+      m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📝 ERROR* ╏\n❌ ➛ ${e.message}\n━━━━━━━━━━━`)
     }
   }
 
-  // 2..edit + nombre.js / texto nuevo
+  // 2. EDIT
   if (command === 'edit') {
-    if (!args[0] ||!text.includes('/')) return m.reply(`🐱 *𝗖𝗢𝗧𝗜 𝗕𝗢𝗧𝗦 𝗫 𝗠𝗔𝗥𝗜𝗘* 🐱\n\n*Uso:* *.edit nombre.js / texto nuevo*`)
+    if (!args[0] ||!text.includes('/')) {
+      await react('❌')
+      return m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📖 USO* ╏\n➛ edit nombre.js / texto nuevo\n━━━━━━━━━━━`)
+    }
 
     let [fileName,...newText] = text.split('/')
     fileName = fileName.trim()
@@ -55,26 +67,32 @@ ${fileContent}
 
     try {
       fs.writeFileSync(filePath, newText, 'utf-8')
-      await m.reply(`🐱 𓆩 𝗔𝗥𝗖𝗛𝗜𝗩𝗢 𝗘𝗗𝗜𝗧𝗔𝗗𝗢 𓆪 🐱
+      let msg = `𐔌 ꒱ ***ARCHIVO EDITADO*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— \`\`COTTI BOTS\`\` —˙𖦹.💖꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`EDITAR\`\` —˙𖦹.✏️꒷
 
-──🌸 *DATOS* ╏ 💚
-💚 ➛ *Archivo:* ${fileName}
-💚 ➛ *Estado:* Guardado correctamente
+── *📊 DATOS* ╏
+📁 ➛ Archivo: ${fileName}
+✅ ➛ Estado: Guardado correctamente
 
-━━━━━━━━━━━
-*Reinicia el bot para aplicar cambios*`)
-      await m.react('✅')
+── *📝 NOTA* ╏
+🔄 ➛ Reinicia el bot para aplicar cambios
+
+━━━━━━━━━━━`
+      await m.reply(msg)
+      await react('✅')
     } catch (e) {
-      await m.react('❌')
-      m.reply(`❌ Error al guardar: ${e.message}`)
+      await react('❌')
+      m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📝 ERROR* ╏\n❌ ➛ ${e.message}\n━━━━━━━━━━━`)
     }
   }
 
-  // 3..crear + nombre.js / codigo
+  // 3. CREAR
   if (command === 'crear') {
-    if (!args[0] ||!text.includes('/')) return m.reply(`🐱 *𝗖𝗢𝗧𝗜 𝗕𝗢𝗧𝗦 𝗫 𝗠𝗔𝗥𝗜𝗘* 🐱\n\n*Uso:* *.crear nombre.js / codigo del plugin*`)
+    if (!args[0] ||!text.includes('/')) {
+      await react('❌')
+      return m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📖 USO* ╏\n➛ crear nombre.js / codigo del plugin\n━━━━━━━━━━━`)
+    }
 
     let [fileName,...code] = text.split('/')
     fileName = fileName.trim()
@@ -83,58 +101,71 @@ ${fileContent}
     fileName = fileName.endsWith('.js')? fileName : fileName + '.js'
     let filePath = path.join('./plugins', fileName)
 
-    if (fs.existsSync(filePath)) return m.reply(`❌ *Marie dice:* El archivo *${fileName}* ya existe. Usa *.edit* para modificarlo.`)
+    if (fs.existsSync(filePath)) {
+      await react('❌')
+      return m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ El archivo *${fileName}* ya existe\n💡 ➛ Usa edit para modificarlo\n━━━━━━━━━━━`)
+    }
 
     try {
       fs.writeFileSync(filePath, code, 'utf-8')
-      await m.reply(`🐱 𓆩 𝗔𝗥𝗖𝗛𝗜𝗩𝗢 𝗖𝗥𝗘𝗔𝗗𝗢 𓆪 🐱
+      let msg = `𐔌 ꒱ ***ARCHIVO CREADO*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— \`\`COTTI BOTS\`\` —˙𖦹.💖꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`CREAR\`\` —˙𖦹.📄꒷
 
-──🌸 *DATOS* ╏ 💚
-💚 ➛ *Archivo:* ${fileName}
-💚 ➛ *Estado:* Creado correctamente
+── *📊 DATOS* ╏
+📁 ➛ Archivo: ${fileName}
+✅ ➛ Estado: Creado correctamente
 
-━━━━━━━━━━━
-*Reinicia el bot para cargar el plugin*`)
-      await m.react('✅')
+── *📝 NOTA* ╏
+🔄 ➛ Reinicia el bot para cargar el plugin
+
+━━━━━━━━━━━`
+      await m.reply(msg)
+      await react('✅')
     } catch (e) {
-      await m.react('❌')
-      m.reply(`❌ Error al crear: ${e.message}`)
+      await react('❌')
+      m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📝 ERROR* ╏\n❌ ➛ ${e.message}\n━━━━━━━━━━━`)
     }
   }
 
-  // 4..del + nombre.js
+  // 4. DEL
   if (command === 'del') {
-    if (!args[0]) return m.reply(`🐱 *𝗖𝗢𝗧𝗜 𝗕𝗢𝗧𝗦 𝗫 𝗠𝗔𝗥𝗜𝗘* 🐱\n\n*Uso:* *.del nombre.js*`)
+    if (!args[0]) {
+      await react('❌')
+      return m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📖 USO* ╏\n➛ del nombre.js\n━━━━━━━━━━━`)
+    }
 
     let fileName = args[0].endsWith('.js')? args[0] : args[0] + '.js'
     let filePath = path.join('./plugins', fileName)
 
-    if (!fs.existsSync(filePath)) return m.reply(`❌ *Marie dice:* No encontré el archivo *${fileName}*`)
+    if (!fs.existsSync(filePath)) {
+      await react('❌')
+      return m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ No encontré el archivo *${fileName}*\n━━━━━━━━━━━`)
+    }
 
     try {
       fs.unlinkSync(filePath)
-      await m.reply(`🐱 𓆩 𝗔𝗥𝗖𝗛𝗜𝗩𝗢 𝗘𝗟𝗜𝗠𝗜𝗡𝗔𝗗𝗢 𓆪 🐱
+      let msg = `𐔌 ꒱ ***ARCHIVO ELIMINADO*** 𐔌 ꒱ 🗑️
 
-.⃟𖥔 ݁. 𖦹˙— \`\`COTTI BOTS\`\` —˙𖦹.💖꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`ELIMINAR\`\` —˙𖦹.🗑️꒷
 
-──🌸 *DATOS* ╏ 💚
-💚 ➛ *Archivo:* ${fileName}
-💚 ➛ *Estado:* Eliminado correctamente
+── *📊 DATOS* ╏
+📁 ➛ Archivo: ${fileName}
+✅ ➛ Estado: Eliminado correctamente
 
-━━━━━━━━━━━`)
-      await m.react('🗑️')
+━━━━━━━━━━━`
+      await m.reply(msg)
+      await react('🗑️')
     } catch (e) {
-      await m.react('❌')
-      m.reply(`❌ Error al eliminar: ${e.message}`)
+      await react('❌')
+      m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📝 ERROR* ╏\n❌ ➛ ${e.message}\n━━━━━━━━━━━`)
     }
   }
 
-  // 5..ver1 = ver lista de archivos del github
+  // 5. VER1
   if (command === 'ver1') {
     try {
-      await m.react('⏳')
+      await react('⏳')
       const repo = 'ForThreePro/Teste2' // TU REPO
       const branch = 'main'
       const url = `https://api.github.com/repos/${repo}/contents/plugins?ref=${branch}`
@@ -142,21 +173,23 @@ ${fileContent}
       const { data } = await axios.get(url)
       let jsFiles = data.filter(f => f.name.endsWith('.js')).map((f, i) => `│ ${i+1}. ${f.name}`).join('\n')
 
-      await m.reply(`🐱 𓆩 𝗟𝗜𝗦𝗧𝗔 𝗗𝗘 𝗣𝗟𝗨𝗚𝗜𝗡𝗦 𝗚𝗜𝗧𝗛𝗨𝗕 𓆪 🐱
+      let msg = `𐔌 ꒱ ***LISTA GITHUB*** 𐔌 ꒱ 📋
 
-.⃟𖥔 ݁. 𖦹˙— \`\`COTTI BOTS\`\` —˙𖦹.💖꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`PLUGINS\`\` —˙𖦹.📋꒷
 
-│
+── *📊 ARCHIVOS* ╏
 ${jsFiles || '│ No hay archivos.js'}
-│
-━━━━━━━━━━━
-*Total:* ${jsFiles.split('\n').length} archivos
-*Repo:* ${repo}
-*Powered by*: ***COTTI BOTS x Marie*** 🌸`)
-      await m.react('✅')
+
+── *📝 INFO* ╏
+📦 ➛ Total: ${jsFiles? jsFiles.split('\n').length : 0} archivos
+🔗 ➛ Repo: ${repo}
+
+━━━━━━━━━━━`
+      await m.reply(msg)
+      await react('✅')
     } catch (e) {
-      await m.react('❌')
-      m.reply(`❌ Error al obtener lista: ${e.message}\n\n*Verifica que el repo ForThreePro/Teste2 sea público*`)
+      await react('❌')
+      m.reply(`𐔌 ꒱ ***ARCHIVOS*** 𐔌 ꒱ ⚠️\n\n── *📝 ERROR* ╏\n❌ ➛ ${e.message}\n💡 ➛ Verifica que el repo sea público\n━━━━━━━━━━━`)
     }
   }
 }
