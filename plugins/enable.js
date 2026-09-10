@@ -10,7 +10,7 @@ let handler = async (m, { conn, command, args, isOwner, isAdmin, isROwner }) => 
 
   if (!args[0]) {
     await react('❌')
-    let error = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
+    let error = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`CONFIGURACIÓN\`\` —˙𖦹.⚙️꒷
 
@@ -29,42 +29,42 @@ let handler = async (m, { conn, command, args, isOwner, isAdmin, isROwner }) => 
   let fail = false
   switch (type) {
     case 'welcome': case 'bienvenida':
-      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔒\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
+      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
       chat.bienvenida = isEnable
       break
     case 'subbots': case 'serbot':
-      if (!isROwner) { await react('🔒'); return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔒\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo Owner\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
+      if (!isROwner) { await react('🔒'); return conn.sendMessage(m.chat, { text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo Owner\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
       bot.jadibotmd = isEnable
       break
     case 'antispam':
-      if (!isOwner) { await react('🔒'); return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔒\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo Owner\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
+      if (!isOwner) { await react('🔒'); return conn.sendMessage(m.chat, { text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo Owner\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
       bot.antiSpam = isEnable
       break
     case 'antilink':
-      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔒\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
+      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
       chat.antiLink = isEnable
       break
     case 'antibot':
-      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔒\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
+      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
       chat.antiBot = isEnable
       break
     case 'modoadmin':
-      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔒\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
+      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
       chat.modoadmin = isEnable
       break
     case 'nsfw': case 'antinopor':
-      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔒\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
+      if (m.isGroup &&!isAdmin) { await react('🔒'); return conn.sendMessage(m.chat, { text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo admins\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
       chat.nsfw = isEnable
       break
     case 'audios':
       chat.audios = isEnable
       break
     case 'autoread': case 'autoleer':
-      if (!isROwner) { await react('🔒'); return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔒\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo Owner\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
+      if (!isROwner) { await react('🔒'); return conn.sendMessage(m.chat, { text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo Owner\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
       global.opts['autoread'] = isEnable
       break
     case 'antiprivado':
-      if (!isOwner) { await react('🔒'); return conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔒\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo Owner\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
+      if (!isOwner) { await react('🔒'); return conn.sendMessage(m.chat, { text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n🔒 ➛ Solo Owner\n━━━━━━━━━━━` }, { quoted: m }); fail = true; break }
       bot.antiPrivate = isEnable
       break
     default:
@@ -74,13 +74,13 @@ let handler = async (m, { conn, command, args, isOwner, isAdmin, isROwner }) => 
   if (fail) return
   await react(isEnable? '🟢' : '🔴')
 
-  // IMAGEN FIJA QUE ME DISTE
-  let catalogoImg = { url: 'https://files.evogb.win/QFXQtu.jpg' }
+  // IMAGEN FIJA NUEVA FERSY
+  let catalogoImg = { url: 'https://files.evogb.win/GEkGfz.jpg' }
 
   let estadoTexto = isEnable? 'Activado' : 'Desactivado'
   let estadoEmoji = isEnable? '🟢' : '🔴'
 
-  let statusTxt = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+  let statusTxt = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`CONFIGURACIÓN\`\` —˙𖦹.⚙️꒷
 
@@ -88,6 +88,7 @@ let handler = async (m, { conn, command, args, isOwner, isAdmin, isROwner }) => 
 ⚙️ ➛ Función: *${type}*
 ${estadoEmoji} ➛ Estado: *${estadoTexto}*
 👑 ➛ Por: @${m.sender.split('@')[0]}
+> _"Brillando como Fersy"_ 🪩
 
 ━━━━━━━━━━━`
 
