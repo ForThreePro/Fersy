@@ -1,4 +1,4 @@
-let handler = async (m, { conn, args, command, usedPrefix }) => {
+let handler = async (m, { conn, args }) => {
   let chat = global.db.data.chats[m.chat]
   if (!chat) global.db.data.chats[m.chat] = {}
 
@@ -6,45 +6,101 @@ let handler = async (m, { conn, args, command, usedPrefix }) => {
   let mime = (q.msg || q).mimetype || ''
 
   // Detectar tipo: welcome / bye / kick
-  let type = command.replace('audiowelcome','').replace('audiobye','').replace('audiokick','')
-               .replace('delaudiowelcome','').replace('delaudiobye','').replace('delaudiokick','')
+  let textoCmd = m.text.toLowerCase()
+  let type = ''
+  if (textoCmd.includes('welcome')) type = 'welcome'
+  if (textoCmd.includes('bye')) type = 'bye'
+  if (textoCmd.includes('kick')) type = 'kick'
 
-  if (command.includes('welcome')) type = 'welcome'
-  if (command.includes('bye')) type = 'bye'
-  if (command.includes('kick')) type = 'kick'
+  const react = async (text) => {
+    try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+  }
 
   // SET AUDIO
-  if (command.startsWith('audio')) {
+  if (textoCmd.includes('audio') &&!textoCmd.includes('del')) {
+    await react('🎵')
+
     // Si responde a un audio o manda audio
     if (mime && /audio/.test(mime)) {
       let buffer = await q.download()
       chat[`audio${type}`] = buffer
-      return m.reply(`🐱 𓆩 𝗔𝗨𝗗𝗜𝗢 𝗚𝗨𝗔𝗥𝗗𝗔𝗗𝗢 𓆪 🐱\n\n✅ *Audio de ${type} guardado*\nSe reproducirá cuando pase el evento`)
+      let ok = `𐔌 ꒱ ***AUDIO ${type.toUpperCase()}*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`GUARDADO\`\` —˙𖦹.🎵꒷
+
+── *📊 INFORMACIÓN* ╏
+✅ ➛ Audio de *${type}* guardado
+🔊 ➛ Se reproducirá cuando pase el evento
+
+━━━━━━━━━━━`
+      return conn.sendMessage(m.chat, { text: ok }, { quoted: m })
     }
 
     // Si manda un link
     if (args[0] && args[0].startsWith('http')) {
       chat[`audio${type}`] = args[0]
-      return m.reply(`🐱 𓆩 𝗟𝗜𝗡𝗞 𝗚𝗨𝗔𝗥𝗗𝗔𝗗𝗢 𓆪 🐱\n\n✅ *Audio de ${type} guardado*\nLink: ${args[0]}`)
+      let ok = `𐔌 ꒱ ***AUDIO ${type.toUpperCase()}*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`GUARDADO\`\` —˙𖦹.🔗꒷
+
+── *📊 INFORMACIÓN* ╏
+✅ ➛ Link de audio *${type}* guardado
+🔗 ➛ ${args[0]}
+
+━━━━━━━━━━━`
+      return conn.sendMessage(m.chat, { text: ok }, { quoted: m })
     }
 
-    return m.reply(`🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n📌 *Uso:* ${usedPrefix}${command} + [responder a audio]\n📌 *Uso:* ${usedPrefix}${command} <link del audio>`)
+    await react('❌')
+    let uso = `𐔌 ꒱ ***AUDIO ${type.toUpperCase()}*** 𐔌 ꒱ 📝
+
+.⃟𖥔 ݁. 𖦹˙— \`\`FORMATO\`\` —˙𖦹.🎵꒷
+
+── *📖 USO* ╏
+➛ Responde a un audio
+➛ Envía: <link del audio>
+
+── *💡 EJEMPLOS* ╏
+➛ Responde a un audio + comando
+➛ link.mp3
+
+━━━━━━━━━━━`
+    return conn.sendMessage(m.chat, { text: uso }, { quoted: m })
   }
 
   // DEL AUDIO
-  if (command.startsWith('delaudio')) {
+  if (textoCmd.includes('delaudio')) {
     if (!chat[`audio${type}`]) {
-      return m.reply(`🍕 *No hay un audio de ${type} configurado*`)
+      await react('📭')
+      let vacio = `𐔌 ꒱ ***AUDIO ${type.toUpperCase()}*** 𐔌 ꒱ 📭
+
+.⃟𖥔 ݁. 𖦹˙— \`\`NO CONFIGURADO\`\` —˙𖦹.❌꒷
+
+── *📝 AVISO* ╏
+📭 ➛ No hay un audio de *${type}* configurado
+
+━━━━━━━━━━━`
+      return conn.sendMessage(m.chat, { text: vacio }, { quoted: m })
     }
+
     delete chat[`audio${type}`]
-    await m.reply(`🐱 𓆩 𝗔𝗨𝗗𝗜𝗢 𝗘𝗟𝗜𝗠𝗜𝗡𝗔𝗗𝗢 𓆪 🐱\n\n❌ *Audio de ${type} eliminado*`)
+    await react('🗑️')
+    let del = `𐔌 ꒱ ***AUDIO ${type.toUpperCase()}*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ELIMINADO\`\` —˙𖦹.🗑️꒷
+
+── *📊 INFORMACIÓN* ╏
+🗑️ ➛ Audio de *${type}* eliminado
+✅ ➛ Ya no se reproducirá
+
+━━━━━━━━━━━`
+    return conn.sendMessage(m.chat, { text: del }, { quoted: m })
   }
 }
 
 handler.help = ['audiowelcome', 'audiobye', 'audiokick', 'delaudiowelcome', 'delaudiobye', 'delaudiokick']
-handler.tags = ['config']
+handler.tags = ['configuración']
 handler.command = /^(audio(welcome|bye|kick)|delaudio(welcome|bye|kick))$/i
 handler.group = true
 handler.admin = true
-
 export default handler
