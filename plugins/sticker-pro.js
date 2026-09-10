@@ -2,7 +2,15 @@ import { addExif, sticker } from '../lib/sticker.js'
 import axios from 'axios'
 
 let handler = async (m, { conn, text, usedPrefix, command, args }) => {
-    await m.react('⏳')
+    const react = async (text) => {
+        try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+    }
+
+    const error = (msg) => {
+        return m.reply(`𐔌 ꒱ ***STICKERS*** 𐔌 ꒱ ⚠️\n\n.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷\n\n── *📝 AVISO* ╏\n❌ ➛ ${msg}\n━━━━━━━━━━━`)
+    }
+
+    await react('⏳')
 
     // 1. WM / TAKE / ROBAR
     if (command === 'wm' || command === 'take' || command === 'robar') {
@@ -15,12 +23,12 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
         if (!img) return error('Responde a un *sticker*')
 
         try {
-            let stiker = await addExif(img, packname || '***Garfield Bot Oficial***', author || '')
-            await conn.sendFile(m.chat, stiker, 'garfield.webp', '', m)
-            await m.react('✅')
+            let stiker = await addExif(img, packname || 'Sticker', author || '')
+            await conn.sendFile(m.chat, stiker, 'sticker.webp', '', m)
+            await react('✅')
         } catch (e) {
             console.error(e)
-            await m.react('❌')
+            await react('❌')
             error('Error al editar el *sticker*')
         }
     }
@@ -31,9 +39,9 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
         let mime = (q.msg || q).mimetype || q.mediaType || ''
         if (!/webp|image|video/g.test(mime)) return error('Responde a una *imagen, video o gif*')
         let img = await q.download()
-        let stiker = await sticker(img, false, '***Garfield Bot Oficial***', '')
-        await conn.sendFile(m.chat, stiker, 'garfield.webp', '', m)
-        await m.react('✅')
+        let stiker = await sticker(img, false, 'Sticker', '')
+        await conn.sendFile(m.chat, stiker, 'sticker.webp', '', m)
+        await react('✅')
     }
 
     // 3. QC / QUOTLY
@@ -41,7 +49,8 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
         let mentionedJid = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : null
         let authorName, txt, pp
 
-        if (!args.length &&!(m.quoted && m.quoted.text)) return error(`Ingresa un texto para el *sticker quotly*\n> Ejemplo: *${usedPrefix}qc Hola mundo*\n> Ejemplo: *${usedPrefix}qc @user Nombre / Texto*\n> Ejemplo: *${usedPrefix}qc Nombre / Texto*`)
+        if (!args.length &&!(m.quoted && m.quoted.text)) 
+            return error(`Ingresa un texto para el *sticker quotly*\n> Ejemplo: *${usedPrefix}qc Hola mundo*\n> Ejemplo: *${usedPrefix}qc @user Nombre / Texto*\n> Ejemplo: *${usedPrefix}qc Nombre / Texto*`)
 
         if (mentionedJid && args.join(" ").includes("/")) {
             const joined = args.slice(1).join(" ")
@@ -86,17 +95,17 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
         try {
             const json = await axios.post('https://btzqc.betabotz.eu.org/generate', obj, { headers: { 'Content-Type': 'application/json' }})
             const buffer = Buffer.from(json.data.result.image, 'base64')
-            const stiker = await sticker(buffer, false, '***Garfield Bot Oficial***', '')
+            const stiker = await sticker(buffer, false, 'Sticker', 'Bot')
 
             if (stiker) {
-                await conn.sendFile(m.chat, stiker, 'garfieldqc.webp', '', m)
-                await m.react('✅')
+                await conn.sendFile(m.chat, stiker, 'quotly.webp', '', m)
+                await react('✅')
             } else {
-                await m.react('❌')
+                await react('❌')
             }
         } catch (e) {
             console.error(e)
-            await m.react('❌')
+            await react('❌')
             error('Error al generar el *sticker*')
         }
     }
@@ -109,25 +118,11 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
         let url = `https://api.evogb.org/tools/emojimix?emoji1=${encodeURIComponent(emoji1)}&emoji2=${encodeURIComponent(emoji2)}&key=sasuke`
         try {
             await conn.sendMessage(m.chat, { sticker: { url: url } }, { quoted: m })
-            await m.react('✅')
+            await react('✅')
         } catch (e) {
-            await m.react('❌')
+            await react('❌')
             error(`Error: ${e.message}`)
         }
-    }
-
-    function error(msg) {
-        let texto = `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟 - 𝗦𝗧𝗜𝗖𝗞𝗘𝗥𝗦* 🐱
-
-*━━━━━━━━━━*
-*❌ ERROR*
-
-*➤* ${msg}
-
-*━━━━━━━━━━*
-*Owner:* @whois.yallico
-> _"Algo salió mal"_ 💥`
-        m.reply(texto)
     }
 }
 
