@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 
 const handler = async (m, { conn, args, isAdmin, isOwner }) => {
   if (!isAdmin &&!isOwner) {
-    let error = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
+    let error = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ACCESO DENEGADO\`\` —˙𖦹.🔒꒷
 
@@ -24,7 +24,7 @@ const handler = async (m, { conn, args, isAdmin, isOwner }) => {
   if (/on/i.test(args[0])) {
     await react('🟢')
     chat.bienvenida = true
-    let ok = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+    let ok = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`BIENVENIDA\`\` —˙𖦹.🟢꒷
 
@@ -37,7 +37,7 @@ const handler = async (m, { conn, args, isAdmin, isOwner }) => {
   } else if (/off/i.test(args[0])) {
     await react('🔴')
     chat.bienvenida = false
-    let off = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+    let off = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`BIENVENIDA\`\` —˙𖦹.🔴꒷
 
@@ -48,7 +48,7 @@ const handler = async (m, { conn, args, isAdmin, isOwner }) => {
     return conn.sendMessage(m.chat, { text: off }, { quoted: m })
   } else {
     await react('❌')
-    let uso = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 📝
+    let uso = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`FORMATO\`\` —˙𖦹.⚙️꒷
 
@@ -75,7 +75,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const userJid = m.messageStubParameters?.[0] || m.participant
   if (!userJid) return!0
 
-  const DEFAULT_IMG = 'https://files.evogb.win/QFXQtu.jpg' // <-- TU FOTO NUEVA
+  const DEFAULT_IMG = 'https://files.evogb.win/GEkGfz.jpg' // <-- TU FOTO NUEVA FERSY
   let imgBuffer = null
 
   // PASO 1: Intentar obtener foto del usuario
@@ -84,7 +84,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
     let res = await fetch(userPP)
     imgBuffer = await res.buffer()
   } catch {
-    // PASO 2: Si falla, usar la foto que me diste
+    // PASO 2: Si falla, usar la foto de Fersy
     try {
       let res = await fetch(DEFAULT_IMG)
       imgBuffer = await res.buffer()
@@ -104,13 +104,14 @@ handler.before = async function (m, { conn, groupMetadata }) {
     case WAMessageStubType.GROUP_PARTICIPANT_ADD:
       audio = chat.audiowelcome
       txt = chat.customWelcome? chat.customWelcome.replace(/@user/gi, userTag).replace(/@group/gi, groupName).replace(/@desc/gi, groupDesc) :
-`𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 👋
+`💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`BIENVENIDO\`\` —˙𖦹.✨꒷
 
 ── *📊 INFORMACIÓN* ╏
 👋 ➛ ${userTag} llegó a *${groupName}*
 👥 ➛ Miembro N°: *${membersCount}*
+> _"Brillando como Fersy"_ 🪩
 
 ━━━━━━━━━━━`
       break
@@ -118,7 +119,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
     case WAMessageStubType.GROUP_PARTICIPANT_LEAVE:
       audio = chat.audiobye
       txt = chat.customBye? chat.customBye.replace(/@user/gi, userTag).replace(/@group/gi, groupName) :
-`𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 👋
+`💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`SE FUE\`\` —˙𖦹.💤꒷
 
@@ -132,7 +133,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
     case WAMessageStubType.GROUP_PARTICIPANT_REMOVE:
       audio = chat.audiokick
       txt = chat.customKick? chat.customKick.replace(/@user/gi, userTag).replace(/@group/gi, groupName) :
-`𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
+`💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`EXPULSADO\`\` —˙𖦹.🥊꒷
 
