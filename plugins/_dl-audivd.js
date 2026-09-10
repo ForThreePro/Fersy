@@ -5,7 +5,7 @@ import { promisify } from 'util'
 
 const execFileAsync = promisify(execFile)
 
-// FUNCION PARA REACCIONES COMPATIBLE
+// FUNCION PARA REACCIONES
 const react = async (conn, m, text) => {
   try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
 }
@@ -14,14 +14,40 @@ const handler = async (m, { conn }) => {
     const q = m.quoted ? m.quoted : m
     const mime = (q.msg || q).mimetype || ''
 
-    if (!/video/.test(mime)) return m.reply('❌ Responde a un video para extraer su audio.')
+    if (!/video/.test(mime)) {
+        let menuUso = `𐔌 ꒱ ***.audivd*** 𐔌 ꒱ 🎵
 
-    await react(conn, m, "⏳")
+.⃟𖥔 ݁. 𖦹˙— \`\`HERRAMIENTA\`\` —˙𖦹.⚙️꒷
+
+── *📝 DESCRIPCIÓN* ╏
+🎵 ➛ Extrae el audio de un video
+🎵 ➛ Convierte a MP3 192kbps
+
+── *📖 USO* ╏
+1️⃣ ➛ Responde a un video con:.*audivd*
+2️⃣ ➛ O usa el alias:.*audio*
+
+── *📦 FORMATO* ╏
+⬇️ ➛ Salida: *MP3 44.1kHz Stereo*
+
+━━━━━━━━━━━`
+        return conn.sendMessage(m.chat, { text: menuUso }, { quoted: m })
+    }
 
     let tempVideo
     let tempAudio
     try {
-        await m.reply('⏳ Extrayendo audio del video...')
+        await react(conn, m, "⏳")
+        await m.reply(`𐔌 ꒱ ***.audivd*** 𐔌 ꒱ ⏳
+
+.⃟𖥔 ݁. 𖦹˙— \`\`PROCESANDO\`\` —˙𖦹.⚙️꒷
+
+── *📊 ESTADO* ╏
+📥 ➛ Descargando video...
+🎵 ➛ Extrayendo audio...
+⚙️ ➛ Convirtiendo a MP3...
+
+━━━━━━━━━━━`)
 
         const videoBuffer = await q.download()
         if (!videoBuffer) throw new Error('No se pudo obtener el buffer del video.')
@@ -45,7 +71,7 @@ const handler = async (m, { conn }) => {
         ], { timeout: 120000 })
 
         const audioBuffer = await fs.readFile(tempAudio)
-        
+
         await conn.sendMessage(m.chat, {
             audio: audioBuffer,
             mimetype: 'audio/mpeg',
@@ -54,21 +80,45 @@ const handler = async (m, { conn }) => {
         }, { quoted: m })
 
         await react(conn, m, "✅")
-        await m.reply('✅ AUDIO EXTRAÍDO CORRECTAMENTE')
+        let menuOk = `𐔌 ꒱ ***.audivd*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`COMPLETADO\`\` —˙𖦹.🎵꒷
+
+── *📊 RESULTADO* ╏
+✅ ➛ Audio extraído correctamente
+📌 ➛ Formato: *MP3 192kbps*
+📌 ➛ Calidad: *44.1kHz Stereo*
+
+── *📥 DESCARGA* ╏
+⬇️ ➛ Archivo enviado arriba
+
+━━━━━━━━━━━`
+        return conn.sendMessage(m.chat, { text: menuOk }, { quoted: m })
 
     } catch (e) {
         console.error(e)
         await react(conn, m, "❌")
-        await m.reply('❌ ERROR AL PROCESAR EL ARCHIVO: ' + e.message)
+        let menuErr = `𐔌 ꒱ ***.audivd*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
+
+── *📝 DESCRIPCIÓN* ╏
+❌ ➛ ${e.message}
+
+── *💡 SOLUCIÓN* ╏
+🔧 ➛ Usa un video válido
+🔧 ➛ Máx 2 minutos recomendado
+
+━━━━━━━━━━━`
+        return conn.sendMessage(m.chat, { text: menuErr }, { quoted: m })
     } finally {
         await fs.unlink(tempVideo).catch(() => {})
         await fs.unlink(tempAudio).catch(() => {})
     }
 }
 
-handler.help = ['audivd']
-handler.tags = ['tools']
+handler.help = ['audivd', 'audio']
+handler.tags = ['herramienta']
 handler.command = ['audivd', 'audio']
 handler.limit = true
-
 export default handler
