@@ -6,9 +6,9 @@ const react = async (conn, m, text) => {
   try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
 }
 
-var handler = async (m, { conn, args, usedPrefix, command }) => {
+var handler = async (m, { conn, args }) => {
   if (!args[0]) {
-    let menuUso = `𐔌 ꒱ ***.${command}*** 𐔌 ꒱ 📱
+    let menuUso = `𐔌 ꒱ ***TIKTOK DOWNLOADER*** 𐔌 ꒱ 📱
 
 .⃟𖥔 ݁. 𖦹˙— \`\`DESCARGAS\`\` —˙𖦹.📥꒷
 
@@ -17,10 +17,10 @@ var handler = async (m, { conn, args, usedPrefix, command }) => {
 📱 ➛ Con botones interactivos
 
 ── *📖 USO* ╏
-➛.*${command}* <link de tiktok>
+➛ Envía: <link de tiktok>
 
 ── *💡 EJEMPLO* ╏
-➛.*${command}* https://vm.tiktok.com/ZMkcmTCa6/
+➛ https://vm.tiktok.com/ZMkcmTCa6/
 
 ── *🔗 SOPORTE* ╏
 📱 ➛ vm.tiktok.com
@@ -34,7 +34,7 @@ var handler = async (m, { conn, args, usedPrefix, command }) => {
   const url = args[0]
   if (!url.match(/(https?:\/\/)?(www\.)?(vm\.|vt\.|www\.)?tiktok\.com\//)) {
     await react(conn, m, '❌')
-    let menuError = `𐔌 ꒱ ***.${command}*** 𐔌 ꒱ ⚠️
+    let menuError = `𐔌 ꒱ ***TIKTOK DOWNLOADER*** 𐔌 ꒱ ⚠️
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
@@ -50,7 +50,7 @@ var handler = async (m, { conn, args, usedPrefix, command }) => {
 
   try {
     await react(conn, m, "⏳")
-    await m.reply(`𐔌 ꒱ ***.${command}*** 𐔌 ꒱ ⏳
+    await m.reply(`𐔌 ꒱ ***TIKTOK DOWNLOADER*** 𐔌 ꒱ ⏳
 
 .⃟𖥔 ݁. 𖦹˙— \`\`PROCESANDO\`\` —˙𖦹.⚙️꒷
 
@@ -87,7 +87,7 @@ var handler = async (m, { conn, args, usedPrefix, command }) => {
         message: {
           interactiveMessage: proto.Message.InteractiveMessage.fromObject({
             body: {
-              text: `𐔌 ꒱ ***.${command}*** 𐔌 ꒱ ✅
+              text: `𐔌 ꒱ ***TIKTOK DOWNLOADER*** 𐔌 ꒱ ✅
 
 .⃟𖥔 ݁. 𖦹˙— \`\`COMPLETADO\`\` —˙𖦹.📥꒷
 
@@ -118,7 +118,7 @@ var handler = async (m, { conn, args, usedPrefix, command }) => {
 
   } catch (error) {
     await react(conn, m, "❌")
-    let menuErr = `𐔌 ꒱ ***.${command}*** 𐔌 ꒱ ⚠️
+    let menuErr = `𐔌 ꒱ ***TIKTOK DOWNLOADER*** 𐔌 ꒱ ⚠️
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
