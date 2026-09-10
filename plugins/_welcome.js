@@ -2,23 +2,67 @@ import { WAMessageStubType } from '@whiskeysockets/baileys'
 import fetch from 'node-fetch'
 
 const handler = async (m, { conn, args, isAdmin, isOwner }) => {
-  if (!isAdmin &&!isOwner) return conn.reply(m.chat, `🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n🍕 *Solo admins pueden usar este comando*`, m)
+  if (!isAdmin &&!isOwner) {
+    let error = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ACCESO DENEGADO\`\` —˙𖦹.🔒꒷
+
+── *📝 AVISO* ╏
+🔒 ➛ Solo admins pueden usar este comando
+
+━━━━━━━━━━━`
+    return conn.sendMessage(m.chat, { text: error }, { quoted: m })
+  }
+
   let chat = global.db.data.chats[m.chat]
   if (!chat) global.db.data.chats[m.chat] = {}
 
+  const react = async (text) => {
+    try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+  }
+
   if (/on/i.test(args[0])) {
+    await react('🟢')
     chat.bienvenida = true
-    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🟢 *Activada con imagen de Garfield*`, m)
+    let ok = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`BIENVENIDA\`\` —˙𖦹.🟢꒷
+
+── *📊 ESTADO* ╏
+🟢 ➛ Activada
+🖼️ ➛ Con imagen personalizada
+
+━━━━━━━━━━━`
+    return conn.sendMessage(m.chat, { text: ok }, { quoted: m })
   } else if (/off/i.test(args[0])) {
+    await react('🔴')
     chat.bienvenida = false
-    await conn.reply(m.chat, `😼 𓆩 ***𝗕𝗜𝗘𝗡𝗩𝗘𝗡𝗜𝗗𝗔*** 𓆪 😼\n\n🔴 *Desactivada*`, m)
+    let off = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`BIENVENIDA\`\` —˙𖦹.🔴꒷
+
+── *📊 ESTADO* ╏
+🔴 ➛ Desactivada
+
+━━━━━━━━━━━`
+    return conn.sendMessage(m.chat, { text: off }, { quoted: m })
   } else {
-    await conn.reply(m.chat, `🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n📌 *Uso:* ${m.prefix}bienvenida on/off`, m)
+    await react('❌')
+    let uso = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 📝
+
+.⃟𖥔 ݁. 𖦹˙— \`\`FORMATO\`\` —˙𖦹.⚙️꒷
+
+── *📖 USO* ╏
+➛ bienvenida on
+➛ bienvenida off
+
+━━━━━━━━━━━`
+    return conn.sendMessage(m.chat, { text: uso }, { quoted: m })
   }
 }
 
 handler.help = ['bienvenida <on/off>']
-handler.tags = ['config']
+handler.tags = ['configuración']
 handler.command = /^(bienvenida|welcome|bye)$/i
 handler.group = true
 handler.admin = true
@@ -31,7 +75,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
   const userJid = m.messageStubParameters?.[0] || m.participant
   if (!userJid) return!0
 
-  const DEFAULT_IMG = 'https://files.evogb.win/QFXQtu.jpg' // <-- LINK FIJO
+  const DEFAULT_IMG = 'https://files.evogb.win/QFXQtu.jpg' // <-- TU FOTO NUEVA
   let imgBuffer = null
 
   // PASO 1: Intentar obtener foto del usuario
@@ -40,7 +84,7 @@ handler.before = async function (m, { conn, groupMetadata }) {
     let res = await fetch(userPP)
     imgBuffer = await res.buffer()
   } catch {
-    // PASO 2: Si falla, descargar la de Garfield por defecto
+    // PASO 2: Si falla, usar la foto que me diste
     try {
       let res = await fetch(DEFAULT_IMG)
       imgBuffer = await res.buffer()
@@ -60,19 +104,42 @@ handler.before = async function (m, { conn, groupMetadata }) {
     case WAMessageStubType.GROUP_PARTICIPANT_ADD:
       audio = chat.audiowelcome
       txt = chat.customWelcome? chat.customWelcome.replace(/@user/gi, userTag).replace(/@group/gi, groupName).replace(/@desc/gi, groupDesc) :
-`😼 𓆩 ***𝗡𝗨𝗘𝗩𝗢 𝗚𝗔𝗧𝗜𝗧𝗢*** 𓆪 😼\n\n🐱 *${userTag}* llegó a *${groupName}*\n🍕 *Miembro N°:* ${membersCount}`
+`𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 👋
+
+.⃟𖥔 ݁. 𖦹˙— \`\`BIENVENIDO\`\` —˙𖦹.✨꒷
+
+── *📊 INFORMACIÓN* ╏
+👋 ➛ ${userTag} llegó a *${groupName}*
+👥 ➛ Miembro N°: *${membersCount}*
+
+━━━━━━━━━━━`
       break
 
     case WAMessageStubType.GROUP_PARTICIPANT_LEAVE:
       audio = chat.audiobye
       txt = chat.customBye? chat.customBye.replace(/@user/gi, userTag).replace(/@group/gi, groupName) :
-`😾 𓆩 ***𝗦𝗘 𝗙𝗨𝗘 𝗗𝗘𝗟 𝗦𝗢𝗙𝗔*** 𓆪 😾\n\n💤 *${userTag}* se durmió fuera de *${groupName}*\n📉 *Quedamos:* ${membersCount}`
+`𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 👋
+
+.⃟𖥔 ݁. 𖦹˙— \`\`SE FUE\`\` —˙𖦹.💤꒷
+
+── *📊 INFORMACIÓN* ╏
+💤 ➛ ${userTag} salió de *${groupName}*
+📉 ➛ Quedamos: *${membersCount}*
+
+━━━━━━━━━━━`
       break
 
     case WAMessageStubType.GROUP_PARTICIPANT_REMOVE:
       audio = chat.audiokick
       txt = chat.customKick? chat.customKick.replace(/@user/gi, userTag).replace(/@group/gi, groupName) :
-`🙀 𓆩 ***𝗘𝗫𝗣𝗨𝗟𝗦𝗔𝗗𝗢*** 𓆪 🙀\n\n🥊 *${userTag}* fue pateado de *${groupName}*`
+`𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`EXPULSADO\`\` —˙𖦹.🥊꒷
+
+── *📊 INFORMACIÓN* ╏
+🥊 ➛ ${userTag} fue expulsado de *${groupName}*
+
+━━━━━━━━━━━`
       break
   }
 
