@@ -16,7 +16,7 @@ let handler = async (m, { conn }) => {
     }
 
     // SOLO TU NUMERO: +51 927 174 369
-    let miNumero = '51927174369@s.whatsapp.net'
+    let miNumero = '51960231506@s.whatsapp.net'
     if (user!== miNumero) {
         let error = `𐔌 ꒱ ***SALIDA*** 𐔌 ꒱ ⚠️
 
