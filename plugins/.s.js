@@ -29,25 +29,29 @@ let handler = async (m, { conn, text, command }) => {
             contenido = contenido.join(' ')
 
             if (!nombre) {
-                let txt = `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗦𝗘𝗧 𝗩𝗜𝗣* 🐱
-*━━━━━━━━━━━━━━━━━━*
-*📋 COMO USAR:*
+                let menu = `𐔌 ꒱ ***.set*** 𐔌 ꒱ 📌
 
-*1. Para Texto:*
-.set nombre Tu texto aquí
+.⃟𖥔 ݁. 𖦹˙— \`\`HERRAMIENTA\`\` —˙𖦹.💾꒷
 
-*2. Para Media:*
-Responde a imagen/video/audio/sticker/documento
-.set nombre
+── *📝 DESCRIPCIÓN* ╏
+💾 ➛ Guarda textos, imágenes, videos, audios y stickers
+💾 ➛ Para usarlos después con.nombre
 
-*━━━━━━━━━━━━━━━━━━*
-*💡 Ejemplos:*
-.set pago Yape +51 927 174 369
-Responde a imagen +.set menu
-*━━━━━━━━━━*
-> _Solo Admins_ | _Máx 15MB_`
+── *📖 USO* ╏
+1️⃣ ➛ *Texto:*.set nombre Tu texto aquí
+2️⃣ ➛ *Media:* Responde a una imagen/video/etc.set nombre
+
+── *💡 EJEMPLOS* ╏
+📌 ➛.set pago Yape +51 927 174 369
+📌 ➛ Responde a imagen +.set menu
+
+── *⚠️ NOTAS* ╏
+🔒 ➛ Solo admins
+📦 ➛ Máx: Imagen/Video 15MB | Audio 10MB | Texto 4000 chars
+
+━━━━━━━━━━━`
                 await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
-                return m.reply(txt)
+                return conn.sendMessage(m.chat, { text: menu }, { quoted: m })
             }
 
             if (nombre.length < 2) return m.reply('⚠️ Nombre muy corto')
@@ -96,19 +100,22 @@ Responde a imagen +.set menu
             saveDB(db)
             await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } })
 
-            return m.reply(`🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗦𝗘𝗧 𝗩𝗜𝗣* 🐱
-*━━━━━━━━━━━━━━━━━━*
-*✅ COMANDO CREADO EXITOSAMENTE*
+            let size = dataToSave.content? formatBytes(Buffer.from(dataToSave.content,'base64').length) : formatBytes(contenido.length)
+            let menuOk = `𐔌 ꒱ ***.set*** 𐔌 ꒱ ✅
 
-*📊 DATOS:*
-*➤ Comando:*.${nombre}
-*➤ Tipo:* ${emojiType[type]} ${type.toUpperCase()}
-*➤ Peso:* ${dataToSave.content? formatBytes(Buffer.from(dataToSave.content,'base64').length) : formatBytes(contenido.length)}
-*➤ Creado:* ${new Date().toLocaleString('es-PE')}
+.⃟𖥔 ݁. 𖦹˙— \`\`CREADO\`\` —˙𖦹.💎꒷
 
-*━━━━━━━━━━*
-*Usa ahora:.${nombre}*
-> _Guardado en DB Local_ 💾`)
+── *📊 DATOS* ╏
+📌 ➛ Comando: *.*${nombre}
+${emojiType[type]} ➛ Tipo: *${type.toUpperCase()}*
+📦 ➛ Peso: *${size}*
+📅 ➛ Creado: *${new Date().toLocaleString('es-PE')}*
+
+── *📖 USAR* ╏
+➛ Ahora usa: *.*${nombre}
+
+━━━━━━━━━━━`
+            return conn.sendMessage(m.chat, { text: menuOk }, { quoted: m })
         }
 
         // =====.del =====
@@ -116,41 +123,79 @@ Responde a imagen +.set menu
             let nombre = text?.toLowerCase().replace(/[^a-z0-9_]/g, '')
             if (!nombre ||!db[chatId][nombre]) {
                 await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
-                return m.reply('⚠️ Ese comando no existe')
+                let menuDel = `𐔌 ꒱ ***.del*** 𐔌 ꒱ 🗑️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`HERRAMIENTA\`\` —˙𖦹.❌꒷
+
+── *📝 DESCRIPCIÓN* ╏
+🗑️ ➛ Elimina un comando guardado
+
+── *📖 USO* ╏
+➛.del nombre
+
+── *📊 RESULTADO* ╏
+❌ ➛ Ese comando no existe
+
+━━━━━━━━━━━`
+                return conn.sendMessage(m.chat, { text: menuDel }, { quoted: m })
             }
             delete db[chatId][nombre]
             saveDB(db)
             await conn.sendMessage(m.chat, { react: { text: '🗑️', key: m.key } })
-            return m.reply(`🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗦𝗘𝗧 𝗩𝗜𝗣* 🐱\n*━━━━━━━━━━*\n*🗑️ COMANDO ELIMINADO*\n*➤ Comando:*.${nombre}\n*━━━━━━━━━━*`)
+            let menuDelOk = `𐔌 ꒱ ***.del*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ELIMINADO\`\` —˙𖦹.🗑️꒷
+
+── *📊 RESULTADO* ╏
+🗑️ ➛ Comando eliminado: *.*${nombre}
+
+━━━━━━━━━━━`
+            return conn.sendMessage(m.chat, { text: menuDelOk }, { quoted: m })
         }
 
         // =====.listset =====
         if (command === 'listset') {
             let lista = Object.keys(db[chatId])
-            if (lista.length === 0) return m.reply('📭 *No hay comandos en este grupo*')
+            if (lista.length === 0) {
+                let menuVacio = `𐔌 ꒱ ***.listset*** 𐔌 ꒱ 📭
 
-            let txt = `🐱 *𝗟𝗜𝗦𝗧𝗔 𝗗𝗘 𝗖𝗢𝗠𝗔𝗡𝗗𝗢𝗦* 🐱
-*━━━━━━━━━━*
-*Total:* ${lista.length} comandos
+.⃟𖥔 ݁. 𖦹˙— \`\`LISTA\`\` —˙𖦹.📋꒷
 
-`
+── *📊 RESULTADO* ╏
+📭 ➛ No hay comandos guardados en este grupo
+
+━━━━━━━━━━━`
+                return conn.sendMessage(m.chat, { text: menuVacio }, { quoted: m })
+            }
+
+            let txt = `𐔌 ꒱ ***.listset*** 𐔌 ꒱ 📋
+
+.⃟𖥔 ݁. 𖦹˙— \`\`LISTA\`\` —˙𖦹.📋꒷
+
+── *📊 TOTAL* ╏
+📦 ➛ ${lista.length} comandos guardados
+
+── *📜 COMANDOS* ╏\n`
             lista.forEach((v,i) => {
-                txt += `${i+1}..${v} ${emojiType[db[chatId][v].type]} [${db[chatId][v].type}]\n`
+                txt += `${i+1} ➛.*${v}* ${emojiType[db[chatId][v].type]} [${db[chatId][v].type}]\n`
             })
-            txt += `*━━━━━━━━━━━━━━━━━━*
-> _Usa.nombre para ejecutar_`
+            txt += `
+── *📖 USO* ╏
+➛ Usa.*nombre* para ejecutar
+
+━━━━━━━━━━━`
             await conn.sendMessage(m.chat, { react: { text: '📋', key: m.key } })
-            return m.reply(txt)
+            return conn.sendMessage(m.chat, { text: txt }, { quoted: m })
         }
 
     } catch (e) {
-        console.log('[SET VIP ERROR]', e)
+        console.log('[SET ERROR]', e)
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
         return m.reply('❌ Error interno del bot')
     }
 }
 
-// EJECUTOR CON DISEÑO
+// EJECUTOR
 handler.before = async (m, { conn }) => {
     try {
         if (!m.text?.startsWith('.') || m.text.length < 2) return
@@ -164,14 +209,14 @@ handler.before = async (m, { conn }) => {
         const buffer = data.content? Buffer.from(data.content,'base64') : null
 
         if (data.type === 'text') return await conn.reply(chatId, `*${data.content}*`, m)
-        if (data.type === 'image' && buffer) await conn.sendMessage(chatId, { image: buffer, caption: `🐱 *${cmd.toUpperCase()}*\n\n${data.caption || ''}` }, { quoted: m })
-        if (data.type === 'video' && buffer) await conn.sendMessage(chatId, { video: buffer, caption: `🐱 *${cmd.toUpperCase()}*\n\n${data.caption || ''}` }, { quoted: m })
+        if (data.type === 'image' && buffer) await conn.sendMessage(chatId, { image: buffer, caption: `📌 *${cmd.toUpperCase()}*\n\n${data.caption || ''}` }, { quoted: m })
+        if (data.type === 'video' && buffer) await conn.sendMessage(chatId, { video: buffer, caption: `📌 *${cmd.toUpperCase()}*\n\n${data.caption || ''}` }, { quoted: m })
         if (data.type === 'audio' && buffer) await conn.sendMessage(chatId, { audio: buffer, mimetype: 'audio/ogg; codecs=opus', ptt: true }, { quoted: m })
         if (data.type === 'sticker' && buffer) await conn.sendMessage(chatId, { sticker: buffer }, { quoted: m })
         if (data.type === 'document' && buffer) await conn.sendMessage(chatId, { document: buffer, fileName: data.fileName, caption: data.caption }, { quoted: m })
 
     } catch (e) {
-        console.log('[SET VIP BEFORE ERROR]', e)
+        console.log('[SET BEFORE ERROR]', e)
     }
 }
 
