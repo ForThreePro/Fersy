@@ -1,26 +1,42 @@
 let handler = async (m, { conn }) => {
+    const react = async (text) => {
+        try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+    }
+
     try {
-        await m.react('🔗')
+        await react('🔗')
         let link = await conn.groupInviteCode(m.chat)
+        let groupMetadata = await conn.groupMetadata(m.chat)
 
-        let texto = `🐱 𓆩 𝗟𝗜𝗡𝗞 𝗗𝗘𝗟 𝗚𝗥𝗨𝗣𝗢 𓆪 🐱
+        let texto = `𐔌 ꒱ ***LINK DEL GRUPO*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— \`\`INVITACION\`\` —˙𖦹.🍕꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`INVITACIÓN\`\` —˙𖦹.🔗꒷
 
-──🍃 *𝗟𝗜𝗡𝗞* ╏ 💚
+── *📊 INFORMACIÓN* ╏
+👥 ➛ Grupo: *${groupMetadata.subject}*
+
+── *🔗 ENLACE* ╏
 https://chat.whatsapp.com/${link}
 
-──🍃 *𝗡𝗢𝗧𝗔* ╏ 🌿
-🍕 *Solo admins pueden resetear el link*
-🍕 *No lo compartas con desconocidos*
+── *📝 NOTAS* ╏
+🔒 ➛ Solo admins pueden resetear el link
+⚠️ ➛ No lo compartas con desconocidos
 
-━━━━━━━━━━━
-*Powered by*: ***Garfield Bot Oficial*** 🍕`
+━━━━━━━━━━━`
 
-        await conn.reply(m.chat, texto, m)
+        await conn.sendMessage(m.chat, { text: texto }, { quoted: m })
     } catch (e) {
-        await m.react('❌')
-        m.reply(`❌ *Error:* No pude obtener el link. ¿Soy admin?`)
+        await react('❌')
+        let error = `𐔌 ꒱ ***LINK DEL GRUPO*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
+
+── *📝 AVISO* ╏
+❌ ➛ No pude obtener el link
+🔒 ➛ ¿Soy admin del grupo?
+
+━━━━━━━━━━━`
+        conn.sendMessage(m.chat, { text: error }, { quoted: m })
     }
 }
 
