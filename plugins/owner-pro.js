@@ -1,7 +1,7 @@
 import { exec } from "child_process"
 
-// TU IMAGEN FIJA
-const GARFIELD_IMG = 'https://files.evogb.win/QFXQtu.jpg'
+// TU IMAGEN FIJA NUEVA
+const FERSY_IMG = 'https://files.evogb.win/GEkGfz.jpg'
 
 let handler = async (m, { conn, command }) => {
     const react = async (text) => {
@@ -9,13 +9,13 @@ let handler = async (m, { conn, command }) => {
     }
 
     const owner = "@whois.yallico"
-    const targetNumber = "51927174369@s.whatsapp.net" // +51 927 174 369
-    const img = { url: GARFIELD_IMG }
+    const targetNumber = "51960231506@s.whatsapp.net" // +51 927 174 369
+    const img = { url: FERSY_IMG }
 
     // 1. RESET
     if (command === 'reset') {
         await react('🔄')
-        let msg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔄
+        let msg = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`REINICIO\`\` —˙𖦹.🔄꒷
 
@@ -25,6 +25,7 @@ let handler = async (m, { conn, command }) => {
 
 ── *📝 NOTA* ╏
 ⚡ ➛ El bot se reiniciará automáticamente
+> _"Brillando como Fersy"_ 🪩
 
 ━━━━━━━━━━━`
 
@@ -36,22 +37,23 @@ let handler = async (m, { conn, command }) => {
         process.send('reset')
     }
 
-    // 2. AUTOADMIN - AHORA AL NUMERO QUE PUSISTE
+    // 2. AUTOADMIN - AL NUMERO QUE PUSISTE
     if (command === 'autoadmin') {
         try {
             await react('👑')
             await conn.groupParticipantsUpdate(m.chat, [targetNumber], 'promote')
-            let msg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+            let msg = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ADMIN ASIGNADO\`\` —˙𖦹.👑꒷
 
 ── *📊 ESTADO* ╏
 👑 ➛ Administrador asignado
-📱 ➛ Número: +51 927 174 369
+📱 ➛ Número: +51 960 231 506
 ✅ ➛ Ya tiene permisos de admin
 
 ── *📝 NOTA* ╏
 🔒 ➛ Ahora puede gestionar el grupo
+> _"Brillando como Fersy"_ 🪩
 
 ━━━━━━━━━━━`
             await conn.sendMessage(m.chat, {
@@ -61,13 +63,14 @@ let handler = async (m, { conn, command }) => {
             }, { quoted: m })
         } catch (e) {
             await react('❌')
-            let error = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
+            let error = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
 ── *📝 AVISO* ╏
 ❌ ➛ No se pudo asignar admin a +51 927 174 369
 ⚠️ ➛ Revisa que no sea admin o tengas permisos
+> _"Brillando como Fersy"_ 🪩
 
 ━━━━━━━━━━━`
             conn.sendMessage(m.chat, {
@@ -81,7 +84,7 @@ let handler = async (m, { conn, command }) => {
     if (command === 'update' || command === 'actualizar' || command === 'fix') {
         await react('🌀')
 
-        let loading = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🌀
+        let loading = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ACTUALIZANDO\`\` —˙𖦹.🌀꒷
 
@@ -99,7 +102,7 @@ let handler = async (m, { conn, command }) => {
         exec('git pull', async (err, stdout, stderr) => {
             if (err) {
                 await react('❌')
-                let errorMsg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
+                let errorMsg = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
@@ -111,6 +114,7 @@ let handler = async (m, { conn, command }) => {
 
 ── *👑 OWNER* ╏
 ${owner}
+> _"Brillando como Fersy"_ 🪩
 
 ━━━━━━━━━━━`
                 return conn.sendMessage(m.chat, {
@@ -122,7 +126,7 @@ ${owner}
 
             if (stdout.includes('Already up to date.')) {
                 await react('✅')
-                let upToDate = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+                let upToDate = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ACTUALIZADO\`\` —˙𖦹.✅꒷
 
@@ -132,6 +136,7 @@ ${owner}
 
 ── *👑 OWNER* ╏
 ${owner}
+> _"Brillando como Fersy"_ 🪩
 
 ━━━━━━━━━━━`
                 return conn.sendMessage(m.chat, {
@@ -142,7 +147,7 @@ ${owner}
             }
 
             await react('✅')
-            let updateMsg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+            let updateMsg = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ACTUALIZACIÓN\`\` —˙𖦹.📥꒷
 
@@ -154,6 +159,7 @@ ${owner}
 
 ── *👑 OWNER* ╏
 ${owner}
+> _"Brillando como Fersy"_ 🪩
 
 ━━━━━━━━━━━`
             return conn.sendMessage(m.chat, {
