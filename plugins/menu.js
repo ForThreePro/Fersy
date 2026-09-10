@@ -1,15 +1,20 @@
 import os from 'os'
 import { performance } from 'perf_hooks'
 
-// IMAGEN FIJA GARFIELD
+// TU IMAGEN FIJA
 const GARFIELD_IMG = 'https://files.evogb.win/QFXQtu.jpg'
 
 let handler = async (m, { conn, usedPrefix }) => {
-  let loadMsg = await conn.reply(m.chat, `🐱 𓆩 𝗖𝗔𝗥𝗚𝗔𝗡𝗗𝗢 𝗠𝗘𝗡𝗨 𓆪 🐱\n\n⏳ *Espere un momento...*\n> Cargando sistema Garfield...`, m)
+  const react = async (text) => {
+    try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+  }
+
+  await react('⏳')
+  let loadMsg = await conn.reply(m.chat, `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⏳\n\n── *📊 ESTADO* ╏\n⏳ ➛ Cargando menú...`, m)
 
   let taguser = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
 
-  // FOTO FIJA
+  // TU FOTO FIJA
   let img = { url: GARFIELD_IMG }
 
   let uptime = process.uptime() * 1000
@@ -36,57 +41,59 @@ let handler = async (m, { conn, usedPrefix }) => {
   const icons = {
     search: '🔍', download: '⬇️', game: '🎮', rpg: '⚔️', config: '⚙️',
     group: '👥', owner: '👑', info: 'ℹ️', fun: '😂', anime: '🌸',
-    sticker: '🧩', tools: '🛠️', nsfw: '🔞', audio: '🎵', prem: '🍃', otros: '📁'
+    sticker: '🧩', tools: '🛠️', nsfw: '🔞', audio: '🎵', prem: '💎', otros: '📁'
   }
 
   const categoryNames = {
     search: 'BUSQUEDA', download: 'DESCARGAS', game: 'JUEGOS', rpg: 'RPG',
     config: 'CONFIG', group: 'GRUPOS', owner: 'OWNER', info: 'INFO',
     fun: 'DIVERSION', anime: 'ANIME', sticker: 'STICKERS', tools: 'HERRAMIENTAS',
-    nsfw: 'NSFW', audio: 'AUDIO', prem: 'PREM', otros: 'OTROS'
+    nsfw: 'NSFW', audio: 'AUDIO', prem: 'PREMIUM', otros: 'OTROS'
   }
 
-  let menu = `🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n`
-  menu += `⤷ ┇ 𝐕𝐄𝐑𝐒𝐈𝐎𝐍 ﹒ 3.0 PREM ：✿ 。\n`
-  menu += `꒰ ◞⁺⊹ ．estado: *EN LINEA* • ${_uptime}\n\n`
-  menu += ` ꒱ ׁ. ᘏ 𝗨𝗦𝗨𝗔𝗥𝗜𝗢 𝗔𝗖𝗧𝗜𝗩𝗢 ׅ 𝆬 ָ֢ ෆ\n`
-  menu += `🐱 ࣪ ꕀ @${taguser.split('@')[0]}. ˚. ᵎᵎ\n`
-  menu += `> *Bienvenido al sistema Garfield*\n\n`
-  menu += `──🍃 *INFORMACION DEL BOT* ╏ 💚\n`
-  menu += `*Usuarios*: ${totalreg} | *Comandos*: ${totalcmd}\n`
-  menu += `*Owner*: ${ownerTag}\n`
-  menu += `*Numero*: +${numBot}\n\n`
-  menu += ` ׅ 🍃 : 𝖲𝖨𝖲𝖳𝖤𝖬𝖠 ﹙ 🌿 ﹚\n`
-  menu += `> ﹒ RAM: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}mb / ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}gb\n`
-  menu += ` ᶻz　*${new Date().toLocaleDateString('es', {weekday: 'long', timeZone: 'America/Lima'})}* ─ ${new Date().toLocaleDateString('es', {timeZone: 'America/Lima'})} ─ ${new Date().toLocaleTimeString('es', {timeZone: 'America/Lima'})}　⋌\n\n`
-  menu += `© ❛ *ping*. ${ping}ms\n`
-  menu += `名 ─ *modo:* public﹔\n\n`
-  menu += `> ❍ 𝖴𝗌𝖺. 𝖺𝗇𝗍𝖾𝗌 𝖽𝖾 𝖼𝖺𝖽𝖺 𝖼𝗈𝗆𝖺𝗇𝖽𝗈 𝗉𝖺𝗋𝖺 𝖺𝖼𝗍𝗂𝗏𝖺𝗋𝗅𝗈\n`
+  let menu = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+
+.⃟𖥔 ݁. 𖦹˙— \`\`MENÚ PRINCIPAL\`\` —˙𖦹.🍕꒷
+
+── *📊 INFORMACIÓN* ╏
+👤 ➛ Usuario: @${taguser.split('@')[0]}
+👑 ➛ Owner: ${ownerTag}
+📱 ➛ Número: +${numBot}
+⚡ ➛ Ping: ${ping}ms
+⏱️ ➛ Uptime: ${_uptime}
+👥 ➛ Usuarios: ${totalreg}
+📜 ➛ Comandos: ${totalcmd}
+
+── *💻 SISTEMA* ╏
+💾 ➛ RAM: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}mb / ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}gb
+📅 ➛ ${new Date().toLocaleDateString('es', {weekday: 'long', timeZone: 'America/Lima'})}
+🕐 ➛ ${new Date().toLocaleTimeString('es', {timeZone: 'America/Lima'})}
+
+── *📖 COMANDOS* ╏
+`
 
   for (let category in groups) {
     let icon = icons[category] || '📁'
     let catName = categoryNames[category] || category.toUpperCase()
-    menu += `.⃟𖥔 ݁. 𖦹˙— \`\`𝐏𝐫𝐞𝐦\`\` —˙𖦹.${icon}꒷\n`
+    menu += `\n.⃟𖥔 ݁. 𖦹˙— \`\`${catName}\`\` —˙𖦹.${icon}꒷\n`
     for (let cmd of groups[category]) {
-      menu += `${icon} ➛.${cmd}\n`
+      menu += `${icon} ➛ ${usedPrefix}${cmd}\n`
     }
-    menu += ` ㅤ└──.✦ ── ⊰ ̟!!.✦. ˙\n\n`
   }
 
-  menu += `━━━━━━━━━━━\n`
-  menu += `🐱 ***Garfield Bot Oficial*** 🐱\n`
-  menu += `*Owner*: ${ownerTag}\n`
-  menu += `*Contacto*: +${numBot}\n`
-  menu += `*Version*: 3.0 PREM\n`
-  menu += `*Power*: Nivel Garfield\n`
-  menu += `> "Odio los lunes... pero amo la lasaña" 🍕\n`
-  menu += `━━━━━━━━━━━`
+  menu += `
+── *📝 NOTA* ╏
+💡 ➛ Usa ${usedPrefix} antes de cada comando
+
+━━━━━━━━━━━`
 
   await conn.sendMessage(m.chat, {
     image: img,
     caption: menu,
     mentions: [taguser, owner]
   }, { quoted: m })
+
+  await react('✅')
 }
 
 handler.help = ['menu', 'help', 'menú']
