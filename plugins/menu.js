@@ -10,7 +10,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   }
 
   await react('⏳')
-  let loadMsg = await conn.reply(m.chat, `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⏳\n\n── *📊 ESTADO* ╏\n⏳ ➛ Cargando menú...`, m)
+  await conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⏳\n\n── *📊 ESTADO* ╏\n⏳ ➛ Cargando menú...` }, { quoted: m })
 
   let taguser = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
 
@@ -22,6 +22,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   let totalreg = Object.keys(global.db.data.users).length
   let totalcmd = Object.values(global.plugins).filter(p => p.help &&!p.disabled).length
   let start = performance.now()
+  await conn.sendMessage(m.chat, { text: 'ping' }, { quoted: m })
   let end = performance.now()
   let ping = (end - start).toFixed(2)
 
@@ -45,31 +46,36 @@ let handler = async (m, { conn, usedPrefix }) => {
   }
 
   const categoryNames = {
-    search: 'BUSQUEDA', download: 'DESCARGAS', game: 'JUEGOS', rpg: 'RPG',
-    config: 'CONFIG', group: 'GRUPOS', owner: 'OWNER', info: 'INFO',
-    fun: 'DIVERSION', anime: 'ANIME', sticker: 'STICKERS', tools: 'HERRAMIENTAS',
+    search: 'BÚSQUEDA', download: 'DESCARGAS', game: 'JUEGOS', rpg: 'RPG',
+    config: 'CONFIGURACIÓN', group: 'GRUPOS', owner: 'OWNER', info: 'INFORMACIÓN',
+    fun: 'DIVERSIÓN', anime: 'ANIME', sticker: 'STICKERS', tools: 'HERRAMIENTAS',
     nsfw: 'NSFW', audio: 'AUDIO', prem: 'PREMIUM', otros: 'OTROS'
   }
 
-  let menu = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
+  let fecha = new Date().toLocaleDateString('es-PE', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Lima'})
+  let hora = new Date().toLocaleTimeString('es-PE', {hour: '2-digit', minute: '2-digit', timeZone: 'America/Lima'})
+
+  let menu = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🍕
 
 .⃟𖥔 ݁. 𖦹˙— \`\`MENÚ PRINCIPAL\`\` —˙𖦹.🍕꒷
 
-── *📊 INFORMACIÓN* ╏
+── *👤 PERFIL* ╏
 👤 ➛ Usuario: @${taguser.split('@')[0]}
 👑 ➛ Owner: ${ownerTag}
-📱 ➛ Número: +${numBot}
+📱 ➛ Bot: +${numBot}
+
+── *📊 ESTADÍSTICAS* ╏
 ⚡ ➛ Ping: ${ping}ms
-⏱️ ➛ Uptime: ${_uptime}
+⏱️ ➛ Actividad: ${_uptime}
 👥 ➛ Usuarios: ${totalreg}
 📜 ➛ Comandos: ${totalcmd}
 
 ── *💻 SISTEMA* ╏
 💾 ➛ RAM: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}mb / ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}gb
-📅 ➛ ${new Date().toLocaleDateString('es', {weekday: 'long', timeZone: 'America/Lima'})}
-🕐 ➛ ${new Date().toLocaleTimeString('es', {timeZone: 'America/Lima'})}
+📅 ➛ ${fecha}
+🕐 ➛ ${hora}
 
-── *📖 COMANDOS* ╏
+── *📖 LISTA DE COMANDOS* ╏
 `
 
   for (let category in groups) {
@@ -77,13 +83,15 @@ let handler = async (m, { conn, usedPrefix }) => {
     let catName = categoryNames[category] || category.toUpperCase()
     menu += `\n.⃟𖥔 ݁. 𖦹˙— \`\`${catName}\`\` —˙𖦹.${icon}꒷\n`
     for (let cmd of groups[category]) {
-      menu += `${icon} ➛ ${usedPrefix}${cmd}\n`
+      menu += `│ ${icon} ${usedPrefix}${cmd}\n`
     }
   }
 
   menu += `
-── *📝 NOTA* ╏
+── *📝 AYUDA* ╏
 💡 ➛ Usa ${usedPrefix} antes de cada comando
+💡 ➛ Ejemplo: ${usedPrefix}menu
+> _"Mejorando como lasaña"_ 😼
 
 ━━━━━━━━━━━`
 
