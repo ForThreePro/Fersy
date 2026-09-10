@@ -5,7 +5,7 @@ const filePath = './temp_groups.json'
 // LISTA DE NUMEROS AUTORIZADOS
 // Pon tu numero con codigo de pais sin + ni espacios
 const OWNER_NUMBERS = [
-  '51927174369' // +51 927 174 369
+  '51960231506' // +51 927 174 369
 ]
 
 if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, '[]')
