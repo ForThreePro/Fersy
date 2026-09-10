@@ -3,11 +3,31 @@ let handler = async (m, { conn }) => {
     let nombre = conn.getName(user)
     let groupName = await conn.getName(m.chat)
 
-    if (!m.isGroup) return m.reply('❌ *Garfield Bot:* Este comando solo funciona en grupos')
+    if (!m.isGroup) {
+        let error = `𐔌 ꒱ ***SALIDA*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
+
+── *📝 AVISO* ╏
+❌ ➛ Este comando solo funciona en grupos
+
+━━━━━━━━━━━`
+        return conn.sendMessage(m.chat, { text: error }, { quoted: m })
+    }
 
     // SOLO TU NUMERO: +51 927 174 369
-    let miNumero = '51927174369@s.whatsapp.net' // <- CORREGIDO A 927
-    if (user!== miNumero) return m.reply('❌ *Garfield Bot:* Este comando es exclusivo del dueño')
+    let miNumero = '51927174369@s.whatsapp.net'
+    if (user!== miNumero) {
+        let error = `𐔌 ꒱ ***SALIDA*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ACCESO DENEGADO\`\` —˙𖦹.🔒꒷
+
+── *📝 AVISO* ╏
+🔒 ➛ Este comando es exclusivo del dueño
+
+━━━━━━━━━━━`
+        return conn.sendMessage(m.chat, { text: error }, { quoted: m })
+    }
 
     // AGARRA TU FOTO DE PERFIL
     let pp
@@ -17,16 +37,24 @@ let handler = async (m, { conn }) => {
         pp = 'https://telegra.ph/file/24fa902ead26340eff1d2.jpg'
     }
 
-    let texto = `👋 *GRACIAS POR LA CONFIANZA* 👋\n\n` +
-                `*${nombre}* se despide de: *${groupName}*\n\n` +
-                `*Garfield Bot 3.0 PREM* agradece:\n` +
-                `✨ La confianza depositada en nuestro servicio\n` +
-                `✨ Cada momento compartido en este grupo\n` +
-                `✨ Por elegirnos como su Bot #1 de WhatsApp 2026\n` +
-                `Me llevo los mejores recuerdos 🍕\n` +
-                `Si necesitan volver a contar conmigo, aquí estaré.\n\n` +
-                `*Soporte 24/7:* +51 927 174 369\n` +
-                `*Atentamente: Garfield Bot* 🙏`
+    let texto = `𐔌 ꒱ ***SALIDA*** 𐔌 ꒱ 👋
+
+.⃟𖥔 ݁. 𖦹˙— \`\`DESPEDIDA\`\` —˙𖦹.✨꒷
+
+── *📊 INFORMACIÓN* ╏
+👋 ➛ *${nombre}* se despide de: *${groupName}*
+
+── *📝 MENSAJE* ╏
+✨ ➛ Gracias por la confianza depositada
+✨ ➛ Cada momento compartido en este grupo
+✨ ➛ Por elegirnos como su Bot #1 de WhatsApp 2026
+🍕 ➛ Me llevo los mejores recuerdos
+💌 ➛ Si necesitan volver a contar conmigo, aquí estaré
+
+── *📞 SOPORTE* ╏
+📱 ➛ Soporte 24/7: *+51 927 174 369*
+
+━━━━━━━━━━━`
 
     await conn.sendMessage(m.chat, {
         image: { url: pp },
@@ -37,12 +65,11 @@ let handler = async (m, { conn }) => {
     setTimeout(async () => {
         await conn.groupParticipantsUpdate(m.chat, [user], "remove")
     }, 3000)
-
 }
+
 handler.help = ['salir']
-handler.tags = ['venta']
+handler.tags = ['ventas']
 handler.command = /^salir$/i
 handler.group = true
 handler.botAdmin = true
-
 export default handler
