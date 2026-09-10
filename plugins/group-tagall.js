@@ -7,7 +7,7 @@ const handler = async (m, { isOwner, isAdmin, conn, participants, args }) => {
     if (!(isAdmin || isOwner)) {
       await react('❌')
       return conn.sendMessage(m.chat, {
-        text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ Solo admins pueden usar este comando\n━━━━━━━━━━━`
+        text: `💗 ***FERSY BOT*** 🎀\n\n── *📝 AVISO* ╏\n❌ ➛ Solo admins pueden usar este comando\n━━━━━━━━━━━`
       }, { quoted: m })
     }
 
@@ -59,10 +59,10 @@ const handler = async (m, { isOwner, isAdmin, conn, participants, args }) => {
     // Ordenar las banderas según el orden definido
     const orderedFlags = countryFlags.map(c => c.bandera).concat(['🚩'])
 
-    // TU IMAGEN
-    const catalogoImg = { url: 'https://files.evogb.win/QFXQtu.jpg' }
+    // TU IMAGEN NUEVA FERSY
+    const catalogoImg = { url: 'https://files.evogb.win/GEkGfz.jpg' }
 
-    let messageText = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 📢
+    let messageText = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`INVOCACIÓN GENERAL\`\` —˙𖦹.📢꒷
 
@@ -87,6 +87,7 @@ const handler = async (m, { isOwner, isAdmin, conn, participants, args }) => {
     messageText += `
 ── *📝 NOTA* ╏
 📢 ➛ Todos fueron mencionados
+> _"Brillando como Fersy"_ 🪩
 
 ━━━━━━━━━━━`
 
@@ -101,7 +102,7 @@ const handler = async (m, { isOwner, isAdmin, conn, participants, args }) => {
   } catch (error) {
     console.error("[ERROR EN TODOS]:", error)
     await react('❌')
-    let errorMsg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
+    let errorMsg = `💗 ***FERSY BOT*** 🎀
 
 .⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
