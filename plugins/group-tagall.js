@@ -1,8 +1,14 @@
 const handler = async (m, { isOwner, isAdmin, conn, participants, args }) => {
+  const react = async (text) => {
+    try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+  }
+
   try {
     if (!(isAdmin || isOwner)) {
-      global.dfail('admin', m, conn);
-      return;
+      await react('❌')
+      return conn.sendMessage(m.chat, {
+        text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n❌ ➛ Solo admins pueden usar este comando\n━━━━━━━━━━━`
+      }, { quoted: m })
     }
 
     const customMessage = args.join(' ') || '📢 INVOCACIÓN GENERAL'
@@ -27,7 +33,7 @@ const handler = async (m, { isOwner, isAdmin, conn, participants, args }) => {
       { prefijo: '91', bandera: '🇮🇳' }, { prefijo: '61', bandera: '🇦🇺' },
       { prefijo: '64', bandera: '🇳🇿' }, { prefijo: '1', bandera: '🇺🇸' },
       { prefijo: '7', bandera: '🇷🇺' }, { prefijo: '63', bandera: '🇵🇭' },
-      { prefijo: '95', bandera: '🇲🇲' }
+      { prefijo: '95', bandera: '🇲' }
     ]
 
     const getCountryFlag = (mem) => {
@@ -53,16 +59,19 @@ const handler = async (m, { isOwner, isAdmin, conn, participants, args }) => {
     // Ordenar las banderas según el orden definido
     const orderedFlags = countryFlags.map(c => c.bandera).concat(['🚩'])
 
-    // Texto con diseño GARFIELD BOT OFICIAL
-    let messageText = `🐱 𓆩 𝗜𝗡𝗩𝗢𝗖𝗔𝗖𝗜𝗢𝗡 𝗚𝗘𝗡𝗘𝗥𝗔𝗟 𓆪 🐱
+    // TU IMAGEN
+    const catalogoImg = { url: 'https://files.evogb.win/QFXQtu.jpg' }
 
-.⃟𖥔 ݁. 𖦹˙— \`\` ${groupName} \`\` —˙𖦹.🍕꒷
+    let messageText = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 📢
 
-──🍃 *𝗜𝗡𝗙𝗢* ╏ 💚
-💚 ➛ *Integrantes:* ${participants.length}
-💚 ➛ *Mensaje:* ${customMessage}
+.⃟𖥔 ݁. 𖦹˙— \`\`INVOCACIÓN GENERAL\`\` —˙𖦹.📢꒷
 
-──🍃 *𝗠𝗜𝗘𝗠𝗕𝗥𝗢𝗦 𝗣𝗢𝗥 𝗣𝗔𝗜𝗦* ╏ 🌿
+── *📊 INFORMACIÓN* ╏
+👥 ➛ Grupo: *${groupName}*
+👤 ➛ Integrantes: *${participants.length}*
+💬 ➛ Mensaje: *${customMessage}*
+
+── *🌍 MIEMBROS POR PAÍS* ╏
 `
 
     for (const flag of orderedFlags) {
@@ -76,25 +85,31 @@ const handler = async (m, { isOwner, isAdmin, conn, participants, args }) => {
     }
 
     messageText += `
-━━━━━━━━━━━
-*Powered by*: ***Garfield Bot Oficial*** 🍕
-*Owner*: @whois.yallico`
+── *📝 NOTA* ╏
+📢 ➛ Todos fueron mencionados
 
-    // IMAGEN FIJA GARFIELD
-    const imageUrl = { url: 'https://files.evogb.win/QFXQtu.jpg' } // <-- AQUI TU LINK
+━━━━━━━━━━━`
 
     await conn.sendMessage(m.chat, {
-      image: imageUrl,
+      image: catalogoImg,
       caption: messageText,
       mentions: participants.map(a => a.jid || a.id)
     }, { quoted: m })
 
-    await m.react('📢')
+    await react('📢')
 
   } catch (error) {
     console.error("[ERROR EN TODOS]:", error)
-    await m.react('❌')
-    conn.reply(m.chat, `❌ Ocurrió un error al ejecutar el comando.`, m)
+    await react('❌')
+    let errorMsg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
+
+── *📝 AVISO* ╏
+❌ ➛ Ocurrió un error al ejecutar el comando
+
+━━━━━━━━━━━`
+    conn.sendMessage(m.chat, { text: errorMsg }, { quoted: m })
   }
 }
 
