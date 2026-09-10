@@ -3,46 +3,102 @@ import axios from 'axios'
 let handler = async (m, { conn, text }) => {
     let user = `@${m.sender.split('@')[0]}`
     let groupName = m.isGroup? (await conn.groupMetadata(m.chat)).subject : 'Privado'
+    const APIKEY = 'proyectsV2'
 
-    if (!text) return m.reply(`🐱 𓆩 ***𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟*** 𓆪 🐱\n\n✨ *¿Qué deseas buscar en YouTube?*\n📌 *Ejemplo:* ${m.prefix}ytsearch king nasir`)
+    const react = async (text) => {
+        try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+    }
 
-    await m.react('🔍')
+    if (!text) {
+        await react('❌')
+        let error = `𐔌 ꒱ ***YOUTUBE SEARCH*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
+
+── *📝 AVISO* ╏
+❌ ➛ ¿Qué deseas buscar en YouTube?
+
+── *💡 EJEMPLO* ╏
+➛ ytsearch Bad Bunny
+
+━━━━━━━━━━━`
+        return conn.sendMessage(m.chat, { text: error }, { quoted: m })
+    }
+
+    await react('🔍')
+    await m.reply(`𐔌 ꒱ ***YOUTUBE SEARCH*** 𐔌 ꒱ ⏳
+
+.⃟𖥔 ݁. 𖦹˙— \`\`BUSCANDO\`\` —˙𖦹.📺꒷
+
+── *📊 ESTADO* ╏
+🔍 ➛ Buscando: *${text}*
+⏳ ➛ Conectando a StellarWA...
+
+━━━━━━━━━━━`)
+
     try {
-        let { data } = await axios.get(`https://api.delirius.store/search/ytsearch?q=${encodeURIComponent(text)}`)
-        if (!data.data || data.data.length === 0) {
-            await m.react('❌')
-            return m.reply(`🍕 *No se encontraron resultados para:* ${text}`)
+        let { data } = await axios.get(`https://api.stellarwa.xyz/search/yt?query=${encodeURIComponent(text)}&key=${APIKEY}`)
+        
+        if (!data.status ||!data.result || data.result.length === 0) {
+            await react('❌')
+            let vacio = `𐔌 ꒱ ***YOUTUBE SEARCH*** 𐔌 ꒱ 📭
+
+.⃟𖥔 ݁. 𖦹˙— \`\`SIN RESULTADOS\`\` —˙𖦹.❌꒷
+
+── *📝 AVISO* ╏
+📭 ➛ No se encontraron resultados para: *${text}*
+
+━━━━━━━━━━━`
+            return conn.sendMessage(m.chat, { text: vacio }, { quoted: m })
         }
 
-        let res = data.data.slice(0, 5).map((v, i) => 
-`*${i+1}.* *${v.title}*
-⏳ *Duración:* ${v.duration} | 👁️ *Vistas:* ${v.views}
-👤 *Canal:* ${v.author}
-🔗 ${v.url}`).join('\n\n')
+        let res = data.result.slice(0, 5).map((v, i) => 
+`── *${i+1}* ╏
+📺 ➛ *${v.title}*
+⏱️ ➛ Duración: *${v.duration}*
+👁️ ➛ Vistas: *${v.views}*
+👤 ➛ Canal: *${v.author}*
+🔗 ➛ ${v.url}`).join('\n\n')
 
-        let caption = `🐱 𓆩 𝗬𝗢𝗨𝗧𝗨𝗕𝗘 𝗦𝗘𝗔𝗥𝗖𝗛 𓆪 🐱
+        let caption = `𐔌 ꒱ ***YOUTUBE SEARCH*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— \`\`TOP 5 RESULTADOS\`\` —˙𖦹.🍕꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`TOP 5 RESULTADOS\`\` —˙𖦹.📺꒷
+
+── *📊 BÚSQUEDA* ╏
+🔎 ➛ ${text}
 
 ${res}
 
-👤 *Solicitado por:* ${user}
-🏷 *Grupo:* ${groupName}
-
 ━━━━━━━━━━━
-*Powered by*: ***Garfield Bot Oficial*** 🍕
-*Tip:* Usa .ytmp4 o .ytmp3 con el link`
+── *📋 INFORMACIÓN* ╏
+👤 ➛ Solicitado por: ${user}
+👥 ➛ Grupo: *${groupName}*
 
-        m.reply(caption, m.chat, { mentions: [m.sender] })
-        await m.react('✅')
-    } catch { 
-        await m.react('❌')
-        m.reply(`❌ *Error al buscar en YouTube*`)
+── *💡 TIP* ╏
+➛ Usa: ytmp4 + link
+➛ Usa: ytmp3 + link
+
+━━━━━━━━━━━`
+
+        await conn.sendMessage(m.chat, { text: caption, mentions: [m.sender] }, { quoted: m })
+        await react('✅')
+    } catch (e) { 
+        console.error(e)
+        await react('❌')
+        let error = `𐔌 ꒱ ***YOUTUBE SEARCH*** 𐔌 ꒱ ⚠️
+
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
+
+── *📝 AVISO* ╏
+❌ ➛ Error al conectar con StellarWA
+🔧 ➛ Intenta más tarde
+
+━━━━━━━━━━━`
+        conn.sendMessage(m.chat, { text: error }, { quoted: m })
     }
 }
 
 handler.help = ['yts <busqueda>']
-handler.tags = ['search']
+handler.tags = ['búsqueda']
 handler.command = /^(yts|ytsearch)$/i
-
 export default handler
