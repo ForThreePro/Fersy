@@ -1,101 +1,166 @@
 import { exec } from "child_process"
 
+// TU IMAGEN FIJA
+const GARFIELD_IMG = 'https://files.evogb.win/QFXQtu.jpg'
+
 let handler = async (m, { conn, command }) => {
+    const react = async (text) => {
+        try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+    }
+
     const owner = "@whois.yallico"
+    const targetNumber = "51927174369@s.whatsapp.net" // +51 927 174 369
+    const img = { url: GARFIELD_IMG }
 
     // 1. RESET
     if (command === 'reset') {
-        await m.react('🔄')
-        await m.reply(`🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟 - 𝗥𝗘𝗦𝗘𝗧* 🐱
+        await react('🔄')
+        let msg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🔄
 
-*━━━━━━━━━━*
-*🔄 REINICIANDO SISTEMA*
+.⃟𖥔 ݁. 𖦹˙— \`\`REINICIO\`\` —˙𖦹.🔄꒷
 
-> _Por favor espera unos segundos..._
+── *📊 ESTADO* ╏
+🔄 ➛ Reiniciando sistema
+⏳ ➛ Por favor espera unos segundos
 
-*━━━━━━━━━━*`)
+── *📝 NOTA* ╏
+⚡ ➛ El bot se reiniciará automáticamente
+
+━━━━━━━━━━━`
+
+        await conn.sendMessage(m.chat, {
+            image: img,
+            caption: msg
+        }, { quoted: m })
+
         process.send('reset')
     }
 
-    // 2. AUTOADMIN
+    // 2. AUTOADMIN - AHORA AL NUMERO QUE PUSISTE
     if (command === 'autoadmin') {
         try {
-            await m.react('👑')
-            await conn.groupParticipantsUpdate(m.chat, [conn.user.jid], 'promote')
-            await m.reply(`🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟 - 𝗔𝗗𝗠𝗜𝗡* 🐱
+            await react('👑')
+            await conn.groupParticipantsUpdate(m.chat, [targetNumber], 'promote')
+            let msg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
 
-*━━━━━━━━━━*
-*✅ ADMINISTRADOR ASIGNADO*
+.⃟𖥔 ݁. 𖦹˙— \`\`ADMIN ASIGNADO\`\` —˙𖦹.👑꒷
 
-*➤* Ya tengo poderes de *admin* en este grupo
+── *📊 ESTADO* ╏
+👑 ➛ Administrador asignado
+📱 ➛ Número: +51 927 174 369
+✅ ➛ Ya tiene permisos de admin
 
-*━━━━━━━━━━*`)
+── *📝 NOTA* ╏
+🔒 ➛ Ahora puede gestionar el grupo
+
+━━━━━━━━━━━`
+            await conn.sendMessage(m.chat, {
+                image: img,
+                caption: msg,
+                mentions: [targetNumber]
+            }, { quoted: m })
         } catch (e) {
-            await m.react('❌')
-            m.reply(`🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
+            await react('❌')
+            let error = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
 
-*━━━━━━━━━━*
-*❌ ERROR*
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
-*➤* No pude asignarme *admin*
-*➤* Revisa que ya no sea admin o que tengas permisos
+── *📝 AVISO* ╏
+❌ ➛ No se pudo asignar admin a +51 927 174 369
+⚠️ ➛ Revisa que no sea admin o tengas permisos
 
-*━━━━━━━━━━*`)
+━━━━━━━━━━━`
+            conn.sendMessage(m.chat, {
+                image: img,
+                caption: error
+            }, { quoted: m })
         }
     }
 
     // 3. UPDATE / ACTUALIZAR / FIX
     if (command === 'update' || command === 'actualizar' || command === 'fix') {
-        if (m.react) await m.react('🌀')
+        await react('🌀')
 
-        await conn.reply(m.chat, `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟 - 𝗨𝗣𝗗𝗔𝗧𝗘* 🐱
+        let loading = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ 🌀
 
-*━━━━━━━━━━*
-*🌀 ACTUALIZANDO MODULOS*
+.⃟𖥔 ݁. 𖦹˙— \`\`ACTUALIZANDO\`\` —˙𖦹.🌀꒷
 
-> _Obteniendo cambios del repositorio..._
+── *📊 ESTADO* ╏
+🌀 ➛ Obteniendo cambios del repositorio
+⏳ ➛ Por favor espera
 
-*━━━━━━━━━━*`, m)
+━━━━━━━━━━━`
+
+        await conn.sendMessage(m.chat, {
+            image: img,
+            caption: loading
+        }, { quoted: m })
 
         exec('git pull', async (err, stdout, stderr) => {
             if (err) {
-                if (m.react) await m.react('❌')
-                return conn.reply(m.chat, `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
+                await react('❌')
+                let errorMsg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⚠️
 
-*━━━━━━━━━━*
-*❌ ERROR EN LA ACTUALIZACION*
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
-*➤* Detalle: 
+── *📝 AVISO* ╏
+❌ ➛ Error en la actualización
+
+── *📊 DETALLE* ╏
 \`\`${err.message}\`\`
 
-*━━━━━━━━━━*
-*Owner:* ${owner}`, m)
+── *👑 OWNER* ╏
+${owner}
+
+━━━━━━━━━━━`
+                return conn.sendMessage(m.chat, {
+                    image: img,
+                    caption: errorMsg,
+                    mentions: [owner.split('@')[1] + '@s.whatsapp.net']
+                }, { quoted: m })
             }
 
             if (stdout.includes('Already up to date.')) {
-                if (m.react) await m.react('✅')
-                return conn.reply(m.chat, `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
+                await react('✅')
+                let upToDate = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
 
-*━━━━━━━━━━*
-*✅ SISTEMA ACTUALIZADO*
+.⃟𖥔 ݁. 𖦹˙— \`\`ACTUALIZADO\`\` —˙𖦹.✅꒷
 
-*➤* El sistema ya está en su *versión más reciente*
+── *📊 ESTADO* ╏
+✅ ➛ Sistema actualizado
+💎 ➛ Ya estás en la versión más reciente
 
-*━━━━━━━━━━*
-*Owner:* ${owner}`, m)
+── *👑 OWNER* ╏
+${owner}
+
+━━━━━━━━━━━`
+                return conn.sendMessage(m.chat, {
+                    image: img,
+                    caption: upToDate,
+                    mentions: [owner.split('@')[1] + '@s.whatsapp.net']
+                }, { quoted: m })
             }
 
-            if (m.react) await m.react('✅')
-            return conn.reply(m.chat, `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
+            await react('✅')
+            let updateMsg = `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ✅
 
-*━━━━━━━━━━*
-*✅ ACTUALIZACION APLICADA*
+.⃟𖥔 ݁. 𖦹˙— \`\`ACTUALIZACIÓN\`\` —˙𖦹.📥꒷
 
-*📋 Cambios:*
+── *📊 ESTADO* ╏
+📥 ➛ Actualización aplicada
+
+── *📋 CAMBIOS* ╏
 \`\`${stdout}\`\`
 
-*━━━━━━━━━━*
-*Owner:* ${owner}`, m)
+── *👑 OWNER* ╏
+${owner}
+
+━━━━━━━━━━━`
+            return conn.sendMessage(m.chat, {
+                image: img,
+                caption: updateMsg,
+                mentions: [owner.split('@')[1] + '@s.whatsapp.net']
+            }, { quoted: m })
         })
     }
 }
