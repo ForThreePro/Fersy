@@ -157,6 +157,6 @@ let handler = async (m, { conn, usedPrefix, command }) => {
 }
 
 handler.help = ['removebg', 'rbg', 'nobg']
-handler.tags = ['ia', 'herramienta']
+handler.tags = ['ia']
 handler.command = /^(removebg|rbg|nobg)$/i
 export default handler
