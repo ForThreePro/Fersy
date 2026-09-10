@@ -1,5 +1,4 @@
 import os from 'os'
-import { performance } from 'perf_hooks'
 
 // TU IMAGEN FIJA
 const GARFIELD_IMG = 'https://files.evogb.win/QFXQtu.jpg'
@@ -10,21 +9,14 @@ let handler = async (m, { conn, usedPrefix }) => {
   }
 
   await react('⏳')
-  await conn.sendMessage(m.chat, { text: `𐔌 ꒱ ***GARFIEL BOT*** 𐔌 ꒱ ⏳\n\n── *📊 ESTADO* ╏\n⏳ ➛ Cargando menú...` }, { quoted: m })
 
   let taguser = m.mentionedJid && m.mentionedJid[0]? m.mentionedJid[0] : m.quoted? m.quoted.sender : m.sender
-
-  // TU FOTO FIJA
   let img = { url: GARFIELD_IMG }
 
   let uptime = process.uptime() * 1000
   let _uptime = clockString(uptime)
   let totalreg = Object.keys(global.db.data.users).length
   let totalcmd = Object.values(global.plugins).filter(p => p.help &&!p.disabled).length
-  let start = performance.now()
-  await conn.sendMessage(m.chat, { text: 'ping' }, { quoted: m })
-  let end = performance.now()
-  let ping = (end - start).toFixed(2)
 
   let owner = global.owner?.[0]?.[0] || '51927174369'
   let ownerTag = `@${owner}`
@@ -39,6 +31,7 @@ let handler = async (m, { conn, usedPrefix }) => {
     else groups[category].push(plugin.help)
   }
 
+  // ICONOS POR CATEGORIA - YA NO TODO 📂
   const icons = {
     search: '🔍', download: '⬇️', game: '🎮', rpg: '⚔️', config: '⚙️',
     group: '👥', owner: '👑', info: 'ℹ️', fun: '😂', anime: '🌸',
@@ -65,7 +58,6 @@ let handler = async (m, { conn, usedPrefix }) => {
 📱 ➛ Bot: +${numBot}
 
 ── *📊 ESTADÍSTICAS* ╏
-⚡ ➛ Ping: ${ping}ms
 ⏱️ ➛ Actividad: ${_uptime}
 👥 ➛ Usuarios: ${totalreg}
 📜 ➛ Comandos: ${totalcmd}
@@ -79,7 +71,7 @@ let handler = async (m, { conn, usedPrefix }) => {
 `
 
   for (let category in groups) {
-    let icon = icons[category] || '📁'
+    let icon = icons[category] || '📁' // Ahora cada categoria tiene su icono
     let catName = categoryNames[category] || category.toUpperCase()
     menu += `\n.⃟𖥔 ݁. 𖦹˙— \`\`${catName}\`\` —˙𖦹.${icon}꒷\n`
     for (let cmd of groups[category]) {
@@ -90,7 +82,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   menu += `
 ── *📝 AYUDA* ╏
 💡 ➛ Usa ${usedPrefix} antes de cada comando
-💡 ➛ Ejemplo: ${usedPrefix}menu
+💡 ➛ Ejemplo: ${usedPrefix}sticker
 > _"Mejorando como lasaña"_ 😼
 
 ━━━━━━━━━━━`
@@ -113,5 +105,6 @@ export default handler
 function clockString(ms) {
   let h = isNaN(ms)? '--' : Math.floor(ms / 3600000)
   let m = isNaN(ms)? '--' : Math.floor(ms / 60000) % 60
-  return [h, m].map(v => v.toString().padStart(2, 0)).join('h ') + 'm'
+  let s = isNaN(ms)? '--' : Math.floor(ms / 1000) % 60
+  return `${h}h ${m}m ${s}s`
 }
