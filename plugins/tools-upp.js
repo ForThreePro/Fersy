@@ -3,61 +3,66 @@ import { FormData, Blob } from "formdata-node"
 import { fileTypeFromBuffer } from "file-type"
 
 let handler = async (m, { conn }) => {
+  const react = async (text) => {
+    try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+  }
+
   let q = m.quoted? m.quoted : m
   let mime = (q.msg || q).mimetype || ''
-  if (!mime) return conn.reply(m.chat, `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
+  if (!mime) {
+    await react('❌')
+    return conn.reply(m.chat, `𐔌 ꒱ ***UPLOADER*** 𐔌 ꒱ ⚠️
 
-*━━━━━━━━━━*
-*⚠️ ERROR DE USO ⚠️*
+.⃟𖥔 ݁. 𖦹˙— \`\`USO\`\` —˙𖦹.☁️꒷
 
-*Instrucciones:*
-*➤* Responde a una *imagen, video, audio o documento*
-*➤* Formatos: *Imagen | Video | Audio | Doc*
+── *📖 COMO USAR* ╏
+➛ Responde a una *imagen, video, audio o documento*
+➛ Formatos: Imagen | Video | Audio | Doc
 
-*━━━━━━━━━━*
-*Owner:* @whois.yallico 
-*WhatsApp:* +51 927 174 369`, m)
+━━━━━━━━━━━`, m)
+  }
 
   try {
-    await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } })
+    await react('⏳')
+    await m.reply(`𐔌 ꒱ ***UPLOADER*** 𐔌 ꒱ ⏳
+
+.⃟𖥔 ݁. 𖦹˙— \`\`SUBIENDO\`\` —˙𖦹.☁️꒷
+
+── *📊 ESTADO* ╏
+⏳ ➛ Subiendo archivo a la nube...
+
+━━━━━━━━━━━`)
+
     let media = await q.download()
     let link = await myCloud(media)
     if (!link.url) throw new Error()
 
-    let txt = `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
+    let txt = `𐔌 ꒱ ***UPLOADER*** 𐔌 ꒱ ✅
 
-*━━━━━━━━━━━━━━━━━━*
-*✅ ARCHIVO SUBIDO CORRECTAMENTE*
+.⃟𖥔 ݁. 𖦹˙— \`\`RESULTADO\`\` —˙𖦹.☁️꒷
 
-*📊 DATOS DEL ARCHIVO*
-*➤ Enlace:* ${link.url}
-*➤ ID:* ${link.id || 'N/A'}
-*➤ Peso:* ${formatBytes(media.length)}
-*➤ Servidor:* *evogb.win*
-*➤ Bot:* ***Garfield Bot Oficial***
+── *📊 DATOS DEL ARCHIVO* ╏
+🔗 ➛ Enlace: ${link.url}
+🆔 ➛ ID: ${link.id || 'N/A'}
+📦 ➛ Peso: ${formatBytes(media.length)}
+🖥️ ➛ Servidor: evogb.win
 
-*━━━━━━━━━━━━━━━━━━*
-*Owner:* @whois.yallico 
-*WhatsApp:* +51 927 174 369
-> _"Guardado en la nube por Garfield Bot"_ ☁️⚡`
+━━━━━━━━━━━`
 
-    await conn.sendFile(m.chat, media, 'garfield.' + link.url.split('.').pop(), txt, m)
-    await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } })
+    await conn.sendFile(m.chat, media, 'file.' + link.url.split('.').pop(), txt, m)
+    await react('✅')
   } catch (e) {
     console.error(e)
-    await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
-    await conn.reply(m.chat, `🐱 *𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𝗢𝗙𝗜𝗖𝗜𝗔𝗟* 🐱
+    await react('❌')
+    await conn.reply(m.chat, `𐔌 ꒱ ***UPLOADER*** 𐔌 ꒱ ⚠️
 
-*━━━━━━━━━━*
-*❌ ERROR DE SUBIDA ❌*
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
-*Aviso:*
-*➤* No se pudo subir el archivo
-*➤* Intenta con otro archivo
+── *📝 AVISO* ╏
+❌ ➛ No se pudo subir el archivo
+💡 ➛ Intenta con otro archivo
 
-*━━━━━━━━━━*
-*Owner:* @whois.yallico 
-*WhatsApp:* +51 927 174 369`, m)
+━━━━━━━━━━━`, m)
   }
 }
 
