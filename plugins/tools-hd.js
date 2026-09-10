@@ -7,19 +7,6 @@ const api = {
     key: 'proyectsV2'
 }
 
-// ===== DISEÑO GARFIELD BOT =====
-const D = {
-    name: 'GARFIELD BOT',
-    emoji: '🐱🍝',
-    border: '╭─── 𓆩🐱𓆪 ───╮',
-    border2: '╰─── 𓆩🍝𓆪 ───╯',
-    title: '𝐆𝐀𝐑𝐅𝐈𝐄𝐋𝐃 𝐇𝐃',
-    footer: '> "Mejorando como lasaña" 😼',
-    process: '🐱 MEJORANDO IMAGEN',
-    found: '🍝 IMAGEN MEJORADA',
-    error: '😿 NO SE PUDO'
-}
-
 function generateUniqueFilename(mime) {
   const ext = mime.split('/')[1] || 'jpg'
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -52,44 +39,42 @@ async function getEnhancedBuffer(url) {
 }
 
 let handler = async (m, { conn, usedPrefix, command }) => {
+    const react = async (text) => {
+        try { await conn.sendMessage(m.chat, { react: { text: text, key: m.key } }) } catch {}
+    }
+
     const q = m.quoted || m
     const mime = (q.msg || q).mimetype || ''
 
-    if (!mime) return m.reply(`${D.border}
-${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
+    if (!mime) {
+      await react('❌')
+      return m.reply(`𐔌 ꒱ ***MEJORADOR HD*** 𐔌 ꒱ ⚠️
 
-.⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`USO\`\` —˙𖦹.🖼️꒷
 
- ⤷ ┇ 𝗠𝗘𝗝𝗢𝗥𝗔𝗗𝗢𝗥 𝗗𝗘 𝗜𝗠𝗔𝗚𝗘𝗡
+── *📖 COMO USAR* ╏
+➛ Responde a una imagen con: *${usedPrefix + command}*
+➛ Soporta: jpg, jpeg, png
 
-──愛 *COMO USAR* ╏ ❄️
-💭 ➛ Responde a una imagen con: *${usedPrefix + command}*
-💭 ➛ Soporta: jpg, jpeg, png
-
-${D.border2}
-${D.footer}
 ━━━━━━━━━━━`)
+    }
 
     if (!/image\/(jpe?g|png)/.test(mime)) {
-      return m.reply(`${D.border}
-⚠️ ➛ El formato *${mime}* no es compatible
-${D.border2}`)
+      await react('❌')
+      return m.reply(`𐔌 ꒱ ***MEJORADOR HD*** 𐔌 ꒱ ⚠️\n\n── *📝 AVISO* ╏\n⚠️ ➛ El formato *${mime}* no es compatible\n━━━━━━━━━━━`)
     }
 
     try {
-      await m.react('🐱')
-      await m.reply(`${D.border}
-${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
+      await react('⏳')
+      await m.reply(`𐔌 ꒱ ***MEJORADOR HD*** 𐔌 ꒱ ⏳
 
-.⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`PROCESANDO\`\` —˙𖦹.🖼️꒷
 
- ⤷ ┇ ${D.process} ：✿ 。
+── *📊 ESTADO* ╏
+⏳ ➛ Subiendo imagen a Uguu...
+⚡ ➛ Mejorando calidad 2x...
 
-  ꒱ ׁ. ᘏ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢 ׅ 𝆬 ָ֢ ෆ
-💭 ➛ Subiendo imagen a Uguu...
-💭 ➛ Mejorando calidad 2x con key proyectsV2...
-
-${D.border2}`)
+━━━━━━━━━━━`)
 
       const buffer = await q.download()
       const uploadedUrl = await uploadToUguu(buffer, mime)
@@ -97,37 +82,29 @@ ${D.border2}`)
 
       await conn.sendMessage(m.chat, {
         image: enhancedBuffer,
-        caption: `${D.border}
-${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
+        caption: `𐔌 ꒱ ***MEJORADOR HD*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`RESULTADO\`\` —˙𖦹.✨꒷
 
- ⤷ ┇ ${D.found} ：✿ 。
+── *📊 DETALLES* ╏
+✨ ➛ Calidad: Mejorada 2x
+🔧 ➛ API: Stellar
 
-  ꒱ ׁ. ᘏ 𝗗𝗘𝗧𝗔𝗟𝗘𝗦 ׅ 𝆬 ָ֢ ෆ
-📌 ➛ Calidad: Mejorada 2x
-📌 ➛ API Key: proyectsV2
-
-${D.border2}
-${D.footer}
 ━━━━━━━━━━━`
       }, { quoted: m })
 
-      await m.react('✅')
+      await react('✅')
 
     } catch (err) {
-      await m.react('❌')
-      await m.reply(`${D.border}
-${D.emoji} 𓆩 𝗘𝗟 ${D.name} 𓆪 ${D.emoji}
+      await react('❌')
+      await m.reply(`𐔌 ꒱ ***MEJORADOR HD*** 𐔌 ꒱ ⚠️
 
-.⃟𖥔 ݁. 𖦹˙— \`\`${D.title}\`\` —˙𖦹.⚠️꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
- ⤷ ┇ ${D.error} ：✿ 。
+── *📝 AVISO* ╏
+❌ ➛ ${err.message || err}
 
-──愛 *FALLA* ╏ ❄️
-⚠️ ➛ ${err.message || err}
-
-${D.border2}`)
+━━━━━━━━━━━`)
     }
 }
 
