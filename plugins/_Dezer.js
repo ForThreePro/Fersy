@@ -17,36 +17,40 @@ const handler = async (m, { conn, command }) => {
         let q = m.quoted? m.quoted : m
         let mime = (q.msg || q).mimetype || ''
 
-        if (!mime || !/audio|video/.test(mime)) return m.reply(`🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
+        if (!mime ||!/audio|video/.test(mime)) {
+            let menuUso = `𐔌 ꒱ ***.${command}*** 𐔌 ꒱ 🎵
 
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`BUSCADOR\`\` —˙𖦹.🔍꒷
 
- ⤷ ┇ 𝗕𝗨𝗦𝗖𝗔𝗗𝗢𝗥 𝗗𝗘 𝗠𝗨𝗦𝗜𝗖𝗔 ：✿ 。
+── *📝 DESCRIPCIÓN* ╏
+🎵 ➛ Identifica canciones respondiendo a audios o videos
+🎵 ➛.song = Descarga el audio
+🎵 ➛.letra = Muestra la letra + descarga el audio
 
-──愛 *COMO USAR* ╏ ❄️
-💭 ➛ Responde a un audio o video con:.song
-💭 ➛ Responde a un audio o video con:.letra
-💭 ➛ Ejemplo: Responde a un estado de WhatsApp
+── *📖 USO* ╏
+1️⃣ ➛ Responde a un audio con:.*${command}*
+2️⃣ ➛ Responde a un video con:.*${command}*
+3️⃣ ➛ Responde a un estado de WhatsApp
 
-━━━━━━━━━━━
-*Bot*: GARFIELD BOT 🐱 | *Odia los lunes*
-━━━━━━━━━━━`)
+── *⏱️ NOTA* ╏
+📦 ➛ Analiza los primeros *${CLIP_SECONDS}s* de audio
+
+━━━━━━━━━━━`
+            return conn.sendMessage(m.chat, { text: menuUso }, { quoted: m })
+        }
 
         await m.react('🔍')
         let buffer = await q.download()
-        if (!buffer) throw 'Error al descargar. Garfield tiene hambre y no puede :('
+        if (!buffer) throw new Error('Error al descargar el archivo')
 
-        // 1. DETECTAR CANCION
-        await m.reply(`🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
+        await m.reply(`𐔌 ꒱ ***.${command}*** 𐔌 ꒱ 🔍
 
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`DETECTANDO\`\` —˙𖦹.🎶꒷
 
- ⤷ ┇ 𝗗𝗘𝗧𝗘𝗖𝗧𝗔𝗡𝗗𝗢 𝗖𝗔𝗡𝗖𝗜𝗢𝗡 ：✿ 。
-꒰ ◞⁺⊹ ．Shazam Garfield •
-
-  ꒱ ׁ. ᘏ 𝗣𝗥𝗢𝗖𝗘𝗦𝗢 ׅ 𝆬 ָ֢ ෆ
-💭 ➛ Analizando ${CLIP_SECONDS}s de audio...
-💭 ➛ Comiendo lasaña mientras busco 😼
+── *📊 PROCESO* ╏
+🔍 ➛ Analizando ${CLIP_SECONDS}s de audio...
+📤 ➛ Subiendo a servidor temporal...
+🎶 ➛ Buscando coincidencia...
 
 ━━━━━━━━━━━`)
 
@@ -59,7 +63,7 @@ const handler = async (m, { conn, command }) => {
         await m.react('📥')
         let search = await yts(searchQuery)
         let result = search.videos[0]
-        if (!result) throw 'No se encontró la canción en YouTube. Odio los lunes.'
+        if (!result) throw new Error('No se encontró la canción en YouTube')
 
         const { title, thumbnail, timestamp, views, videoId, author } = result
         const shortUrl = `https://youtu.be/${videoId}`
@@ -68,29 +72,26 @@ const handler = async (m, { conn, command }) => {
 
         // 3. DESCARGAR AUDIO
         const mediaUrl = await getMediaUrl(shortUrl)
-        if (!mediaUrl) throw 'No se pudo obtener el audio. Garfield está dormido.'
+        if (!mediaUrl) throw new Error('No se pudo obtener el audio')
 
-        // ===== SI ES .song =====
+        // ===== SI ES.song =====
         if(command === 'song'){
             await conn.sendMessage(m.chat, {
                 image: thumb,
-                caption: `🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
+                caption: `𐔌 ꒱ ***.song*** 𐔌 ꒱ ✅
 
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`ENCONTRADO\`\` —˙𖦹.🎵꒷
 
- ⤷ ┇ 𝗖𝗔𝗡𝗖𝗜𝗢𝗡 𝗘𝗡𝗖𝗢𝗡𝗧𝗥𝗔𝗗𝗔 ：✿ 。
-꒰ ◞⁺⊹ ．Descarga completa •
-
-  ꒱ ׁ. ᘏ 𝗗𝗘𝗧𝗔𝗟𝗘𝗦 ׅ 𝆬 ָ֢ ෆ
-📌 ➛ Titulo: *${title}*
+── *📊 INFORMACIÓN* ╏
+📌 ➛ Título: *${title}*
 👤 ➛ Artista: *${author.name}*
 👁️ ➛ Vistas: *${vistas}*
-⏱️ ➛ Duracion: *${timestamp}*
+⏱️ ➛ Duración: *${timestamp}*
 🔗 ➛ Link: ${shortUrl}
 
-━━━━━━━━━━━
-*Bot*: GARFIELD BOT 🐱
-> *"No me hables antes del café y la música"* ☕🎵
+── *📥 DESCARGA* ╏
+⬇️ ➛ Enviando audio...
+
 ━━━━━━━━━━━`
             }, { quoted: m })
 
@@ -101,29 +102,30 @@ const handler = async (m, { conn, command }) => {
             }, { quoted: m })
         }
 
-        // ===== SI ES .letra =====
+        // ===== SI ES.letra =====
         if(command === 'letra'){
             await m.react('📝')
-            // Buscar letra
             const lyricsRes = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(song.artist)}/${encodeURIComponent(song.title)}`).then(r => r.json())
-            let lyrics = lyricsRes.lyrics || 'No encontré la letra. Jon la perdió'
-            if(lyrics.length > 1500) lyrics = lyrics.slice(0, 1500) + '\n\n...Muy larga, prefiero dormir 😴'
+            let lyrics = lyricsRes.lyrics || 'No se encontró la letra'
+            if(lyrics.length > 1500) lyrics = lyrics.slice(0, 1500) + '\n\n...Letra muy larga'
 
             await conn.sendMessage(m.chat, {
-                text: `🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
+                text: `𐔌 ꒱ ***.letra*** 𐔌 ꒱ 📝
 
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐋𝐞𝐭𝐫𝐚\`\` —˙𖦹.💭꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`LETRA\`\` —˙𖦹.🎤꒷
 
-📌 *${title}* - *${author.name}*
+── *📊 CANCIÓN* ╏
+📌 ➛ *${title}* - *${author.name}*
 
+── *📜 LETRA* ╏
 \`\`${lyrics}\`\`
 
-━━━━━━━━━━━
-> *"Cantar cansa. Mejor como"* 🍝
+── *📥 DESCARGA* ╏
+⬇️ ➛ Enviando audio...
+
 ━━━━━━━━━━━`
             }, { quoted: m })
 
-            // También manda el audio
             await conn.sendMessage(m.chat, {
                 audio: { url: mediaUrl },
                 fileName: `${title}.mp3`,
@@ -135,18 +137,19 @@ const handler = async (m, { conn, command }) => {
 
     } catch(e) {
         await m.react('❌')
-        m.reply(`🐱 𓆩 𝗚𝗔𝗥𝗙𝗜𝗘𝗟𝗗 𝗕𝗢𝗧 𓆪 🐱
+        let menuError = `𐔌 ꒱ ***.${command}*** 𐔌 ꒱ ⚠️
 
-.⃟𖥔 ݁. 𖦹˙— \`\`𝐋𝐚𝐬𝐚𝐧𝐚 𝐌𝐮𝐬𝐢𝐜\`\` —˙𖦹.⚠️꒷
+.⃟𖥔 ݁. 𖦹˙— \`\`ERROR\`\` —˙𖦹.❌꒷
 
- ⤷ ┇ 𝗘𝗥𝗢𝗥 𝗗𝗘 𝗦𝗜𝗦𝗧𝗘𝗠𝗔 ：✿ 。
+── *📝 DESCRIPCIÓN* ╏
+❌ ➛ ${e.message}
 
-──愛 *FALLA* ╏ ❄️
-⚠️ ➛ ${e.message}
-⚠️ ➛ Intenta con un audio/video mas claro
-⚠️ ➛ O dame lasaña y lo arreglo 😼
+── *💡 SOLUCIÓN* ╏
+🔧 ➛ Usa un audio/video más claro
+🔧 ➛ Asegúrate que tenga música con voz
 
-━━━━━━━━━━━`)
+━━━━━━━━━━━`
+        return conn.sendMessage(m.chat, { text: menuError }, { quoted: m })
     }
 }
 
