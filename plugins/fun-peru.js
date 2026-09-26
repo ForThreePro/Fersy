@@ -3,7 +3,7 @@ let handler = async (m, { conn, command, text, participants }) => {
     let who = m.mentionedJid[0] || m.quoted?.sender || (conn.parseMention(text)[0]) || (text.replace(/[^0-9]/g, '') + '@s.whatsapp.net')
     if (who === '@s.whatsapp.net' ||!who) who = null
 
-    let necesitaPersona = ['chisme','piropo','rumor','tentacion','caleta','chonguear'].includes(command)
+    let necesitaPersona = ['chisme','rumor','tentacion','caleta','chonguear'].includes(command)
 
     if (necesitaPersona &&!who) return m.reply(`❌ *Error 404* ❌\nTienes que:\n1. *Tocar @*\n2. *Responder* +.comando\n3..comando 519123456`)
 
@@ -30,26 +30,6 @@ let handler = async (m, { conn, command, text, participants }) => {
             `😂 ${user} dice que ${target} dice "ya pe" cada 3 segundos`,
             `📰 Chisme del día: ${user} vio a ${target} corriendo pa agarrar micro`,
             `☕ ${user} tomó desayuno con ${target} y se enteró de todo`
-        ],
-        piropo: [
-            `😏 ${user} a ${target}: Oe flaca/o, ¿tu jato es el sol? Porque me quemas`,
-            `💘 ${user} a ${target}: Si fueras ceviche, te me comería todito`,
-            `🥵 ${user} a ${target}: Más rica/o que pan con chicharrón eres`,
-            `😍 ${user} a ${target}: Tu cara vale más que mi propina del mes`,
-            `🔥 ${user} a ${target}: Ptm, apagas el micro con esa pinta`,
-            `💎 ${user} a ${target}: Eres más fino que arroz chaufa de chifa`,
-            `🌹 ${user} a ${target}: Si el amor fuera combi, yo me subo contigo`,
-            `✨ ${user} a ${target}: Brillas más que luces del centro en navidad`,
-            `😈 ${user} a ${target}: ¿Te duele? Porque caíste del cielo, pe`,
-            `💕 ${user} a ${target}: Más linda/o que tarde en la Costa Verde`,
-            `🚗 ${user} a ${target}: Si fueras taxi, yo sería tu pasajero fijo`,
-            `🍫 ${user} a ${target}: Dulce como suspiro a la limeña`,
-            `🎵 ${user} a ${target}: Contigo hasta bailo huayno, oe`,
-            `📱 ${user} a ${target}: Tienes más señal que Bitel en mi casa`,
-            `🏆 ${user} a ${target}: Te ganaste mi like y mi corazón, causa`,
-            `🌙 ${user} a ${target}: Guapa/o hasta para ir a comprar al mercado`,
-            `💣 ${user} a ${target}: Me dejaste loco como corte de luz`,
-            `❤️‍🔥 ${user} a ${target}: Si el Perú es lindo, tú eres lo más lindo`
         ],
         rumor: [
             `📰 RUMOR: ${user} dice que ${target} se va a casar con su ex`,
@@ -141,11 +121,11 @@ let handler = async (m, { conn, command, text, participants }) => {
 }
 
 handler.help = [
-'chisme @ | piropo @ | rumor @',
+'chisme @ | rumor @',
 'tentacion @ | caleta @ | chonguear @'
 ]
 handler.tags = ['fun']
-handler.command = ['chisme','piropo','rumor','tentacion','caleta','chonguear']
+handler.command = ['chisme','rumor','tentacion','caleta','chonguear']
 handler.group = true
 
 export default handler
